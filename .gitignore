@@ -112,3 +112,8 @@ dist
 *.njsproj
 *.sln
 *.sw?
+
+# sAmArA specific
+packages/api/storage/
+packages/api/vendor/
+
