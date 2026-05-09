@@ -1,0 +1,186 @@
+{
+    "tree": [
+        {
+            "link": "/",
+            "name": "Home",
+            "children": [
+                {
+                    "link": "/shop",
+                    "name": "Shop",
+                    "children": [
+                        {
+                            "link": "/shop/product-page",
+                            "name": "Product Page",
+                            "children": [],
+                            "last_modified": "2023-10-13"
+                        }
+                    ],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/shipping",
+                    "name": "Shipping",
+                    "children": [],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/blog",
+                    "name": "Blog",
+                    "children": [],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/about-us",
+                    "name": "About Us",
+                    "children": [],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/adding-to-cart",
+                    "name": "Adding To Cart",
+                    "children": [
+                        {
+                            "link": "/adding-to-cart/cart",
+                            "name": "Cart",
+                            "children": [
+                                {
+                                    "link": "/adding-to-cart/cart/empty-cart",
+                                    "name": "Empty Cart",
+                                    "children": [],
+                                    "last_modified": "2023-10-13"
+                                },
+                                {
+                                    "link": "/adding-to-cart/cart/check-out",
+                                    "name": "Check Out",
+                                    "children": [
+                                        {
+                                            "link": "/adding-to-cart/cart/check-out/success",
+                                            "name": "Success",
+                                            "children": [],
+                                            "last_modified": "2023-10-13"
+                                        }
+                                    ],
+                                    "last_modified": "2023-10-13"
+                                },
+                                {
+                                    "link": "/adding-to-cart/cart/log-in-and-confirmation",
+                                    "name": "Log In And Confirmation",
+                                    "children": [
+                                        {
+                                            "link": "/adding-to-cart/cart/log-in-and-confirmation/success",
+                                            "name": "Success",
+                                            "children": [],
+                                            "last_modified": "2023-10-13"
+                                        }
+                                    ],
+                                    "last_modified": "2023-10-13"
+                                }
+                            ],
+                            "last_modified": "2023-10-13"
+                        }
+                    ],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/log-in",
+                    "name": "Log In",
+                    "children": [
+                        {
+                            "link": "/log-in/sign-up",
+                            "name": "Sign Up",
+                            "children": [
+                                {
+                                    "link": "/log-in/sign-up/my-profile",
+                                    "name": "My Profile",
+                                    "children": [
+                                        {
+                                            "link": "/log-in/sign-up/my-profile/order-history",
+                                            "name": "Order History",
+                                            "children": [
+                                                {
+                                                    "link": "/log-in/sign-up/my-profile/order-history/order",
+                                                    "name": "Order",
+                                                    "children": [
+                                                        {
+                                                            "link": "/log-in/sign-up/my-profile/order-history/order/tracking",
+                                                            "name": "Tracking",
+                                                            "children": [],
+                                                            "last_modified": "2023-10-13"
+                                                        }
+                                                    ],
+                                                    "last_modified": "2023-10-13"
+                                                }
+                                            ],
+                                            "last_modified": "2023-10-13"
+                                        },
+                                        {
+                                            "link": "/log-in/sign-up/my-profile/support-chat",
+                                            "name": "Support Chat",
+                                            "children": [],
+                                            "last_modified": "2023-10-13"
+                                        }
+                                    ],
+                                    "last_modified": "2023-10-13"
+                                },
+                                {
+                                    "link": "/log-in/sign-up/registration",
+                                    "name": "Registration",
+                                    "children": [
+                                        {
+                                            "link": "/log-in/sign-up/registration/success",
+                                            "name": "Success",
+                                            "children": [],
+                                            "last_modified": "2023-10-13"
+                                        }
+                                    ],
+                                    "last_modified": "2023-10-13"
+                                },
+                                {
+                                    "link": "/log-in/sign-up/passcode-recover",
+                                    "name": "Passcode Recover",
+                                    "children": [
+                                        {
+                                            "link": "/log-in/sign-up/passcode-recover/mail",
+                                            "name": "Mail",
+                                            "children": [
+                                                {
+                                                    "link": "/log-in/sign-up/passcode-recover/mail/phone-confirmation",
+                                                    "name": "Phone Confirmation",
+                                                    "children": [
+                                                        {
+                                                            "link": "/log-in/sign-up/passcode-recover/mail/phone-confirmation/success",
+                                                            "name": "Success",
+                                                            "children": [],
+                                                            "last_modified": "2023-10-13"
+                                                        }
+                                                    ],
+                                                    "last_modified": "2023-10-13"
+                                                }
+                                            ],
+                                            "last_modified": "2023-10-13"
+                                        }
+                                    ],
+                                    "last_modified": "2023-10-13"
+                                }
+                            ],
+                            "last_modified": "2023-10-13"
+                        }
+                    ],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/cookies",
+                    "name": "Cookies",
+                    "children": [],
+                    "last_modified": "2023-10-13"
+                },
+                {
+                    "link": "/404-error",
+                    "name": "404 Error",
+                    "children": [],
+                    "last_modified": "2023-10-13"
+                }
+            ]
+        }
+    ]
+}

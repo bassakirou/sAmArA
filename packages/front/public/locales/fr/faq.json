@@ -1,0 +1,19 @@
+{
+  "faq-one-title": "Comment contacter le service clientèle ?",
+  "faq-one-content": "Notre équipe chargée de l'expérience client est disponible 7 jours sur 7 et nous vous proposons deux moyens de nous contacter : l'e-mail et le chat. Nous nous efforçons de répondre rapidement, vous ne devez donc pas attendre trop longtemps pour obtenir une réponse.",
+  "faq-two-title": "L'installation de l'application a échoué, comment mettre à jour les informations du système ?",
+  "faq-two-content": "Veuillez lire attentivement la documentation. Nous avons également des tutoriels vidéo en ligne concernant ce problème. Si le problème persiste, veuillez ouvrir un ticket dans le forum de support.",
+  "faq-three-title": "La réponse du site web prend du temps, comment l'améliorer ?",
+  "faq-three-content": "Tout d'abord, veuillez vérifier votre connexion Internet. Nous avons également des tutoriels vidéo en ligne concernant ce problème. Si le problème persiste, veuillez ouvrir un ticket dans le forum de support.",
+  "faq-four-title": "Comment créer un compte ?",
+  "faq-four-content": "Si vous souhaitez ouvrir un compte à des fins personnelles, vous pouvez le faire par téléphone ou en ligne. L'ouverture d'un compte en ligne ne prend que quelques minutes.",
+
+  "faq-seller-one-title": "Comment fonctionne le système de commissions sAmarA?",
+  "faq-seller-one-content": "S'inscrire sur sAmArA et ouvrir une boutique est gratuit. Il y a deux types de frais de base : les frais de transaction, et les frais de traitement des paiements.  <br> Lorsqu'un article est vendu, des frais de transaction correspondant aux frais exigibles par les opérateurs de Mobile Money majorés de 1% de frais de transaction liés à l'API de connexion aux opérateurs. Si vous acceptez les paiements via PayPal, des frais de traitement des paiements s'appliquent également de leur côté. <br> Vous payez une commission sur les ventes générées par la plateforme sAmArA",
+  "faq-seller-two-title": "Comment serai-je payé ?",
+  "faq-seller-two-content": "Avec notre système de paiement simple et sécurisé, vous pouvez accepter de nombreux modes de paiement, notamment les paiements par OM et MoMo, les cartes de crédit et de débit et PayPal.",
+  "faq-seller-three-title": "Que dois-je faire pour créer une boutique ?",
+  "faq-seller-three-content": "Ouvrir une boutique sur sAmArA est très facile. Créez un compte sAmArA (si vous n'en possédez pas encore), choisissez un nom de boutique, créez des fiches produits.",
+  "faq-seller-four-title": "Que puis-je vendre sur Etsy ?",
+  "faq-seller-four-content": "sAmArA fournit une place de marché aux artisans afriains, qui peuvent vendre leurs créations faites main et des fournitures créatives de toutes sortes."
+}

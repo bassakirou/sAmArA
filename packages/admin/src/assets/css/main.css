@@ -1,0 +1,412 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+		/*
+    *
+    * This all are the rgb values which are used inside the
+    * tailwind config file and custom plugins css file
+    *
+    */
+
+		/*
+    * primary color
+    */
+		--color-accent: 33, 33, 33;
+
+		/*
+    * Hover state color of primary color
+    */
+		--color-accent-hover: 58, 58, 58;
+
+		/*
+    * shade of primary color
+    */
+		--color-accent-300: 180, 180, 182;
+
+		/*
+    * shade of primary color
+    */
+		--color-accent-400: 159, 159, 161;
+
+		/*
+    * shade of primary color
+    */
+		--color-accent-500: 138, 139, 140;
+
+		/*
+    * shade of primary color
+    */
+		--color-accent-600: 117, 118, 118;
+
+		/*
+    * shade of primary color
+    */
+		--color-accent-700: 95, 96, 96;
+
+		/*
+    * light color
+    */
+		--color-light: 255, 255, 255;
+
+		/*
+    * dark color
+    */
+		--color-dark: 0, 0, 0;
+
+		/*
+    * Black muted color
+    */
+		--color-muted-black: 17, 17, 17;
+
+		/*
+    *
+    * TEXT colors
+    *
+    */
+
+		/*
+    * text color used for body/base text -> gray-500
+    */
+		--text-base: 107, 114, 128;
+
+		/*
+    * dark base text color  -> gray-600
+    */
+		--text-base-dark: 75, 85, 99;
+
+		/*
+    * muted text color -> gray-400
+    */
+		--text-muted: 156, 163, 175;
+
+		/*
+    * light muted text color - gray-300
+    */
+		--text-muted-light: 209, 213, 219;
+
+		/*
+    * text color used for heading text -> gray-700
+    */
+		--text-sub-heading: 55, 65, 81;
+
+		/*
+    * text color used for heading text -> gray-800
+    */
+		--text-heading: 31, 41, 55;
+
+		/*
+    * text color used for heading text -> gray-900
+    */
+		--text-bolder: 31, 41, 55;
+
+		/*
+    *
+    * border colors
+    *
+    */
+
+		/*
+    * border color 50
+    */
+		--color-border-50: 249, 250, 251;
+
+		/*
+    * border color 100
+    */
+		--color-border-100: 243, 244, 246;
+
+		/*
+    * border color 200
+    */
+		--color-border-200: 229, 231, 235;
+
+		/*
+    * border base color which is 300
+    */
+		--color-border-base: 209, 213, 219;
+
+		/*
+    * border color 400
+    */
+		--color-border-400: 156, 163, 175;
+
+		/*
+    *
+    * Tailwind default gray color override
+    *
+    */
+
+		/*
+    * gray-50
+    */
+		--color-gray-50: 249, 250, 251;
+
+		/*
+    * gray-100
+    */
+		--color-gray-100: 243, 244, 246;
+
+		/*
+    * gray-200
+    */
+		--color-gray-200: 229, 231, 235;
+
+		/*
+    * gray-300
+    */
+		--color-gray-300: 209, 213, 219;
+
+		/*
+    * gray-400
+    */
+		--color-gray-400: 156, 163, 175;
+
+		/*
+    * gray-500
+    */
+		--color-gray-500: 107, 114, 128;
+
+		/*
+    * gray-600
+    */
+		--color-gray-600: 75, 85, 99;
+
+		/*
+    * gray-700
+    */
+		--color-gray-700: 55, 65, 81;
+
+		/*
+    * gray-800
+    */
+		--color-gray-800: 31, 41, 55;
+
+		/*
+    * gray-900
+    */
+    --color-gray-900: 31, 41, 55;
+
+    /*
+    * orange-50
+    */
+    --color-orange-50: 255, 247, 237;
+
+    /*
+    * orange-100
+    */
+    --color-orange-100: 255, 237, 213;
+
+    /*
+    * orange-200
+    */
+    --color-orange-200: 254, 215, 170;
+
+    /*
+    * orange-300
+    */
+    --color-orange-300: 253, 186, 116;
+
+    /*
+    * orange-400
+    */
+    --color-orange-400: 251, 146, 60;
+
+    /*
+    * orange-500
+    */
+    --color-orange-500: 249, 115, 22;
+
+    /*
+    * orange-600
+    */
+    --color-orange-600: 234, 88, 12;
+
+    /*
+    * orange-700
+    */
+    --color-orange-700: 194, 65, 12;
+
+    /*
+    * orange-800
+    */
+    --color-orange-800: 154, 52, 18;
+
+    /*
+    * orange-900
+    */
+    --color-orange-900: 124, 45, 18;
+
+    /*
+    Pending
+    */
+    --color-pending: 201, 161, 22;
+
+    /*
+    Processing
+    */
+    --color-processing: 158, 117, 0;
+
+    /*
+    Complete
+    */
+    --color-complete: 0, 161, 127;
+
+    /*
+    Canceled
+    */
+    --color-canceled: 227, 110, 1;
+
+    /*
+    Failed
+    */
+    --color-failed: 238, 43, 0;
+
+    /*
+    Out for delivery
+    */
+    --color-out-for-delivery: 126, 173, 66;
+  }
+
+  a {
+    @apply no-underline;
+  }
+}
+@import './custom-plugins.css';
+
+/* CUSTOM STYLE */
+.bg-sable {
+  background: url(../../../public/image/bg/bg_sable.jpg) repeat !important;
+  position: fixed;
+}
+
+.bg-sable-1 {
+  background: url(../../../public/image/bg/bg_sable.jpg) repeat !important;
+  position: relative;
+}
+
+.bg-sable::after {
+  content: '';
+  display: block;
+  position: absolute;
+  width: 100%;
+  height: 13px;
+  background: url(../../../public/image/bg/bg-triangles-bottom.png) repeat-x;
+  bottom: -12px;
+  z-index: -1;
+}
+
+.shadow-sub-menu {
+  box-shadow: 8px 15px 2rem 0px rgba(0, 0, 0, 18%);
+}
+
+.bg-bottom-samra {
+  position: relative;
+}
+
+.bg-bottom-samra {
+  position: fixed;
+  width: 18rem;
+  height: 18px;
+  background: url(../../../public/image/bg/bg-footer-top.png) repeat-x;
+  left: 0;
+  bottom: -4px;
+  z-index: 1;
+}
+
+.motif {
+  position: absolute;
+  width: 100%;
+  height: 15px;
+  background: url(../../../public/image/bg/bg-footer-top.png) repeat-x;
+  background-size: cover;
+  z-index: 1;
+  left: 0;
+  top: 0;
+}
+
+.sam-btn {
+  position: relative;
+  color: #000;
+  padding: 6px;
+  font-weight: 600;
+  display: inline-block;
+}
+.sam-btn.vert,
+.sam-btn.rouge {
+  color: #fff;
+}
+.sam-btn:before {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 46px;
+  top: 0;
+  left: -8px;
+  @apply bg-yellow-500;
+  transform: skew(-16deg, 0deg);
+  z-index: 0;
+}
+.sam-btn.vert:before,
+.sam-btn.vert:after {
+  @apply bg-green-600;
+}
+.sam-btn.rouge:before,
+.sam-btn.rouge:after {
+  @apply bg-red-600;
+}
+.sam-btn:after {
+  content: '';
+  position: absolute;
+  width: 60%;
+  height: 47px;
+  top: 0;
+  right: -9px;
+  @apply bg-yellow-500;
+  transform: skew(-16deg, 0deg);
+  z-index: 0;
+}
+.sam-btn span {
+  position: absolute;
+}
+.sam-btn span.btn-text {
+  z-index: 1;
+  position: relative;
+  padding: 0 10px;
+}
+.sam-btn span.item1 {
+  content: '';
+  width: 40px;
+  height: 40px;
+  background: url(../../../public/image/icons/triangle-rouge.svg) no-repeat;
+  background-size: 40px 40px;
+  transform: rotate(60deg);
+  z-index: 1;
+  top: -19px;
+  right: -40px;
+  transition: all 0.3s ease-in-out;
+}
+.sam-btn:hover span.item1 {
+  top: -23px;
+  right: -44px;
+}
+.sam-btn span.item2 {
+  content: '';
+  width: 40px;
+  height: 40px;
+  background: url(../../../public/image/icons/triangle-vert.svg) no-repeat;
+  background-size: 40px 40px;
+  z-index: 1;
+  bottom: -12px;
+  left: -35px;
+  transition: all 0.3s ease-in-out;
+}
+.sam-btn.vert span.item2 {
+  background: url(../../../public/image/icons/triangle-orange.svg) no-repeat;
+}
+.sam-btn:hover span.item2 {
+  bottom: -16px;
+  left: -39px;
+}
