@@ -29,6 +29,10 @@ export default function Uploader({
   const [files, setFiles] = useState<Attachment[]>(getPreviewImage(value));
   const { mutate: upload, isLoading: loading } = useUploadMutation();
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFiles(getPreviewImage(value));
+  }, [value]);
   const { getRootProps, getInputProps } = useDropzone({
     ...(!acceptFile ? { accept: 'image/*' } : { accept: ACCEPTED_FILE_TYPES }),
     multiple,
@@ -175,17 +179,6 @@ export default function Uploader({
       );
     }
   });
-
-  useEffect(
-    () => () => {
-      // Reset error after upload new file
-      setError(null);
-
-      // Make sure to revoke the data uris to avoid memory leaks
-      files.forEach((file: any) => URL.revokeObjectURL(file.thumbnail));
-    },
-    [files]
-  );
 
   return (
     <section className="upload">

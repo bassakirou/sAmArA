@@ -1,5 +1,5 @@
 {
-  "name": "@samara/admin",
+  "name": "admin",
   "version": "5.4.0",
   "private": true,
   "scripts": {

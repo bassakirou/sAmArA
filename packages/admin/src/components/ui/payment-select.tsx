@@ -1,7 +1,9 @@
+import { useModalAction } from '@/components/ui/modal/modal.context';
 import { capitalize } from 'lodash';
 import { Controller, useForm } from 'react-hook-form';
 import CheckboxGroup from '@/components/ui/checkbox/checkbox-group';
 import { StripeIcon } from '@/components/icons/payment-gateways/stripe';
+import { TaramoneyIcon } from '@/components/icons/payment-gateways/taramoney';
 import { PayPalIcon } from '@/components/icons/payment-gateways/paypal';
 import { MollieIcon } from '@/components/icons/payment-gateways/mollie';
 import { RazorPayIcon } from '@/components/icons/payment-gateways/razorpay';
@@ -14,6 +16,7 @@ import cn from 'classnames';
 import Image from 'next/image';
 import { BkashIcon } from '../icons/payment-gateways/bkash';
 import { PaymongoIcon } from '../icons/payment-gateways/paymongo';
+import { GearIcon } from '@/components/icons/gear-icon';
 
 interface PaymentSelectProps {
   options: OptionType[];
@@ -41,6 +44,7 @@ const PaymentMethodCard = ({
   isDefault?: boolean;
   disable?: boolean;
 }) => {
+  const { openModal } = useModalAction();
   const icon: any = {
     stripe: <StripeIcon />,
     paypal: <PayPalIcon />,
@@ -52,6 +56,7 @@ const PaymentMethodCard = ({
     xendit: <XenditIcon />,
     bkash: <BkashIcon />,
     paymongo: <PaymongoIcon />,
+    taramoney: <TaramoneyIcon />,
   };
   return (
     <label
@@ -74,6 +79,15 @@ const PaymentMethodCard = ({
         <span className="absolute flex h-full w-full items-center justify-center p-6 md:p-9">
           {icon[name] ? icon[name] : ''}
         </span>
+        <div
+          className="absolute top-2 right-2 cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            openModal('GATEWAY_SETTINGS', { gateway: name });
+          }}
+        >
+          <GearIcon className="h-5 w-5 text-gray-400" />
+        </div>
         {isDefault && (
           <span className="absolute -top-7 -right-7 flex h-14 w-14 rotate-45 items-end justify-center bg-accent p-2 text-white">
             <StarIcon className="h-auto w-2.5" />

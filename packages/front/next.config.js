@@ -13,7 +13,6 @@ module.exports = withPWA({
   images: {
     domains: [
       'api.samara-shopping.com',
-      'samara-api.appaa-cameroun.net',
       'localhost',
       'googleusercontent.com',
       'maps.googleapis.com',
@@ -28,8 +27,7 @@ module.exports = withPWA({
       'picsum.photos',
       'cdninstagram.com',
       'scontent.cdninstagram.com',
-      'samara-api.dbs-tv.com',
-      'chawkbazarlaravel.s3.ap-southeast-1.amazonaws.com'
+      'chawkbazarlaravel.s3.ap-southeast-1.amazonaws.com',
     ],
   },
 

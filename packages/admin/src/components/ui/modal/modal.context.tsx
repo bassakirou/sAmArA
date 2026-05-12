@@ -37,7 +37,8 @@ export type MODAL_VIEWS =
   | 'REVIEW_IMAGE_POPOVER'
   | 'ABUSE_REPORT'
   | 'GENERATE_DESCRIPTION'
-  | 'COMPOSE_MESSAGE';
+  | 'COMPOSE_MESSAGE'
+  | 'GATEWAY_SETTINGS';
 
 interface State {
   view?: MODAL_VIEWS;

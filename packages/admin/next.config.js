@@ -12,18 +12,9 @@ module.exports = withPWA({
   i18n,
   images: {
     domains: [
-      'api.samara-shopping.com',
-      'samara-api.appaa-cameroun.net',
-      'via.placeholder.com',
-      'res.cloudinary.com',
-      's3.amazonaws.com',
-      '18.141.64.26',
-      '127.0.0.1',
-      'localhost',
-      'picsum.photos',
-      'pickbazar-sail.test',
-      'pickbazarlaravel.s3.ap-southeast-1.amazonaws.com',
-      'chawkbazarlaravel.s3.ap-southeast-1.amazonaws.com',
+      'api.samara-shopping.com', // Production
+      '127.0.0.1', // Local
+      'localhost', // Local
       'lh3.googleusercontent.com',
     ],
   },

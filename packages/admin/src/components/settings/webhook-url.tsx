@@ -13,6 +13,7 @@ import Badge from '@/components/ui/badge/badge';
 import Image from 'next/image';
 import { BkashIcon } from '../icons/payment-gateways/bkash';
 import { PaymongoIcon } from '../icons/payment-gateways/paymongo';
+import { TaramoneyIcon } from '@/components/icons/payment-gateways/taramoney';
 
 interface WebHookURLProps {
   gateway: gatewayType;
@@ -38,6 +39,7 @@ const WebHookURL = ({ gateway }: WebHookURLProps) => {
     xendit: <XenditIcon className="h-4 w-auto" />,
     bkash: <BkashIcon className="h-4 w-auto" />,
     paymongo: <PaymongoIcon className="h-4 w-auto" />,
+    taramoney: <TaramoneyIcon className="h-4 w-auto" />,
   };
   const url = `${
     process.env.NEXT_PUBLIC_REST_API_ENDPOINT

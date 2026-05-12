@@ -99,11 +99,12 @@ const ProductVariation = dynamic(
   () => import('@/components/product/variation/variation')
 );
 const AbuseReport = dynamic(() => import('@/components/reviews/abuse-report'));
-const OpenAiModal = dynamic(
-  () => import('@/components/openAI/openAI.modal')
-);
+const OpenAiModal = dynamic(() => import('@/components/openAI/openAI.modal'));
 const ComposerMessage = dynamic(
   () => import('@/components/message/compose-message')
+);
+const GatewaySettingsModal = dynamic(
+  () => import('@/components/settings/gateway-settings-modal')
 );
 
 function renderModal(view: MODAL_VIEWS | undefined, data: any) {
@@ -176,6 +177,8 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <OpenAiModal />;
     case 'COMPOSE_MESSAGE':
       return <ComposerMessage />;
+    case 'GATEWAY_SETTINGS':
+      return <GatewaySettingsModal />;
     default:
       return null;
   }

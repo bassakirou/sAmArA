@@ -6,6 +6,7 @@ import { PayPalIcon } from '@components/icons/payment-gateways/paypal';
 import { PayStack } from '@components/icons/payment-gateways/paystack';
 import { RazorPayIcon } from '@components/icons/payment-gateways/razorpay';
 import { StripeIcon } from '@components/icons/payment-gateways/stripe';
+import { TaramoneyIcon } from '@components/icons/payment-gateways/taramoney';
 import Alert from '@components/ui/alert';
 import Spinner from '@components/ui/loaders/spinner/spinner';
 import { useSettings } from '@framework/settings';
@@ -20,12 +21,12 @@ import { Fragment, useEffect, useState } from 'react';
 
 interface PaymentGroupOptionProps {
   payment: PaymentMethodInformation;
-  theme?: string
+  theme?: string;
 }
 
 const PaymentGroupOption: React.FC<PaymentGroupOptionProps> = ({
   payment: { name, value, icon },
-  theme
+  theme,
 }) => {
   const { t } = useTranslation('common');
   return (
@@ -124,6 +125,12 @@ const PaymentGrid: React.FC<{ className?: string; theme?: 'bw' }> = ({
       name: 'Iyzico',
       value: PaymentGateway.IYZICO,
       icon: <IyzicoIcon />,
+      component: PaymentOnline,
+    },
+    TARAMONEY: {
+      name: 'Taramoney',
+      value: PaymentGateway.TARAMONEY,
+      icon: <TaramoneyIcon />,
       component: PaymentOnline,
     },
     CASH_ON_DELIVERY: {

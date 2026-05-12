@@ -50,6 +50,14 @@ export default function OrderViewHeader({
               color={StatusColor(order?.payment_status)}
             />
           </div>
+          {order?.payment_gateway === 'taramoney' && order?.payment_intent_info && (
+            <div>
+              <span className="mb-2 block lg:mb-0 lg:inline-block lg:ltr:mr-4 lg:rtl:ml-4">
+                Taramoney ID :
+              </span>
+              <Badge text={order.payment_intent_info.transactionId ?? 'N/A'} />
+            </div>
+          )}
         </div>
       </div>
     </div>

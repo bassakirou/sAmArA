@@ -4,6 +4,7 @@ import * as socialIcons from '@/components/icons/social';
 import { CURRENCY } from '@/components/settings/currency';
 import { AI } from '@/components/settings/ai';
 import { PAYMENT_GATEWAY } from '@/components/settings/payment';
+import { TaramoneyIcon } from '@/components/icons/payment-gateways/taramoney';
 import WebHookURL from '@/components/settings/webhook-url';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
@@ -275,9 +276,9 @@ export default function SettingsForm({
         ...options?.contactDetails,
         socials: options?.contactDetails?.socials
           ? options?.contactDetails?.socials.map((social: any) => ({
-            icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
-            url: social?.url,
-          }))
+              icon: updatedIcons?.find((icon) => icon?.value === social?.icon),
+              url: social?.url,
+            }))
           : [],
       },
       deliveryTime: options?.deliveryTime ? options?.deliveryTime : [],
@@ -300,8 +301,8 @@ export default function SettingsForm({
 
       defaultPaymentGateway: options?.defaultPaymentGateway
         ? PAYMENT_GATEWAY.find(
-          (item) => item.name == options?.defaultPaymentGateway
-        )
+            (item) => item.name == options?.defaultPaymentGateway
+          )
         : PAYMENT_GATEWAY[0],
 
       currencyOptions: {
@@ -309,16 +310,16 @@ export default function SettingsForm({
         // @ts-ignore
         formation: options?.currencyOptions?.formation
           ? COUNTRY_LOCALE.find(
-            (item) => item.code == options?.currencyOptions?.formation
-          )
+              (item) => item.code == options?.currencyOptions?.formation
+            )
           : COUNTRY_LOCALE[0],
       },
       // multi-select on payment gateway
       paymentGateway: options?.paymentGateway
         ? options?.paymentGateway?.map((gateway: any) => ({
-          name: gateway?.name,
-          title: gateway?.title,
-        }))
+            name: gateway?.name,
+            title: gateway?.title,
+          }))
         : [],
 
       // @ts-ignore
@@ -328,8 +329,8 @@ export default function SettingsForm({
       // @ts-ignore
       shippingClass: !!shippingClasses?.length
         ? shippingClasses?.find(
-          (shipping: Shipping) => shipping.id == options?.shippingClass
-        )
+            (shipping: Shipping) => shipping.id == options?.shippingClass
+          )
         : '',
       smsEvent: options?.smsEvent
         ? formatEventAPIData(options?.smsEvent)
@@ -396,9 +397,9 @@ export default function SettingsForm({
       location: { ...omit(values?.contactDetails?.location, '__typename') },
       socials: values?.contactDetails?.socials
         ? values?.contactDetails?.socials?.map((social: any) => ({
-          icon: social?.icon?.value,
-          url: social?.url,
-        }))
+            icon: social?.icon?.value,
+            url: social?.url,
+          }))
         : [],
     };
     const smsEvent = formatEventOptions(values.smsEvent);
@@ -419,9 +420,9 @@ export default function SettingsForm({
         paymentGateway:
           values?.paymentGateway && values?.paymentGateway!.length
             ? values?.paymentGateway?.map((gateway: any) => ({
-              name: gateway.name,
-              title: gateway.title,
-            }))
+                name: gateway.name,
+                title: gateway.title,
+              }))
             : PAYMENT_GATEWAY.filter((value: any, index: number) => index < 2),
         useEnableGateway: values?.useEnableGateway,
         guestCheckout: values?.guestCheckout,
@@ -450,7 +451,8 @@ export default function SettingsForm({
   let useEnableGateway = watch('useEnableGateway');
   // let enableAi = watch('useAi');
 
-  const upload_max_filesize = (options?.server_info?.upload_max_filesize || 1024) / 1024;
+  const upload_max_filesize =
+    (options?.server_info?.upload_max_filesize || 1024) / 1024;
 
   const logoInformation = (
     <span>
@@ -794,7 +796,7 @@ export default function SettingsForm({
                     amount: 987456321.123456789,
                     currencyCode:
                       currentCurrency?.code ?? settings?.options?.currency!,
-                    locale: formation?.code! as string ?? 'USD',
+                    locale: (formation?.code! as string) ?? 'USD',
                     fractions: currentFractions ?? 2,
                   })}
                   color="bg-accent"

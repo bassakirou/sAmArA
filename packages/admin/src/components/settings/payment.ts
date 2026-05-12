@@ -5,4 +5,5 @@ export const PAYMENT_GATEWAY = [
   { name: 'mollie', title: 'Mollie' },
   { name: 'paystack', title: 'Paystack' },
   { name: 'iyzico', title: 'Iyzico' },
+  { name: 'taramoney', title: 'Taramoney' },
 ];

@@ -13,7 +13,10 @@ export interface Props extends InputHTMLAttributes<HTMLInputElement> {
   variant?: 'normal' | 'solid' | 'outline';
   dimension?: 'small' | 'medium' | 'big';
   showLabel?: boolean;
+  children?: React.ReactNode;
 }
+
+export type InputProps = Props;
 
 const classes = {
   root: 'px-4 h-12 flex items-center w-full rounded appearance-none transition duration-300 ease-in-out text-heading text-sm focus:outline-none focus:ring-0',
@@ -75,24 +78,27 @@ const Input = React.forwardRef<HTMLInputElement, Props>(
         ) : (
           ''
         )}
-        <input
-          id={name}
-          name={name}
-          type={type}
-          ref={ref}
-          className={`${rootClassName} ${
-            disabled
-              ? `cursor-not-allowed border-[#D4D8DD] bg-[#EEF1F4] ${numberDisable} select-none`
-              : ''
-          }`}
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          spellCheck="false"
-          disabled={disabled}
-          aria-invalid={error ? 'true' : 'false'}
-          {...rest}
-        />
+        <div className="relative">
+          <input
+            id={name}
+            name={name}
+            type={type}
+            ref={ref}
+            className={`${rootClassName} ${
+              disabled
+                ? `cursor-not-allowed border-[#D4D8DD] bg-[#EEF1F4] ${numberDisable} select-none`
+                : ''
+            }`}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            disabled={disabled}
+            aria-invalid={error ? 'true' : 'false'}
+            {...rest}
+          />
+          {children}
+        </div>
         {note && <p className="mt-2 text-xs text-body">{note}</p>}
         {error && (
           <p className="my-2 text-xs text-red-500 text-start">{error}</p>
