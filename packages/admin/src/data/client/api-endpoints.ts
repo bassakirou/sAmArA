@@ -30,6 +30,7 @@ export const API_ENDPOINTS = {
   RESET_PASSWORD: 'reset-password',
   DOWNLOAD_INVOICE: 'download/invoice',
   APPROVE_SHOP: 'approve-shop',
+  RESTORE_SHOP: 'restore-shop',
   DISAPPROVE_SHOP: 'disapprove-shop',
   SHOPS: 'shops',
   MY_SHOPS: 'my-shops',

@@ -39,6 +39,12 @@ const ApproveShopView = dynamic(
 const DisApproveShopView = dynamic(
   () => import('@/components/shop/disapprove-shop-view')
 );
+const ShopDeleteView = dynamic(
+  () => import('@/components/shop/shop-delete-view')
+);
+const ShopRestoreView = dynamic(
+  () => import('@/components/shop/shop-restore-view')
+);
 const RemoveStaffView = dynamic(
   () => import('@/components/shop/staff-delete-view')
 );
@@ -137,6 +143,10 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <ApproveShopView />;
     case 'SHOP_DISAPPROVE_VIEW':
       return <DisApproveShopView />;
+    case 'DELETE_SHOP':
+      return <ShopDeleteView />;
+    case 'RESTORE_SHOP':
+      return <ShopRestoreView />;
     case 'DELETE_STAFF':
       return <RemoveStaffView />;
     case 'UPDATE_REFUND':

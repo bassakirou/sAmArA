@@ -37,6 +37,34 @@ export const useDisApproveShopMutation = () => {
   });
 };
 
+export const useDeleteShopMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation(shopClient.delete, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-deleted'));
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.SHOPS);
+    },
+  });
+};
+
+export const useRestoreShopMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation(shopClient.restore, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-restored'));
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.SHOPS);
+    },
+  });
+};
+
 export const useCreateShopMutation = () => {
   const queryClient = useQueryClient();
   const router = useRouter();

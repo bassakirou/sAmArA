@@ -18,6 +18,7 @@ type IProps = {
   onPagination: (current: number) => void;
   onSort: (current: any) => void;
   onOrder: (current: string) => void;
+  isDeleted?: boolean;
 };
 
 const ShopList = ({
@@ -26,6 +27,7 @@ const ShopList = ({
   onPagination,
   onSort,
   onOrder,
+  isDeleted = false,
 }: IProps) => {
   const { t } = useTranslation();
   const { alignLeft, alignRight } = useIsRTL();
@@ -164,9 +166,12 @@ const ShopList = ({
         return (
           <ActionButtons
             id={id}
-            approveButton={true}
-            detailsUrl={`/${slug}`}
+            approveButton={!isDeleted}
+            detailsUrl={!isDeleted ? `/${slug}` : undefined}
             isShopActive={is_active}
+            deleteModalView={!isDeleted ? 'DELETE_SHOP' : undefined}
+            restoreModalView={isDeleted ? 'RESTORE_SHOP' : undefined}
+            customLocale={isDeleted ? 'restore' : undefined}
           />
         );
       },

@@ -31,4 +31,10 @@ export const shopClient = {
       variables
     );
   },
+  restore: (variables: { id: string }) => {
+    return HttpClient.post<{ id: string }>(
+      API_ENDPOINTS.RESTORE_SHOP,
+      variables
+    );
+  },
 };

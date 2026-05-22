@@ -10,6 +10,7 @@ import Search from '@/components/common/search';
 import { adminOnly } from '@/utils/auth-utils';
 import { useShopsQuery } from '@/data/shop';
 import { SortOrder } from '@/types';
+import Button from '@/components/ui/button';
 
 export default function AllShopPage() {
   const { t } = useTranslation();
@@ -17,12 +18,14 @@ export default function AllShopPage() {
   const [page, setPage] = useState(1);
   const [orderBy, setOrder] = useState('created_at');
   const [sortedBy, setColumn] = useState<SortOrder>(SortOrder.Desc);
+  const [isDeleted, setIsDeleted] = useState(false);
   const { shops, paginatorInfo, loading, error } = useShopsQuery({
     name: searchTerm,
     limit: 10,
     page,
     orderBy,
     sortedBy,
+    is_deleted: isDeleted ? 'true' : 'false',
   });
 
   if (loading) return <Loader text={t('common:text-loading')} />;
@@ -40,12 +43,19 @@ export default function AllShopPage() {
       <Card className="mb-8 flex flex-col items-center justify-between md:flex-row">
         <div className="mb-4 md:mb-0 md:w-1/4">
           <h1 className="text-lg font-semibold text-heading">
-            {t('common:sidebar-nav-item-shops')}
+            {isDeleted ? t('common:text-trash') + ' - ' + t('common:sidebar-nav-item-shops') : t('common:sidebar-nav-item-shops')}
           </h1>
         </div>
 
-        <div className="ms-auto flex w-full flex-col items-center md:w-1/2 md:flex-row">
+        <div className="ms-auto flex w-full flex-col items-center md:w-3/4 md:flex-row gap-4">
           <Search onSearch={handleSearch} />
+          <Button
+            onClick={() => setIsDeleted(!isDeleted)}
+            className="w-full md:w-auto"
+            variant="outline"
+          >
+            {isDeleted ? t('common:text-back-to-list') ?? 'Retour à la liste' : t('common:text-trash') ?? 'Corbeille'}
+          </Button>
         </div>
       </Card>
       <ShopList
@@ -54,6 +64,7 @@ export default function AllShopPage() {
         onPagination={handlePagination}
         onOrder={setOrder}
         onSort={setColumn}
+        isDeleted={isDeleted}
       />
     </>
   );
