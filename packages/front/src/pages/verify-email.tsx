@@ -6,10 +6,10 @@ import { useRouter } from 'next/router';
 import Link from '@components/ui/link';
 import { ROUTES } from '@lib/routes';
 import { useToken } from '@lib/use-token';
+import { useEffect } from 'react';
 import {
   useLogout,
   useResendVerificationEmail,
-  useUser,
 } from '@framework/auth';
 
 const VerifyEmail = () => {
@@ -19,11 +19,10 @@ const VerifyEmail = () => {
   const { emailVerified } = getEmailVerified();
   const { mutate: logout, isLoading: isLogoutLoader } = useLogout();
 
-  emailVerified && useUser();
-
-  if (emailVerified) {
-    router.push('/my-account');
-  }
+  useEffect(() => {
+    if (!emailVerified) return;
+    router.push(ROUTES.ACCOUNT);
+  }, [emailVerified, router]);
   const handleLogout = () => {
     logout();
     router.push(ROUTES.HOME);

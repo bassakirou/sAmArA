@@ -14,6 +14,7 @@ import client from '@framework/utils/index';
 import { useRouter } from 'next/router';
 import { useUI } from '@contexts/ui.context';
 import { ROUTES } from '@lib/routes';
+import { useCallback } from 'react';
 
 export const useOrders = (options: OrdersQueryOptionsType) => {
   const { data, isLoading, error } = useQuery<Order, Error>(
@@ -117,7 +118,7 @@ export function useCreateOrder() {
     },
   });
 
-  function formatOrderInput(input: OrderCreateInputType) {
+  const formatOrderInput = useCallback((input: OrderCreateInputType) => {
     const formattedInputs = {
       ...input,
       language: locale,
@@ -134,7 +135,7 @@ export function useCreateOrder() {
       },
     };
     createOrder(formattedInputs);
-  }
+  }, [createOrder, locale, t]);
 
   return {
     createOrder: formatOrderInput,

@@ -1,5 +1,6 @@
 import CashOnDelivery from '@components/checkout/payment/cash-on-delivery';
 import PaymentOnline from '@components/checkout/payment/payment-online';
+import TaramoneyPayment from '@components/checkout/payment/taramoney-payment';
 import { IyzicoIcon } from '@components/icons/payment-gateways/iyzico';
 import { MollieIcon } from '@components/icons/payment-gateways/mollie';
 import { PayPalIcon } from '@components/icons/payment-gateways/paypal';
@@ -131,7 +132,7 @@ const PaymentGrid: React.FC<{ className?: string; theme?: 'bw' }> = ({
       name: 'Taramoney',
       value: PaymentGateway.TARAMONEY,
       icon: <TaramoneyIcon />,
-      component: PaymentOnline,
+      component: TaramoneyPayment,
     },
     CASH_ON_DELIVERY: {
       name: t('text-cash-on-delivery'),

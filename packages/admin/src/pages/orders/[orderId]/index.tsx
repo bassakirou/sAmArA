@@ -7,7 +7,6 @@ import { useForm } from 'react-hook-form';
 import Button from '@/components/ui/button';
 import ErrorMessage from '@/components/ui/error-message';
 import { siteSettings } from '@/settings/site.settings';
-import usePrice from '@/utils/use-price';
 import { formatAddress } from '@/utils/format-address';
 import Loader from '@/components/ui/loader/loader';
 import ValidationError from '@/components/ui/form-validation-error';
@@ -29,6 +28,7 @@ import { clearCheckoutAtom } from '@/contexts/checkout';
 import { ORDER_STATUS } from '@/utils/order-status';
 import OrderViewHeader from '@/components/order/order-view-header';
 import OrderStatusProgressBox from '@/components/order/order-status-progress-box';
+import OrderTotalCell from '@/components/order/order-total-cell';
 
 type FormValues = {
   order_status: any;
@@ -75,32 +75,6 @@ export default function OrderDetailsPage() {
       order_status: order_status?.status as string,
     });
   };
-  const { price: subtotal } = usePrice(
-    order && {
-      amount: order?.amount!,
-    }
-  );
-
-  const { price: total } = usePrice(
-    order && {
-      amount: order?.paid_total!,
-    }
-  );
-  const { price: discount } = usePrice(
-    order && {
-      amount: order?.discount! ?? 0,
-    }
-  );
-  const { price: delivery_fee } = usePrice(
-    order && {
-      amount: order?.delivery_fee!,
-    }
-  );
-  const { price: sales_tax } = usePrice(
-    order && {
-      amount: order?.sales_tax!,
-    }
-  );
 
   if (loading) return <Loader text={t('common:text-loading')} />;
   if (error) return <ErrorMessage message={error.message} />;
@@ -154,10 +128,12 @@ export default function OrderDetailsPage() {
       key: 'price',
       align: alignRight,
       render: function Render(_: any, item: any) {
-        const { price } = usePrice({
-          amount: parseFloat(item.pivot.subtotal),
-        });
-        return <span>{price}</span>;
+        return (
+          <OrderTotalCell
+            order={order}
+            amount={parseFloat(item.pivot.subtotal)}
+          />
+        );
       },
     },
   ];
@@ -237,23 +213,29 @@ export default function OrderDetailsPage() {
           <div className="flex w-full flex-col space-y-2 border-t-4 border-double border-border-200 px-4 py-4 ms-auto sm:w-1/2 md:w-1/3">
             <div className="flex items-center justify-between text-sm text-body">
               <span>{t('common:order-sub-total')}</span>
-              <span>{subtotal}</span>
+              <OrderTotalCell order={order} amount={Number(order?.amount ?? 0)} />
             </div>
             <div className="flex items-center justify-between text-sm text-body">
               <span>{t('common:order-tax')}</span>
-              <span>{sales_tax}</span>
+              <OrderTotalCell
+                order={order}
+                amount={Number(order?.sales_tax ?? 0)}
+              />
             </div>
             <div className="flex items-center justify-between text-sm text-body">
               <span>{t('common:order-delivery-fee')}</span>
-              <span>{delivery_fee}</span>
+              <OrderTotalCell
+                order={order}
+                amount={Number(order?.delivery_fee ?? 0)}
+              />
             </div>
             <div className="flex items-center justify-between text-sm text-body">
               <span>{t('common:order-discount')}</span>
-              <span>{discount}</span>
+              <OrderTotalCell order={order} amount={Number(order?.discount ?? 0)} />
             </div>
             <div className="flex items-center justify-between text-base font-semibold text-heading">
               <span>{t('common:order-total')}</span>
-              <span>{total}</span>
+              <OrderTotalCell order={order} amount={Number(order?.paid_total ?? 0)} />
             </div>
           </div>
         </div>

@@ -15,11 +15,10 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import Alert from "@components/ui/alert";
 import React, { useState } from "react";
 import { useRegister } from "@framework/auth";
-import { AUTH_TOKEN } from "@lib/constants";
 import { useAtom } from "jotai";
 import { authorizationAtom } from "@store/authorization-atom";
-import Cookies from "js-cookie";
 import {useRouter} from "next/router";
+import { useEffect } from "react";
 
 interface SignUpInputType {
   email: string;
@@ -51,7 +50,7 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
   const { t } = useTranslation();
   const [errorMessage, setErrorMessage] = useState("");
   const [_, authorize] = useAtom(authorizationAtom);
-  const { mutate: signUp, isLoading }: any = useRegister();
+  const { mutate: signUp, isLoading, formError, setFormError }: any = useRegister();
   const { setModalView, openModal, closeModal } = useUI();
 
   const {
@@ -64,6 +63,19 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
     defaultValues,
   });
 
+  useEffect(() => {
+    if (!formError) return;
+    Object.keys(formError).forEach((field: any) => {
+      const message = Array.isArray(formError[field])
+        ? formError[field][0]
+        : formError[field];
+      setError(field, {
+        type: "manual",
+        message,
+      });
+    });
+  }, [formError, setError]);
+
   function handleSignIn() {
     if (layout === "modal"){
       setModalView("LOGIN_VIEW");
@@ -74,37 +86,9 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
   }
 
   function onSubmit({ name, email, password }: SignUpInputType) {
-    signUp(
-      {
-        name,
-        email,
-        password,
-      },
-      {
-        onSuccess: (data: any) => {
-          if (data?.token && data?.permissions?.length) {
-            if (layout === "page"){
-              // Redirect to the my-account page
-              return router.push(ROUTES.ACCOUNT);
-            } else {
-              closeModal();
-              return;
-            }
-          }
-        },
-        onError: (error: any) => {
-          const {
-            response: { data },
-          }: any = error ?? {};
-          Object.keys(data).forEach((field: any) => {
-            setError(field, {
-              type: "manual",
-              message: data[field][0],
-            });
-          });
-        },
-      }
-    );
+    setErrorMessage("");
+    setFormError?.(null);
+    signUp({ name, email, password });
   }
 
   return (

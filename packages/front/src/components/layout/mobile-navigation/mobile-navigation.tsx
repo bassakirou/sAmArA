@@ -18,7 +18,8 @@ const AuthMenu = dynamic(() => import("@components/layout/header/auth-menu"), {
 	ssr: false,
 });
 const MobileMenu = dynamic(
-	() => import("@components/layout/header/mobile-menu")
+	() => import("@components/layout/header/mobile-menu"),
+	{ ssr: false }
 );
 
 const BottomNavigation: React.FC = () => {

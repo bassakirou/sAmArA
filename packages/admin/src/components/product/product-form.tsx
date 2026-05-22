@@ -9,6 +9,7 @@ import Radio from '@/components/ui/radio/radio';
 import { useRouter } from 'next/router';
 import { yupResolver } from '@hookform/resolvers/yup';
 import FileInput from '@/components/ui/file-input';
+import Checkbox from '@/components/ui/checkbox/checkbox';
 import { productValidationSchema } from './product-validation-schema';
 import ProductVariableForm from './product-variable-form';
 import ProductSimpleForm from './product-simple-form';
@@ -87,7 +88,7 @@ export const chatbotAutoSuggestion = ({ name }: { name: string }) => {
       title: `Write a product description about ${name} that includes a call-to-action and encourages the reader to make a purchase.`,
     },
   ];
-}
+};
 
 type ProductFormProps = {
   initialValues?: Product | null;
@@ -360,9 +361,10 @@ export default function CreateOrUpdateProductForm({
                   <div
                     className="py-5 border-b border-dashed border-border-200 first:pt-0 last:border-b-0 md:py-8 md:first:pt-0"
                     key={index}
-                  > <div className="flex gap-1 mb-3 text-sm font-semibold leading-none text-body-dark">
-                      {`${t('form:input-label-video-embed')} ${index + 1
-                        }`}
+                  >
+                    {' '}
+                    <div className="flex gap-1 mb-3 text-sm font-semibold leading-none text-body-dark">
+                      {`${t('form:input-label-video-embed')} ${index + 1}`}
                       <Tooltip content={t('common:text-video-tooltip')} />
                     </div>
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
@@ -516,6 +518,14 @@ export default function CreateOrUpdateProductForm({
                     {t(errors?.status?.message!)}
                   </p>
                 )}
+              </div>
+
+              <div className="mt-5">
+                <Checkbox
+                  {...register('is_negotiable')}
+                  label={t('form:input-label-is-negotiable')}
+                  className="mb-5"
+                />
               </div>
             </Card>
           </div>

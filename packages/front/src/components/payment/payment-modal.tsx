@@ -2,6 +2,7 @@ import { useUI } from "@contexts/ui.context";
 import StripePaymentModal from '@components/payment/stripe/stripe-payment-modal';
 import Modal from '@components/common/modal/modal';
 import RazorpayPaymentModal from "@components/payment/razorpay/razorpay-payment-modal";
+import TaramoneyPaymentModal from '@components/payment/taramoney/taramoney-payment-modal';
 
 
 const PAYMENTS_FORM_COMPONENTS: any = {
@@ -12,6 +13,10 @@ const PAYMENTS_FORM_COMPONENTS: any = {
   RAZORPAY: {
     component: RazorpayPaymentModal,
     type: 'default',
+  },
+  TARAMONEY: {
+    component: TaramoneyPaymentModal,
+    type: 'locked',
   },
 };
 
@@ -25,21 +30,42 @@ const PaymentModal = () => {
     PAYMENTS_FORM_COMPONENTS[paymentGateway?.toUpperCase()];
   const PaymentComponent = PaymentMethod?.component;
   const paymentModalType = PaymentMethod?.type;
-  return paymentModalType === 'custom' ? (
-    <Modal open={displayModal} onClose={closeModal}>
-      <PaymentComponent
-        paymentIntentInfo={paymentIntentInfo}
-        trackingNumber={trackingNumber}
-        paymentGateway={paymentGateway}
-      />
-    </Modal>
-  ) : (
+  if (paymentModalType === 'custom') {
+    return (
+      <Modal open={displayModal} onClose={closeModal}>
+        <PaymentComponent
+          paymentIntentInfo={paymentIntentInfo}
+          trackingNumber={trackingNumber}
+          paymentGateway={paymentGateway}
+        />
+      </Modal>
+    );
+  }
+
+  if (paymentModalType === 'locked') {
+    return (
+      <Modal
+        open={displayModal}
+        onClose={closeModal}
+        canClose={false}
+        showCloseButton={false}
+      >
+        <PaymentComponent
+          paymentIntentInfo={paymentIntentInfo}
+          trackingNumber={trackingNumber}
+          paymentGateway={paymentGateway}
+        />
+      </Modal>
+    );
+  }
+
+  return (
     <PaymentComponent
       paymentIntentInfo={paymentIntentInfo}
       trackingNumber={trackingNumber}
       paymentGateway={paymentGateway}
     />
-  );;
+  );
 };
 
 export default PaymentModal;

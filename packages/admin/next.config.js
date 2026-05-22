@@ -16,6 +16,7 @@ module.exports = withPWA({
       '127.0.0.1', // Local
       'localhost', // Local
       'lh3.googleusercontent.com',
+      'samara-api.appaa-cameroun.net',
     ],
   },
   ...(process.env.APPLICATION_MODE === 'production' && {

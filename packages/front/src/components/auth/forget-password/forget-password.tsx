@@ -20,70 +20,65 @@ const ForgotPassword: React.FC<Props> = ({ layout = "modal" }) => {
   const router = useRouter();
   const { t } = useTranslation();
   const { setModalView, openModal, closeModal } = useUI();
-  const { mutate: forgetPassword, isLoading, formError } = useForgotPassword();
-  const { mutate: verifyToken, isLoading: verifying } = useVerifyForgotPasswordToken();
-  const { mutate: resetPassword, isLoading: resetting } = useResetPassword();
+  const { mutateAsync: forgetPassword, isLoading, formError } = useForgotPassword();
+  const { mutateAsync: verifyToken, isLoading: verifying } = useVerifyForgotPasswordToken();
+  const { mutateAsync: resetPassword, isLoading: resetting } = useResetPassword();
 
   const [errorMsg, setErrorMsg] = useState<string | null | undefined>("");
   const [verifiedEmail, setVerifiedEmail] = useState("");
   const [verifiedToken, setVerifiedToken] = useState("");
 
-  function handleEmailSubmit({ email }: { email: string }) {
-    forgetPassword(
-      {
-        email,
-      },
-      {
-        onSuccess: (data: any) => {
-          if (data.success) {
-            setVerifiedEmail(email);
-          } else {
-            setErrorMsg(formError?.email);
-          }
-        },
+  async function handleEmailSubmit({ email }: { email: string }) {
+    setErrorMsg("");
+    try {
+      const data: any = await forgetPassword({ email });
+      if (data?.success) {
+        setVerifiedEmail(email);
+        return;
       }
-    );
+      setErrorMsg(data?.message ?? formError?.email ?? "SOMETHING_WENT_WRONG");
+    } catch (error) {
+      setErrorMsg(formError?.email ?? "SOMETHING_WENT_WRONG");
+    }
   }
 
-  function handleTokenSubmit({ token }: { token: string }) {
-    verifyToken(
-      {
+  async function handleTokenSubmit({ token }: { token: string }) {
+    setErrorMsg("");
+    try {
+      const data: any = await verifyToken({
         email: verifiedEmail,
         token,
-      },
-      {
-        onSuccess: (data: any) => {
-          if (data.success) {
-            setVerifiedToken(token);
-          } else {
-            setErrorMsg(data?.message);
-          }
-        },
+      });
+      if (data?.success) {
+        setVerifiedToken(token);
+        return;
       }
-    );
+      setErrorMsg(data?.message ?? "SOMETHING_WENT_WRONG");
+    } catch (error) {
+      setErrorMsg("SOMETHING_WENT_WRONG");
+    }
   }
 
-  function handleResetPassword({ password }: { password: string }) {
-    resetPassword(
-      {
+  async function handleResetPassword({ password }: { password: string }) {
+    setErrorMsg("");
+    try {
+      const data: any = await resetPassword({
         email: verifiedEmail,
         token: verifiedToken,
         password,
-      },
-      {
-        onSuccess: (data: any) => {
-          if (data.success) {
-            if (layout === "page") {
-              router.push(ROUTES.LOGIN)
-            } else {
-              setModalView("LOGIN_VIEW");
-            }
-          } else {
-            setErrorMsg(data?.message);
-          }
-        },
+      });
+      if (data?.success) {
+        if (layout === "page") {
+          router.push(ROUTES.LOGIN);
+          return;
+        }
+        setModalView("LOGIN_VIEW");
+        return;
       }
-    );
+      setErrorMsg(data?.message ?? "SOMETHING_WENT_WRONG");
+    } catch (error) {
+      setErrorMsg("SOMETHING_WENT_WRONG");
+    }
   }
 
   function handleSignIn() {

@@ -27,6 +27,8 @@ type ModalProps = {
   useBlurBackdrop?: boolean;
   containerClassName?: string;
   variant?: 'default' | 'center' | 'bottom';
+  canClose?: boolean;
+  showCloseButton?: boolean;
 };
 type DivElementRef = React.MutableRefObject<HTMLDivElement>;
 
@@ -59,6 +61,8 @@ const Modal: FC<ModalProps> = ({
   useBlurBackdrop,
   containerClassName,
   variant = 'center',
+  canClose = true,
+  showCloseButton = true,
 }) => {
   // const { closeModal } = useUI();
   const cancelButtonRef = useRef(null);
@@ -66,6 +70,8 @@ const Modal: FC<ModalProps> = ({
 
   const { locale } = useRouter();
   const dir = getDirection(locale);
+
+  const handleDialogClose = canClose ? onClose : () => {};
 
   // const { locale } = useRouter();
   // const dir = getDirection(locale);
@@ -98,7 +104,7 @@ const Modal: FC<ModalProps> = ({
         initialFocus={cancelButtonRef}
         static
         open={open}
-        onClose={onClose}
+        onClose={handleDialogClose}
         dir={dir}
       >
         <div className="relative h-full mx-auto w-full">
@@ -142,18 +148,22 @@ const Modal: FC<ModalProps> = ({
                 containerClassName
               )}
             >
-              <button
-                onClick={onClose}
-                aria-label="Close panel"
-                ref={cancelButtonRef}
-                className={cn(
-                  'fixed z-10 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-white shadow text-gray-600 transition duration-200 focus:outline-none focus:text-gray-800 focus:shadow-md hover:text-gray-800 hover:shadow-md',
-                  closeBtnClasses[variant]
-                )}
-              >
-                <span className="sr-only">{t('text-close')}</span>
-                <IoClose className="text-xl" />
-              </button>
+              {showCloseButton ? (
+                <button
+                  onClick={onClose}
+                  aria-label="Close panel"
+                  ref={cancelButtonRef}
+                  className={cn(
+                    'fixed z-10 inline-flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-full bg-white shadow text-gray-600 transition duration-200 focus:outline-none focus:text-gray-800 focus:shadow-md hover:text-gray-800 hover:shadow-md',
+                    closeBtnClasses[variant]
+                  )}
+                >
+                  <span className="sr-only">{t('text-close')}</span>
+                  <IoClose className="text-xl" />
+                </button>
+              ) : (
+                <button ref={cancelButtonRef} type="button" className="sr-only" />
+              )}
               <div
                 className={`h-full rounded-lg ${
                   variant !== 'default' ? 'overflow-y-auto' : ' '

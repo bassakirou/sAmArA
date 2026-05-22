@@ -1,6 +1,9 @@
 {
   "error-heading": "Looks like you are lost",
   "error-sub-heading": "We can't find the page you're looking for",
+  "error-contact-required": "Phone number is required.",
+  "error-email-required": "Email is required.",
+  "error-email-invalid": "Invalid email address.",
   "support-heading": "Talk To A Real Person",
   "support-sub-heading": "Are you on the fence? Have a question? Need a recommendation? Member Services is always here to help. Send us a message.",
   "app-heading": "The sAmArA App",

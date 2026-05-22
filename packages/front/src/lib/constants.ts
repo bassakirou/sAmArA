@@ -7,6 +7,7 @@ export const LIMIT = 10;
 export const SUPER_ADMIN = 'super_admin';
 export const CUSTOMER = 'customer';
 export const CHECKOUT = 'sAmArA-checkout';
+export const DISPLAY_CURRENCY = 'sAmArA-display-currency';
 export const RTL_LANGUAGES: ReadonlyArray<string> = ['ar', 'he'];
 export const EMAIL_VERIFIED = 'EMAIL_VERIFIED';
 

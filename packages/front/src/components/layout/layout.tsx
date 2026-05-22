@@ -2,6 +2,7 @@ import Header from '@components/layout/header/header';
 import Footer from '@components/layout/footer/footer';
 import MobileNavigation from '@components/layout/mobile-navigation/mobile-navigation';
 import Search from '@components/common/search';
+import ChatWidget from '@components/chat/chat-widget';
 
 const SiteLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   return (
@@ -19,6 +20,7 @@ const SiteLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       <Footer />
       <MobileNavigation />
       <Search />
+      <ChatWidget />
     </div>
   );
 };

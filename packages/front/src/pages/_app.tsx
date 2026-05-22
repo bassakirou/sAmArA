@@ -11,6 +11,10 @@ import { ToastContainer } from 'react-toastify';
 // import { ReactQueryDevtools } from 'react-query/devtools';
 import { appWithTranslation } from 'next-i18next';
 import DefaultSeo from '@components/common/default-seo';
+import Cookies from 'js-cookie';
+import { AUTH_TOKEN } from '@lib/constants';
+import { useSetAtom } from 'jotai';
+import { authorizationAtom } from '@store/authorization-atom';
 
 // Load Open Sans and satisfy typeface font
 import '@fontsource/open-sans';
@@ -58,6 +62,15 @@ export const AppSettings: React.FC<{ children?: React.ReactNode }> = (
   return <SettingsProvider initialValue={data?.options} {...props} />;
 };
 
+const AuthBootstrapper = () => {
+  const setAuthorized = useSetAtom(authorizationAtom);
+  useEffect(() => {
+    const token = Cookies.get(AUTH_TOKEN);
+    setAuthorized(Boolean(token));
+  }, [setAuthorized]);
+  return null;
+};
+
 function CustomApp({
   Component,
   pageProps: {
@@ -86,6 +99,7 @@ function CustomApp({
           <Hydrate state={pageProps.dehydratedState}>
             <AppSettings>
               <ManagedUIContext>
+                <AuthBootstrapper />
                 <DefaultSeo />
                 {Boolean(authProps) ? (
                   <PrivateRoute>

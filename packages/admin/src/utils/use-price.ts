@@ -1,24 +1,34 @@
 import { useMemo } from 'react';
 import { siteSettings } from '@/settings/site.settings';
 import { useSettings } from '@/contexts/settings.context';
+import { useCurrency } from './use-currency';
+
+function normalizeCurrencyDisplay(formatted: string, currencyCode: string) {
+  if (currencyCode === 'XAF') {
+    return formatted.replace(/FCFA/g, 'F CFA').replace(/XAF/g, 'F CFA');
+  }
+  return formatted;
+}
+
 export function formatPrice({
   amount,
   currencyCode,
   locale,
-  fractions = 2
+  fractions = 2,
 }: {
   amount: number;
   currencyCode: string;
   locale: string;
-  fractions: number
+  fractions: number;
 }) {
   const formatCurrency = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode,
-    maximumFractionDigits: (fractions > 20 || fractions < 0 || !fractions ) ? 2 : fractions,
+    maximumFractionDigits:
+      fractions > 20 || fractions < 0 || !fractions ? 2 : fractions,
   });
 
-  return formatCurrency.format(amount);
+  return normalizeCurrencyDisplay(formatCurrency.format(amount), currencyCode);
 }
 
 export function formatVariantPrice({
@@ -26,13 +36,13 @@ export function formatVariantPrice({
   baseAmount,
   currencyCode,
   locale,
-  fractions = 2
+  fractions = 2,
 }: {
   baseAmount: number;
   amount: number;
   currencyCode: string;
   locale: string;
-  fractions: number
+  fractions: number;
 }) {
   const hasDiscount = baseAmount < amount;
   const formatDiscount = new Intl.NumberFormat(locale, { style: 'percent' });
@@ -47,23 +57,63 @@ export function formatVariantPrice({
 
   return { price, basePrice, discount };
 }
+
 type PriceProps = {
   amount: number;
   baseAmount?: number;
   currencyCode?: string;
 };
-export default function usePrice(data?: PriceProps | null) {
-  const { currency, currencyOptions } = useSettings();
-  const { formation, fractions } = currencyOptions;
-  const { amount, baseAmount, currencyCode = currency } = data ?? {};
-  const locale = formation ?? siteSettings.defaultLanguage;
-  const value = useMemo(() => {
-    if (typeof amount !== 'number' || !currencyCode) return '';
 
-    return baseAmount
-      ? formatVariantPrice({ amount, baseAmount, currencyCode, locale, fractions })
-      : formatPrice({ amount, currencyCode, locale, fractions });
-  }, [amount, baseAmount, currencyCode]);
+export default function usePrice(data?: PriceProps | null) {
+  const { currencyOptions } = useSettings();
+  const { formation, fractions } = currencyOptions;
+  const { amount, baseAmount, currencyCode } = data ?? {};
+
+  const { convert, targetCurrency, baseCurrency, rates } = useCurrency();
+  const sourceCurrency = currencyCode ?? baseCurrency;
+  const effectiveTargetCurrency = rates ? targetCurrency : baseCurrency;
+
+  const locale = formation ?? siteSettings.defaultLanguage;
+
+  const value = useMemo(() => {
+    if (typeof amount !== 'number' || !sourceCurrency) return '';
+
+    const convertedAmount = convert(
+      amount,
+      sourceCurrency,
+      effectiveTargetCurrency
+    );
+    const convertedBaseAmount =
+      typeof baseAmount === 'number'
+        ? convert(baseAmount, sourceCurrency, effectiveTargetCurrency)
+        : undefined;
+
+    return convertedBaseAmount
+      ? formatVariantPrice({
+          amount: convertedAmount,
+          baseAmount: convertedBaseAmount,
+          currencyCode: effectiveTargetCurrency,
+          locale,
+          fractions,
+        })
+      : formatPrice({
+          amount: convertedAmount,
+          currencyCode: effectiveTargetCurrency,
+          locale,
+          fractions,
+        });
+  }, [
+    amount,
+    baseAmount,
+    sourceCurrency,
+    convert,
+    targetCurrency,
+    effectiveTargetCurrency,
+    baseCurrency,
+    rates,
+    locale,
+    fractions,
+  ]);
 
   return typeof value === 'string'
     ? { price: value, basePrice: null, discount: null }

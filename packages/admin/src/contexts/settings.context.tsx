@@ -6,10 +6,10 @@ export interface State {
 const initialState = {
   siteTitle: 'sAmArA',
   siteSubtitle: '',
-  currency: 'USD',
+  currency: 'XAF',
   currencyOptions: {
-    formation: "en-US",
-    fractions: 2,
+    formation: 'fr-CM',
+    fractions: 0,
   },
   logo: {
     id: 1,

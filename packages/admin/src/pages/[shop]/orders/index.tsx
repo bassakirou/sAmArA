@@ -55,6 +55,7 @@ export default function Orders() {
     },
     {
       enabled: Boolean(shopId),
+      refetchInterval: 5000,
     }
   );
 

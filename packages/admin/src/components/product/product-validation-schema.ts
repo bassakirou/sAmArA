@@ -49,6 +49,7 @@ export const productValidationSchema = yup.object().shape({
   unit: yup.string().required('form:error-unit-required'),
   type: yup.object().nullable().required('form:error-type-required'),
   status: yup.string().nullable().required('form:error-status-required'),
+  is_negotiable: yup.boolean(),
   variation_options: yup.array().of(
     yup.object().shape({
       price: yup

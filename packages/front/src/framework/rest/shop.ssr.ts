@@ -8,15 +8,15 @@ import { SettingsQueryOptions } from '@type/index';
 
 // This function gets called at build time
 export async function getStaticPaths({ locales }: GetStaticPathsContext) {
-  const { data } = await client.shop.find({ is_active: '1' });
-
-  const paths = data?.flatMap((shop: any) =>
-    locales?.map((locale) => ({ params: { slug: shop.slug }, locale }))
-  );
-
-  // We'll pre-render only these paths at build time.
-  // { fallback: false } means other routes should 404.
-  return { paths, fallback: 'blocking' };
+  try {
+    const { data } = await client.shop.find({ is_active: '1' });
+    const paths = data?.flatMap((shop: any) =>
+      locales?.map((locale) => ({ params: { slug: shop.slug }, locale }))
+    );
+    return { paths, fallback: 'blocking' };
+  } catch (error) {
+    return { paths: [], fallback: 'blocking' };
+  }
 }
 
 // This also gets called at build time
@@ -29,13 +29,12 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
     },
   });
 
-  await queryClient.prefetchQuery(
-    [API_ENDPOINTS.SETTINGS, { language: locale }],
-    ({ queryKey }) =>
-      client.settings.findAll(queryKey[1] as SettingsQueryOptions)
-  );
-
   try {
+    await queryClient.prefetchQuery(
+      [API_ENDPOINTS.SETTINGS, { language: locale }],
+      ({ queryKey }) =>
+        client.settings.findAll(queryKey[1] as SettingsQueryOptions)
+    );
     const shop = await client.shop.findOne({
       slug: params!.slug as string,
       // language: locale,

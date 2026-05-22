@@ -1,6 +1,12 @@
-import { useMemo } from "react";
-import { useRouter } from "next/router";
-import { useSettings } from "@contexts/settings.context";
+import { useMemo } from 'react';
+import { useRouter } from 'next/router';
+import { useSettings } from '@contexts/settings.context';
+import { useCurrency } from '@utils/use-currency';
+
+function normalizeCurrencyDisplay(value: string, currencyCode: string) {
+  if (currencyCode !== 'XAF') return value;
+  return value.replace(/\b(XAF|FCFA)\b/g, 'F CFA');
+}
 
 export function formatPrice({
   amount,
@@ -19,7 +25,7 @@ export function formatPrice({
     maximumFractionDigits: fractions,
   });
 
-  return formatCurrency.format(amount);
+  return normalizeCurrencyDisplay(formatCurrency.format(amount), currencyCode);
 }
 
 export function formatVariantPrice({
@@ -36,7 +42,7 @@ export function formatVariantPrice({
   fractions: number;
 }) {
   const hasDiscount = baseAmount > amount;
-  const formatDiscount = new Intl.NumberFormat(locale, { style: "percent" });
+  const formatDiscount = new Intl.NumberFormat(locale, { style: 'percent' });
   const discount = hasDiscount
     ? formatDiscount.format((baseAmount - amount) / baseAmount)
     : null;
@@ -56,25 +62,53 @@ export default function usePrice(
     currencyCode?: string;
   } | null
 ) {
-  const { currency, currencyOptions } = useSettings();
-  const { amount, baseAmount, currencyCode = currency } = data ?? {};
+  const { currencyOptions } = useSettings();
+  const { amount, baseAmount, currencyCode } = data ?? {};
   const { formation = 'en-US', fractions = 2 } = currencyOptions!;
   const { locale } = useRouter();
-  const value = useMemo(() => {
-    if (typeof amount !== "number" || !currencyCode) return "";
-    const currentLocale = formation ? formation : 'en';
-    return baseAmount
-      ? formatVariantPrice({
-        amount,
-        baseAmount,
-        currencyCode,
-        locale: currentLocale,
-        fractions
-      })
-      : formatPrice({ amount, currencyCode, locale: currentLocale, fractions });
-  }, [amount, baseAmount, currencyCode, locale]);
 
-  return typeof value === "string"
+  const { convert, targetCurrency, baseCurrency } = useCurrency();
+
+  const value = useMemo(() => {
+    if (typeof amount !== 'number') return '';
+
+    const sourceCurrency = currencyCode ?? baseCurrency;
+    const convertedAmount = convert(amount, sourceCurrency, targetCurrency);
+    const convertedBaseAmount =
+      typeof baseAmount === 'number'
+        ? convert(baseAmount, sourceCurrency, targetCurrency)
+        : undefined;
+
+    const currentLocale = formation ? formation : 'en';
+    const effectiveFractions = targetCurrency === 'XAF' ? 0 : fractions;
+
+    return convertedBaseAmount
+      ? formatVariantPrice({
+          amount: convertedAmount,
+          baseAmount: convertedBaseAmount,
+          currencyCode: targetCurrency,
+          locale: currentLocale,
+          fractions: effectiveFractions,
+        })
+      : formatPrice({
+          amount: convertedAmount,
+          currencyCode: targetCurrency,
+          locale: currentLocale,
+          fractions: effectiveFractions,
+        });
+  }, [
+    amount,
+    baseAmount,
+    currencyCode,
+    locale,
+    convert,
+    targetCurrency,
+    baseCurrency,
+    formation,
+    fractions,
+  ]);
+
+  return typeof value === 'string'
     ? { price: value, basePrice: null, discount: null }
     : value;
 }

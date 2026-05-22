@@ -13,7 +13,9 @@ module.exports = withPWA({
   images: {
     domains: [
       'api.samara-shopping.com',
+      'samara-api.appaa-cameroun.net',
       'localhost',
+      '127.0.0.1',
       'googleusercontent.com',
       'maps.googleapis.com',
       'sAmArAapi.redq.io',
@@ -28,6 +30,24 @@ module.exports = withPWA({
       'cdninstagram.com',
       'scontent.cdninstagram.com',
       'chawkbazarlaravel.s3.ap-southeast-1.amazonaws.com',
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'samara-api.appaa-cameroun.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'samara-api.appaa-cameroun.net',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8000',
+        pathname: '/**',
+      },
     ],
   },
 

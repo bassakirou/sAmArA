@@ -495,6 +495,12 @@ export interface Order {
   sales_tax: number;
   total: number;
   paid_total: number;
+  display_currency?: string;
+  display_currency_rate?: number;
+  display_currency_rate_at?: string;
+  paid_currency?: string;
+  paid_currency_rate?: number;
+  paid_currency_rate_at?: string;
   payment_id?: string;
   payment_gateway?: string;
   coupon?: Coupon;
@@ -559,6 +565,7 @@ export interface Product {
   is_digital?: boolean;
   is_external?: boolean;
   is_taxable?: boolean;
+  is_negotiable?: boolean;
   sale_price?: number;
   video?: {
     url: string;
@@ -593,6 +600,7 @@ export interface CreateProduct {
   variations?: AttributeProductPivot[];
   in_stock?: boolean;
   is_taxable?: boolean;
+  is_negotiable?: boolean;
   author_id?: string;
   digital_file?: DigitalFileInput;
   external_product_button_text?: string;
@@ -952,6 +960,9 @@ export interface Conversations {
 
 export interface Message extends LatestMessage {
   conversation: Conversations;
+  product?: Product;
+  product_id?: string;
+  negotiated_price?: number;
 }
 
 export interface ShopSocials {

@@ -14,6 +14,8 @@ import { useWindowSize } from '@utils/use-window-size';
 import Carousel from '@components/ui/carousel/carousel';
 import { SwiperSlide } from 'swiper/react';
 import { Attachment, Product } from '@type/index';
+import { useSetAtom } from 'jotai';
+import { chatAtom } from '@store/chat-atom';
 import isEqual from 'lodash/isEqual';
 import VariationPrice from '@components/product/product-variant-price';
 import { useTranslation } from 'next-i18next';
@@ -38,6 +40,7 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
   const { t } = useTranslation();
   const { width } = useWindowSize();
   const { addItemToCart } = useCart();
+  const setChatState = useSetAtom(chatAtom);
   const [attributes, setAttributes] = useState<{ [key: string]: string }>({});
   const [quantity, setQuantity] = useState(1);
   const [addToCartLoader, setAddToCartLoader] = useState<boolean>(false);
@@ -301,6 +304,22 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
                 ? t('text-add-to-cart')
                 : t('text-out-stock')}
             </span>
+          </Button>
+        </div>
+
+        <div className="flex items-center pb-8 space-x-4 border-b border-gray-300 rtl:space-x-reverse ltr:md:pr-32 ltr:lg:pr-12 ltr:2xl:pr-32 ltr:3xl:pr-48 rtl:md:pl-32 rtl:lg:pl-12 rtl:2xl:pl-32 rtl:3xl:pl-48">
+          <Button
+            onClick={() => {
+              setChatState({
+                isOpen: true,
+                isExpanded: false,
+                activeProduct: product,
+              });
+            }}
+            variant="outline"
+            className="w-full"
+          >
+            {t('text-chat-with-seller')}
           </Button>
         </div>
         <div className="py-6">

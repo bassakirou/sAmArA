@@ -10,10 +10,9 @@ export const settingsValidationSchema = yup.object().shape({
   currencyOptions: yup.object().shape({
     fractions: yup
       .number()
-      .min(1, 'Fractional must be grater than 1')
+      .min(0, 'Fractional must be non-negative') // Allow 0
       .max(5, 'Fractional number can not be grater than 5')
       .typeError('form:error-fractions-must-be-number')
-      .positive('form:error-fractions-must-positive')
       .required('form:error-currency-number of decimals-required'),
   }),
   minimumOrderAmount: yup
@@ -26,10 +25,10 @@ export const settingsValidationSchema = yup.object().shape({
     .typeError('form:error-amount-number'),
   deliveryTime: yup
     .array()
-    .min(1, 'add-at-least-one-delivery-time')
     .of(
       yup.object().shape({
         title: yup.string().required('form:error-title-required'),
       })
-    ),
+    )
+    .default([]),
 });

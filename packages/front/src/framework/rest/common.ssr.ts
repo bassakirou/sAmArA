@@ -15,7 +15,13 @@ export const getStaticProps: GetStaticProps = async ({ locale }) => {
     },
   });
 
-  await queryClient.prefetchQuery([API_ENDPOINTS.SETTINGS, { language: locale }], ({ queryKey }) => client.settings.findAll(queryKey[1] as SettingsQueryOptions))
+  try {
+    await queryClient.prefetchQuery(
+      [API_ENDPOINTS.SETTINGS, { language: locale }],
+      ({ queryKey }) =>
+        client.settings.findAll(queryKey[1] as SettingsQueryOptions)
+    );
+  } catch (error) {}
 
   return {
     props: {

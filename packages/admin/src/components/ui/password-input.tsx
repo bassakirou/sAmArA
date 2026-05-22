@@ -10,7 +10,14 @@ export interface PasswordInputProps extends InputProps {
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   (props, ref) => {
-    const { label, error, forgotPassHelpText, forgotPageLink, className, ...rest } = props;
+    const {
+      label,
+      error,
+      forgotPassHelpText,
+      forgotPageLink,
+      className,
+      ...rest
+    } = props;
     const [show, setShow] = useState(false);
 
     return (
@@ -32,25 +39,28 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
             </a>
           )}
         </div>
-        <Input
-          {...rest}
-          error={error}
-          showLabel={false}
-          type={show ? 'text' : 'password'}
-          ref={ref}
-        >
+        <div className="relative">
+          <Input
+            {...rest}
+            error={error}
+            showLabel={false}
+            type={show ? 'text' : 'password'}
+            ref={ref}
+            inputClassName="pe-12"
+          />
+
           <button
             type="button"
-            className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            className="absolute top-1/2 right-4 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
             onClick={() => setShow((prev) => !prev)}
           >
             {show ? (
-              <EyeOffIcon className="h-5 w-5" />
+              <EyeOffIcon className="w-5 h-5" />
             ) : (
-              <EyeIcon className="h-5 w-5" />
+              <EyeIcon className="w-5 h-5" />
             )}
           </button>
-        </Input>
+        </div>
       </div>
     );
   }

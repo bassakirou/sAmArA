@@ -99,8 +99,8 @@ export default function Uploader({
       'jpeg',
       'gif',
       'png',
-      'eps',
       'raw',
+      'svg',
     ];
     // let filename, fileType, isImage;
     if (file && file.id) {

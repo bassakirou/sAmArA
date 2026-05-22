@@ -1,10 +1,10 @@
 import { initialOtpState, optAtom } from '@components/auth/otp/atom';
-import { useUI } from "@contexts/ui.context";
-import { API_ENDPOINTS } from "@framework/utils/endpoints";
+import { useUI } from '@contexts/ui.context';
+import { API_ENDPOINTS } from '@framework/utils/endpoints';
 import client from '@framework/utils/index';
 import { useToken } from '@lib/use-token';
-import { authorizationAtom } from "@store/authorization-atom";
-import { clearCheckoutAtom } from "@store/checkout";
+import { authorizationAtom } from '@store/authorization-atom';
+import { clearCheckoutAtom } from '@store/checkout';
 import {
   ChangePasswordInputType,
   RegisterUserInputType,
@@ -12,19 +12,17 @@ import {
   User,
 } from '@type/index';
 import axios from 'axios';
-import { useAtom } from "jotai";
-import { useTranslation } from "next-i18next";
+import { useAtom, useSetAtom } from 'jotai';
+import { useTranslation } from 'next-i18next';
 import Router, { useRouter } from 'next/router';
-import { useState } from "react";
+import { useState } from 'react';
 import { UseMutationOptions, useMutation, useQuery } from 'react-query';
 import { toast } from 'react-toastify';
 
 import { AUTH_TOKEN } from '@lib/constants';
 import { ROUTES } from '@lib/routes';
 import Cookies from 'js-cookie';
-import {
-  useQueryClient,
-} from 'react-query';
+import { useQueryClient } from 'react-query';
 
 export function useChangePassword() {
   const { t } = useTranslation('');
@@ -39,7 +37,7 @@ export function useChangePassword() {
         });
         return;
       }
-      toast.success(t("password-update-success"));
+      toast.success(t('password-update-success'));
     },
     onError: (error) => {
       const {
@@ -56,22 +54,57 @@ export function useForgotPassword() {
   let [message, setMessage] = useState<string | null>(null);
   let [formError, setFormError] = useState<any>(null);
 
-  const { mutate, isLoading } = useMutation(client.auth.forgetPassword, {
-    onSuccess: (data: any) => {
-      if (!data.success) {
-        setFormError({
-          email: data?.message ?? '',
-        });
-        return;
-      }
-      setMessage(data?.email);
-    },
-    onError: (error: Error) => {
-      setMessage(error?.message);
-    },
-  });
+  const { mutate, mutateAsync, isLoading } = useMutation(
+    client.auth.forgetPassword,
+    {
+      onSuccess: (data: any) => {
+        setFormError(null);
+        if (!data.success) {
+          setFormError({
+            email: data?.message ?? '',
+          });
+          return;
+        }
+        setMessage(data?.message ?? null);
+      },
+      onError: (error: unknown) => {
+        if (axios.isAxiosError(error)) {
+          const data: any = error.response?.data;
+          if (data?.message) {
+            setMessage(data.message);
+            return;
+          }
+          if (data?.errors && typeof data.errors === 'object') {
+            const first = Object.values(data.errors)?.[0] as any;
+            const firstMessage = Array.isArray(first) ? first[0] : first;
+            if (firstMessage) {
+              setMessage(String(firstMessage));
+              return;
+            }
+          }
+          if (data && typeof data === 'object') {
+            const first = Object.values(data)?.[0] as any;
+            const firstMessage = Array.isArray(first) ? first[0] : first;
+            if (firstMessage) {
+              setMessage(String(firstMessage));
+              return;
+            }
+          }
+        }
+        setMessage((error as any)?.message ?? 'SOMETHING_WENT_WRONG');
+      },
+    }
+  );
 
-  return { mutate, isLoading, message, formError, setFormError, setMessage };
+  return {
+    mutate,
+    mutateAsync,
+    isLoading,
+    message,
+    formError,
+    setFormError,
+    setMessage,
+  };
 }
 
 export function useResendVerificationEmail() {
@@ -97,26 +130,51 @@ export function useResendVerificationEmail() {
   return { mutate, isLoading };
 }
 
-
 export function useLogin() {
   const { t } = useTranslation('common');
   const [_, setAuthorized] = useAtom(authorizationAtom);
   const { closeModal } = useUI();
   const { setToken } = useToken();
+  const queryClient = useQueryClient();
   let [serverError, setServerError] = useState<string | null>(null);
 
   const { mutate, isLoading } = useMutation(client.auth.login, {
     onSuccess: (data: any) => {
+      setServerError(null);
       if (!data.token) {
-        setServerError(t("forms:error-credential-wrong"));
+        const message = t('forms:error-credential-wrong');
+        setServerError(message);
+        toast.error(message);
         return;
       }
       setToken(data.token);
       setAuthorized(true);
+      queryClient.refetchQueries(API_ENDPOINTS.CUSTOMER);
       closeModal();
     },
-    onError: (error: Error) => {
-      console.log(error.message);
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        const data: any = error.response?.data;
+        if (data?.message) {
+          const message = String(data.message);
+          setServerError(message);
+          toast.error(message);
+          return;
+        }
+        if (data?.errors && typeof data.errors === 'object') {
+          const first = Object.values(data.errors)?.[0] as any;
+          const firstMessage = Array.isArray(first) ? first[0] : first;
+          if (firstMessage) {
+            const message = String(firstMessage);
+            setServerError(message);
+            toast.error(message);
+            return;
+          }
+        }
+      }
+      const message = t('SOMETHING_WENT_WRONG');
+      setServerError(message);
+      toast.error(message);
     },
   });
 
@@ -135,7 +193,7 @@ export function useLogout() {
       if (data) {
         setToken('');
         setAuthorized(false);
-        router.push("/");
+        router.push('/');
         //@ts-ignore
         resetCheckout();
         queryClient.refetchQueries(API_ENDPOINTS.CUSTOMER);
@@ -191,12 +249,12 @@ export function useRegister() {
   const { setToken } = useToken();
   const [_, setAuthorized] = useAtom(authorizationAtom);
   const { closeModal } = useUI();
-  let [formError, setFormError] = useState<Partial<RegisterUserInputType> | null>(
-    null
-  );
+  let [formError, setFormError] =
+    useState<Partial<RegisterUserInputType> | null>(null);
 
   const { mutate, isLoading } = useMutation(client.auth.register, {
     onSuccess: (data: any) => {
+      setFormError(null);
       if (data?.token && data?.permissions?.length) {
         setToken(data?.token);
         setAuthorized(true);
@@ -204,8 +262,22 @@ export function useRegister() {
         return;
       }
       if (!data.token) {
-        toast.error(t("forms:error-credential-wrong"));
+        toast.error(t('forms:error-credential-wrong'));
       }
+    },
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        const data: any = error.response?.data;
+        if (data && typeof data === 'object') {
+          if (data?.errors && typeof data.errors === 'object') {
+            setFormError(data.errors);
+            return;
+          }
+          setFormError(data);
+          return;
+        }
+      }
+      toast.error(t('SOMETHING_WENT_WRONG'));
     },
   });
 
@@ -224,12 +296,29 @@ export function useResetPassword() {
         return;
       }
     },
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        const data: any = error.response?.data;
+        if (data?.message) {
+          toast.error(String(data.message));
+          return;
+        }
+        if (data?.errors && typeof data.errors === 'object') {
+          const first = Object.values(data.errors)?.[0] as any;
+          const firstMessage = Array.isArray(first) ? first[0] : first;
+          if (firstMessage) {
+            toast.error(String(firstMessage));
+            return;
+          }
+        }
+      }
+      toast.error('SOMETHING_WENT_WRONG');
+    },
     onSettled: () => {
       queryClient.clear();
     },
   });
 }
-
 
 // export const useSendOtpCodeMutation = () => {
 //   return useMutation((input: SendOtpCodeInputType) =>
@@ -266,11 +355,7 @@ export function useSendOtpCode({
   return { mutate, isLoading, serverError, setServerError };
 }
 
-export function useVerifyOtpCode({
-  onVerify,
-}: {
-  onVerify: Function;
-}) {
+export function useVerifyOtpCode({ onVerify }: { onVerify: Function }) {
   const [otpState, setOtpState] = useAtom(optAtom);
   let [serverError, setServerError] = useState<string | null>(null);
   const { mutate, isLoading } = useMutation(client.auth.verifyOtpCode, {
@@ -338,10 +423,11 @@ export function useVerifyForgotPasswordToken() {
   const queryClient = useQueryClient();
   let [formError, setFormError] = useState<any>(null);
 
-  const { mutate, isLoading } = useMutation(
+  const { mutate, mutateAsync, isLoading } = useMutation(
     client.auth.verifyForgetPassword,
     {
       onSuccess: (data: any) => {
+        setFormError(null);
         if (!data.success) {
           setFormError({
             token: data?.message ?? '',
@@ -349,17 +435,37 @@ export function useVerifyForgotPasswordToken() {
           return;
         }
       },
+      onError: (error: unknown) => {
+        if (axios.isAxiosError(error)) {
+          const data: any = error.response?.data;
+          if (data?.message) {
+            setFormError({ token: String(data.message) });
+            return;
+          }
+          if (data?.errors && typeof data.errors === 'object') {
+            const first = Object.values(data.errors)?.[0] as any;
+            const firstMessage = Array.isArray(first) ? first[0] : first;
+            if (firstMessage) {
+              setFormError({ token: String(firstMessage) });
+              return;
+            }
+          }
+        }
+        setFormError({ token: 'SOMETHING_WENT_WRONG' });
+      },
       onSettled: () => {
         queryClient.clear();
       },
     }
   );
 
-  return { mutate, isLoading, formError, setFormError };
+  return { mutate, mutateAsync, isLoading, formError, setFormError };
 }
 
 export const useUser = () => {
+  const { t } = useTranslation('common');
   const [isAuthorized] = useAtom(authorizationAtom);
+  const setAuthorized = useSetAtom(authorizationAtom);
   const { setEmailVerified, getEmailVerified } = useToken();
   const { emailVerified } = getEmailVerified();
   const router = useRouter();
@@ -386,9 +492,26 @@ export const useUser = () => {
             router.push(ROUTES.verifyEmail);
             return;
           }
+          const responseData: any = err.response?.data;
+          if (responseData?.message) {
+            toast.error(String(responseData.message));
+          } else if (
+            responseData?.errors &&
+            typeof responseData.errors === 'object'
+          ) {
+            const first = Object.values(responseData.errors)?.[0] as any;
+            const firstMessage = Array.isArray(first) ? first[0] : first;
+            if (firstMessage) {
+              toast.error(String(firstMessage));
+            } else {
+              toast.error(t('SOMETHING_WENT_WRONG'));
+            }
+          } else {
+            toast.error(t('SOMETHING_WENT_WRONG'));
+          }
         }
         Cookies.remove(AUTH_TOKEN);
-        Router.reload();
+        setAuthorized(false);
       },
     }
   );
@@ -396,7 +519,7 @@ export const useUser = () => {
     me: data,
     loading: isLoading,
     error,
-    isAuthorized
+    isAuthorized,
   };
 };
 
@@ -404,22 +527,19 @@ export function useSubscribe() {
   const queryClient = useQueryClient();
   let [formError, setFormError] = useState<any>(null);
 
-  const { mutate, isLoading } = useMutation(
-    client.auth.subscribe,
-    {
-      onSuccess: (data: any) => {
-        if (!data.success) {
-          setFormError({
-            token: data?.message ?? '',
-          });
-          return;
-        }
-      },
-      onSettled: () => {
-        queryClient.clear();
-      },
-    }
-  );
+  const { mutate, isLoading } = useMutation(client.auth.subscribe, {
+    onSuccess: (data: any) => {
+      if (!data.success) {
+        setFormError({
+          token: data?.message ?? '',
+        });
+        return;
+      }
+    },
+    onSettled: () => {
+      queryClient.clear();
+    },
+  });
 
   return { mutate, isLoading, formError, setFormError };
 }

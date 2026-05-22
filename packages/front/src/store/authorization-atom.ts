@@ -3,8 +3,9 @@ import { atom } from 'jotai';
 import Cookies from 'js-cookie';
 
 export function checkIsLoggedIn() {
+  if (typeof window === 'undefined') return false;
   const token = Cookies.get(AUTH_TOKEN);
   if (!token) return false;
   return true;
 }
-export const authorizationAtom = atom(checkIsLoggedIn());
+export const authorizationAtom = atom(false);

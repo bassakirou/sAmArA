@@ -22,9 +22,10 @@ export const ScheduleGrid: React.FC<ScheduleProps> = ({
 
   const [selectedSchedule, setSchedule] = useAtom(deliveryTimeAtom);
   useEffect(() => {
+    if (!schedules?.length) return;
+    if (selectedSchedule) return;
     setSchedule(schedules[0]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [schedules, selectedSchedule, setSchedule]);
   return (
     <div className={className}>
       <div className="flex items-center justify-between mb-5 lg:mb-6 xl:mb-7 -mt-1 xl:-mt-2">

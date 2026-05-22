@@ -2,6 +2,7 @@ import { useUI } from "@contexts/ui.context";
 import Modal from "./modal";
 import dynamic from "next/dynamic";
 import Newsletter from '@components/common/newsletter';
+import ProductPopup from "@components/product/product-popup";
 
 const LoginForm = dynamic(() => import("@components/auth/login-form"));
 const OtpLogin = dynamic(() => import("@components/auth/otp/otp-login"));
@@ -9,7 +10,6 @@ const SignUpForm = dynamic(() => import("@components/auth/sign-up-form"));
 const ForgetPasswordForm = dynamic(
   () => import("@components/auth/forget-password/forget-password")
 );
-const ProductPopup = dynamic(() => import("@components/product/product-popup"));
 const CreateOrUpdateAddressForm = dynamic(
   () => import("@components/address/address-form"),
   { ssr: false }
@@ -19,6 +19,9 @@ const AddressDeleteView = dynamic(
 );
 const AddOrUpdateCheckoutContact = dynamic(
   () => import("@components/checkout/contact/add-or-update")
+);
+const TaramoneyPhoneModal = dynamic(
+  () => import('@components/checkout/payment/taramoney-phone-modal')
 );
 const CreateOrUpdateGuestAddressForm = dynamic(
   () => import('@components/checkout/create-or-update-guest')
@@ -56,7 +59,13 @@ const ManagedModal: React.FC = () => {
     return <PaymentModal />;
   }
   return (
-    <Modal open={displayModal} onClose={closeModal} variant={modalVariant}>
+    <Modal
+      open={displayModal}
+      onClose={closeModal}
+      variant={modalVariant}
+      canClose={modalView !== 'TARAMONEY_PHONE_MODAL'}
+      showCloseButton={modalView !== 'TARAMONEY_PHONE_MODAL'}
+    >
       {modalView === 'LOGIN_VIEW' && <LoginForm />}
       {modalView === 'OTP_LOGIN_VIEW' && <OtpLogin />}
       {modalView === 'SIGN_UP_VIEW' && <SignUpForm />}
@@ -68,6 +77,7 @@ const ManagedModal: React.FC = () => {
       {modalView === 'ADD_OR_UPDATE_CHECKOUT_CONTACT' && (
         <AddOrUpdateCheckoutContact data={modalData} />
       )}
+      {modalView === 'TARAMONEY_PHONE_MODAL' && <TaramoneyPhoneModal />}
       {modalView === 'ADD_OR_UPDATE_PROFILE_CONTACT' && (
         <ProfileAddOrUpdateContact data={modalData} />
       )}

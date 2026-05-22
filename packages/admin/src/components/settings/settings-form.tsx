@@ -40,7 +40,14 @@ import omit from 'lodash/omit';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 import { useCallback, useMemo, useState } from 'react';
-import { Controller, useFieldArray, useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
+import {
+  Controller,
+  useFieldArray,
+  useForm,
+  FormProvider,
+  useFormContext,
+} from 'react-hook-form';
 import Badge from '../ui/badge/badge';
 import { COUNTRY_LOCALE } from './country-locale';
 import { settingsValidationSchema } from './settings-validation-schema';
@@ -51,6 +58,7 @@ import {
 import { EMAIL_GROUP_OPTION, SMS_GROUP_OPTION } from './eventsOption';
 import OpenAIButton from '../openAI/openAI.button';
 import { useModalAction } from '../ui/modal/modal.context';
+import Tabs from '@/components/ui/tabs';
 
 export const chatbotAutoSuggestion = ({ name }: { name: string }) => {
   return [
@@ -253,21 +261,14 @@ export default function SettingsForm({
   const { t } = useTranslation();
   const { locale } = useRouter();
   const [isCopied, setIsCopied] = useState(false);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
   const { mutate: updateSettingsMutation, isLoading: loading } =
     useUpdateSettingsMutation();
   const { language, options } = settings ?? {};
   const [serverInfo, SetSeverInfo] = useState(options?.server_info);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    getValues,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
-    shouldUnregister: true,
+  const methods = useForm<FormValues>({
+    shouldUnregister: false,
     resolver: yupResolver(settingsValidationSchema),
     defaultValues: {
       ...options,
@@ -289,7 +290,7 @@ export default function SettingsForm({
       customerService: options?.customerService ?? '',
       currency: options?.currency
         ? CURRENCY.find((item) => item.code == options?.currency)
-        : '',
+        : CURRENCY.find((item) => item.code == 'XAF'),
       defaultAi: options?.defaultAi
         ? AI.find((item) => item.value == options?.defaultAi)
         : 'openai',
@@ -320,7 +321,7 @@ export default function SettingsForm({
             name: gateway?.name,
             title: gateway?.title,
           }))
-        : [],
+        : PAYMENT_GATEWAY.filter((value: any, index: number) => index < 2),
 
       // @ts-ignore
       taxClass: !!taxClasses?.length
@@ -340,7 +341,60 @@ export default function SettingsForm({
         : null,
     },
   });
+  const {
+    register,
+    handleSubmit,
+    control,
+    getValues,
+    watch,
+    setValue,
+    setFocus,
+    formState: { errors },
+  } = methods;
   const { openModal } = useModalAction();
+
+  const getTabIndexForFieldPath = useCallback((path: string) => {
+    if (path.startsWith('deliveryTime')) return 6;
+    if (path.startsWith('smsEvent') || path.startsWith('emailEvent')) return 5;
+    if (path.startsWith('seo.')) return 4;
+    if (
+      path.startsWith('currency') ||
+      path.startsWith('currencyOptions') ||
+      path.startsWith('minimumOrderAmount') ||
+      path.startsWith('freeShipping') ||
+      path.startsWith('freeShippingAmount')
+    )
+      return 3;
+    if (
+      path.startsWith('useCashOnDelivery') ||
+      path.startsWith('useEnableGateway') ||
+      path.startsWith('paymentGateway') ||
+      path.startsWith('defaultPaymentGateway')
+    )
+      return 2;
+    if (
+      path.startsWith('siteTitle') ||
+      path.startsWith('siteSubtitle') ||
+      path.startsWith('taxClass') ||
+      path.startsWith('shippingClass')
+    )
+      return 1;
+    return 0;
+  }, []);
+
+  const findFirstError = useCallback((obj: any, parent = ''): any => {
+    if (!obj || typeof obj !== 'object') return null;
+    if (typeof obj.message === 'string' && parent) {
+      return { path: parent, message: obj.message };
+    }
+    for (const key of Object.keys(obj)) {
+      const next = obj[key];
+      const nextPath = parent ? `${parent}.${key}` : key;
+      const hit = findFirstError(next, nextPath);
+      if (hit) return hit;
+    }
+    return null;
+  }, []);
 
   const generateName = watch('siteTitle');
   const autoSuggestionList = useMemo(() => {
@@ -392,58 +446,65 @@ export default function SettingsForm({
   const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
 
   async function onSubmit(values: FormValues) {
-    const contactDetails = {
-      ...values?.contactDetails,
-      location: { ...omit(values?.contactDetails?.location, '__typename') },
-      socials: values?.contactDetails?.socials
-        ? values?.contactDetails?.socials?.map((social: any) => ({
-            icon: social?.icon?.value,
-            url: social?.url,
-          }))
-        : [],
-    };
-    const smsEvent = formatEventOptions(values.smsEvent);
-    const emailEvent = formatEventOptions(values.emailEvent);
-    updateSettingsMutation({
-      language: locale,
-      options: {
-        ...values,
-        server_info: serverInfo,
-        signupPoints: Number(values.signupPoints),
-        currencyToWalletRatio: Number(values.currencyToWalletRatio),
-        minimumOrderAmount: Number(values.minimumOrderAmount),
-        freeShippingAmount: Number(values.freeShippingAmount),
-        currency: values.currency?.code,
-        defaultAi: values?.defaultAi?.value,
-        // paymentGateway: values.paymentGateway?.name,
-        defaultPaymentGateway: values.defaultPaymentGateway?.name,
-        paymentGateway:
-          values?.paymentGateway && values?.paymentGateway!.length
-            ? values?.paymentGateway?.map((gateway: any) => ({
-                name: gateway.name,
-                title: gateway.title,
-              }))
-            : PAYMENT_GATEWAY.filter((value: any, index: number) => index < 2),
-        useEnableGateway: values?.useEnableGateway,
-        guestCheckout: values?.guestCheckout,
-        taxClass: values?.taxClass?.id,
-        shippingClass: values?.shippingClass?.id,
-        logo: values?.logo,
-        smsEvent,
-        emailEvent,
-        contactDetails,
-        //@ts-ignore
-        seo: {
-          ...values?.seo,
-          ogImage: values?.seo?.ogImage,
-        },
-        currencyOptions: {
-          ...values.currencyOptions,
+    try {
+      const contactDetails = {
+        ...values?.contactDetails,
+        location: { ...omit(values?.contactDetails?.location, '__typename') },
+        socials: values?.contactDetails?.socials
+          ? values?.contactDetails?.socials?.map((social: any) => ({
+              icon: social?.icon?.value,
+              url: social?.url,
+            }))
+          : [],
+      };
+      const smsEvent = formatEventOptions(values.smsEvent as any);
+      const emailEvent = formatEventOptions(values.emailEvent as any);
+      updateSettingsMutation({
+        language: locale,
+        options: {
+          ...values,
+          server_info: serverInfo,
+          signupPoints: Number(values.signupPoints),
+          currencyToWalletRatio: Number(values.currencyToWalletRatio),
+          minimumOrderAmount: Number(values.minimumOrderAmount),
+          freeShippingAmount: Number(values.freeShippingAmount),
+          currency: values.currency?.code,
+          defaultAi: values?.defaultAi?.value,
+          // paymentGateway: values.paymentGateway?.name,
+          defaultPaymentGateway: values.defaultPaymentGateway?.name,
+          paymentGateway:
+            values?.paymentGateway && values?.paymentGateway!.length
+              ? values?.paymentGateway?.map((gateway: any) => ({
+                  name: gateway.name,
+                  title: gateway.title,
+                }))
+              : PAYMENT_GATEWAY.filter(
+                  (value: any, index: number) => index < 2
+                ),
+          useEnableGateway: values?.useEnableGateway,
+          guestCheckout: values?.guestCheckout,
+          taxClass: values?.taxClass?.id,
+          shippingClass: values?.shippingClass?.id,
+          logo: values?.logo,
+          smsEvent,
+          emailEvent,
+          contactDetails,
           //@ts-ignore
-          formation: values?.currencyOptions?.formation?.code,
+          seo: {
+            ...values?.seo,
+            ogImage: values?.seo?.ogImage,
+          },
+          currencyOptions: {
+            ...values.currencyOptions,
+            //@ts-ignore
+            formation: values?.currencyOptions?.formation?.code,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : null;
+      toast.error(message || t('common:SAMARA_ERROR.SOMETHING_WENT_WRONG'));
+    }
   }
 
   let paymentGateway = watch('paymentGateway');
@@ -471,424 +532,576 @@ export default function SettingsForm({
     (item: any) => item?.name === defaultPaymentGateway?.name
   );
 
+  const tabs = [
+    { title: 'Logo', content: <LogoSettings /> },
+    {
+      title: 'Informations',
+      content: (
+        <InformationSettings
+          taxClasses={taxClasses}
+          shippingClasses={shippingClasses}
+        />
+      ),
+    },
+    { title: 'Payment', content: <PaymentSettings /> },
+    { title: 'Currency', content: <CurrencySettings /> },
+    { title: 'SEO', content: <SeoSettings /> },
+    { title: 'SMS / Email', content: <SmsEmailSettings /> },
+    { title: 'Delivery', content: <DeliverySettings /> },
+    { title: 'Shop', content: <ShopSettings /> },
+  ];
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
-        <Description
-          title={t('form:input-label-logo')}
-          details={logoInformation}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+    <FormProvider {...methods}>
+      <form
+        onSubmit={handleSubmit(onSubmit, (formErrors) => {
+          const first = findFirstError(formErrors);
+          if (first?.path) {
+            setActiveTabIndex(getTabIndexForFieldPath(first.path));
+            try {
+              setFocus(first.path as any);
+            } catch (error) {}
+          }
+          if (first?.message) {
+            toast.error(t(first.message));
+            return;
+          }
+          toast.error(t('common:SAMARA_ERROR.SOMETHING_WENT_WRONG'));
+        })}
+      >
+        <Tabs
+          tabs={tabs}
+          variant="pill"
+          selectedIndex={activeTabIndex}
+          onChange={setActiveTabIndex}
         />
+        <div className="mb-4 text-end">
+          <Button type="submit" loading={loading} disabled={loading}>
+            {t('form:button-label-save-settings')}
+          </Button>
+        </div>
+      </form>
+    </FormProvider>
+  );
+}
 
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <FileInput name="logo" control={control} multiple={false} />
-        </Card>
-      </div>
+// Create separate components for each tab for clarity
+const LogoSettings = () => {
+  const { t } = useTranslation();
+  const { control, watch } = useFormContext<FormValues>();
+  const serverUploadMaxFileSize = watch('server_info.upload_max_filesize');
+  const upload_max_filesize =
+    ((serverUploadMaxFileSize as number | undefined) || 1024) / 1024;
 
-      <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
-        <Description
-          title={t('form:form-title-information')}
-          details={t('form:site-info-help-text')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+  const logoInformation = (
+    <span>
+      {t('form:logo-help-text')} <br />
+      {t('form:logo-dimension-help-text')} &nbsp;
+      <span className="font-bold">
+        {siteSettings.logo.width}x{siteSettings.logo.height} {t('common:pixel')}
+      </span>
+      <br />
+      {t('form:size-help-text')} &nbsp;
+      <span className="font-bold">{upload_max_filesize} MB </span>
+    </span>
+  );
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+      <Description
+        title={t('form:input-label-logo')}
+        details={logoInformation}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <FileInput name="logo" control={control} multiple={false} />
+      </Card>
+    </div>
+  );
+};
+
+const InformationSettings = ({
+  taxClasses,
+  shippingClasses,
+}: Pick<IProps, 'taxClasses' | 'shippingClasses'>) => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const {
+    register,
+    control,
+    watch,
+    formState: { errors },
+  } = useFormContext();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
+  const enableFreeShipping = watch('freeShipping');
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+      <Description
+        title={t('form:form-title-information')}
+        details={t('form:site-info-help-text')}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <Input
+          label={t('form:input-label-site-title')}
+          {...register('siteTitle')}
+          error={t(errors.siteTitle?.message!)}
+          variant="outline"
+          className="mb-5"
         />
-
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <Input
-            label={t('form:input-label-site-title')}
-            {...register('siteTitle')}
-            error={t(errors.siteTitle?.message!)}
-            variant="outline"
-            className="mb-5"
-          />
-          <Input
-            label={t('form:input-label-site-subtitle')}
-            {...register('siteSubtitle')}
-            error={t(errors.siteSubtitle?.message!)}
-            variant="outline"
-            className="mb-5"
-          />
-          <Input
-            label={`${t('form:input-label-min-order-amount')}`}
-            {...register('minimumOrderAmount')}
-            type="number"
-            error={t(errors.minimumOrderAmount?.message!)}
-            variant="outline"
-            className="mb-5"
-            disabled={isNotDefaultSettingsPage}
-          />
-          {/* <Input
-            label={`${t('form:input-label-wallet-currency-ratio')}`}
-            {...register('currencyToWalletRatio')}
-            type="number"
-            error={t(errors.currencyToWalletRatio?.message!)}
-            variant="outline"
-            className="mb-5"
-            disabled={isNotDefaultSettingsPage}
-          /> */}
-          {/* <Input
-            label={`${t('form:input-label-signup-points')}`}
-            {...register('signupPoints')}
-            type="number"
-            error={t(errors.signupPoints?.message!)}
-            variant="outline"
-            className="mb-5"
-            disabled={isNotDefaultSettingsPage}
-          /> */}
-          {/* <Input
-            label={`${t('form:input-label-maximum-question-limit')}`}
-            {...register('maximumQuestionLimit')}
-            type="number"
-            error={t(errors.maximumQuestionLimit?.message!)}
-            variant="outline"
-            className="mb-5"
-            disabled={isNotDefaultSettingsPage}
-          /> */}
-
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="useOtp"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">{t('form:input-label-enable-otp')}</Label>
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="useMustVerifyEmail"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">
-                {t('form:input-label-use-must-verify-email')}
-              </Label>
-            </div>
-          </div>
-
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="useAi"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">
-                {t('form:input-label-enable-open-ai')}
-              </Label>
-            </div>
-          </div>
-          <div className="mb-5">
-            <Label>{t('form:input-label-select-ai')}</Label>
-            <SelectInput
-              name="defaultAi"
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.value}
-              options={AI}
-              disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-
-          <div className="mb-5">
-            <Label>{t('form:input-label-tax-class')}</Label>
-            <SelectInput
-              name="taxClass"
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.id}
-              options={taxClasses!}
-              disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-
-          <div className="mb-5">
-            <Label>{t('form:input-label-shipping-class')}</Label>
-            <SelectInput
-              name="shippingClass"
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.id}
-              options={shippingClasses!}
-              disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="guestCheckout"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">
-                {t('form:input-label-enable-guest-checkout')}
-              </Label>
-            </div>
-          </div>
-
+        <Input
+          label={t('form:input-label-site-subtitle')}
+          {...register('siteSubtitle')}
+          error={t(errors.siteSubtitle?.message!)}
+          variant="outline"
+          className="mb-5"
+        />
+        <Input
+          label={`${t('form:input-label-min-order-amount')}`}
+          {...register('minimumOrderAmount')}
+          type="number"
+          error={t(errors.minimumOrderAmount?.message!)}
+          variant="outline"
+          className="mb-5"
+          disabled={isNotDefaultSettingsPage}
+        />
+        <div className="mb-5">
           <div className="flex items-center gap-x-4">
             <SwitchInput
-              name="freeShipping"
+              name="useOtp"
               control={control}
-              checked={enableFreeShipping}
+              disabled={isNotDefaultSettingsPage}
+            />
+            <Label className="mb-0">{t('form:input-label-enable-otp')}</Label>
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <div className="flex items-center gap-x-4">
+            <SwitchInput
+              name="useMustVerifyEmail"
+              control={control}
               disabled={isNotDefaultSettingsPage}
             />
             <Label className="mb-0">
-              {t('form:input-label-enable-free-shipping')}
+              {t('form:input-label-use-must-verify-email')}
             </Label>
           </div>
+        </div>
 
-          {enableFreeShipping && (
-            <Input
-              label={t('form:free-shipping-input-label-amount')}
-              {...register('freeShippingAmount')}
-              error={t(errors.freeShippingAmount?.message!)}
-              variant="outline"
-              type="number"
-              className="mt-5"
-              disabled={isNotDefaultSettingsPage}
-            />
-          )}
-          <Input
-            label={t('form:input-label-mailchimp-text')}
-            {...register('mailchimpSubscribeText')}
-            error={t(errors.mailchimpSubscribeText?.message!)}
-            variant="outline"
-            className="mt-5"
-          />
-
-          <Input
-            label={t('form:input-label-cutomer-service-text')}
-            {...register('customerService')}
-            error={t(errors.customerService?.message!)}
-            variant="outline"
-            className="mt-5"
-          />
-        </Card>
-      </div>
-
-      <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
-        <Description
-          title={t('Payment')}
-          details={t('Configure Payment Option')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
-        />
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div className="mb-5">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="useCashOnDelivery"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">{t('Enable Cash On Delivery')}</Label>
-            </div>
-          </div>
-          <div className="mb-5">
-            <Label>{t('form:input-label-currency')}</Label>
-            <SelectInput
-              name="currency"
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.code}
-              options={CURRENCY}
-              disabled={isNotDefaultSettingsPage}
-            />
-            <ValidationError message={t(errors.currency?.message)} />
-          </div>
+        <div className="mb-5">
           <div className="flex items-center gap-x-4">
             <SwitchInput
+              name="useAi"
               control={control}
               disabled={isNotDefaultSettingsPage}
-              {...register('useEnableGateway')}
             />
-            <Label className="mb-0">{t('Enable Gateway')}</Label>
+            <Label className="mb-0">
+              {t('form:input-label-enable-open-ai')}
+            </Label>
           </div>
-          {useEnableGateway ? (
-            <>
-              <div className="mb-5 mt-5">
-                <Label>{t('text-select-payment-gateway')}</Label>
-                <PaymentSelect
-                  options={PAYMENT_GATEWAY}
-                  control={control}
-                  name="paymentGateway"
-                  defaultItem={
-                    checkAvailableDefaultGateway
-                      ? defaultPaymentGateway?.name
-                      : ''
-                  }
-                  disable={isEmpty(paymentGateway)}
+        </div>
+        <div className="mb-5">
+          <Label>{t('form:input-label-select-ai')}</Label>
+          <SelectInput
+            name="defaultAi"
+            control={control}
+            getOptionLabel={(option: any) => option.name}
+            getOptionValue={(option: any) => option.value}
+            options={AI}
+            disabled={isNotDefaultSettingsPage}
+          />
+        </div>
+
+        <div className="mb-5">
+          <Label>{t('form:input-label-tax-class')}</Label>
+          <SelectInput
+            name="taxClass"
+            control={control}
+            getOptionLabel={(option: any) => option.name}
+            getOptionValue={(option: any) => option.id}
+            options={taxClasses!}
+            disabled={isNotDefaultSettingsPage}
+          />
+        </div>
+
+        <div className="mb-5">
+          <Label>{t('form:input-label-shipping-class')}</Label>
+          <SelectInput
+            name="shippingClass"
+            control={control}
+            getOptionLabel={(option: any) => option.name}
+            getOptionValue={(option: any) => option.id}
+            options={shippingClasses!}
+            disabled={isNotDefaultSettingsPage}
+          />
+        </div>
+        <div className="mb-5">
+          <div className="flex items-center gap-x-4">
+            <SwitchInput
+              name="guestCheckout"
+              control={control}
+              disabled={isNotDefaultSettingsPage}
+            />
+            <Label className="mb-0">
+              {t('form:input-label-enable-guest-checkout')}
+            </Label>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-x-4">
+          <SwitchInput
+            name="freeShipping"
+            control={control}
+            checked={enableFreeShipping}
+            disabled={isNotDefaultSettingsPage}
+          />
+          <Label className="mb-0">
+            {t('form:input-label-enable-free-shipping')}
+          </Label>
+        </div>
+
+        {enableFreeShipping && (
+          <Input
+            label={t('form:free-shipping-input-label-amount')}
+            {...register('freeShippingAmount')}
+            error={t(errors.freeShippingAmount?.message!)}
+            variant="outline"
+            type="number"
+            className="mt-5"
+            disabled={isNotDefaultSettingsPage}
+          />
+        )}
+        <Input
+          label={t('form:input-label-mailchimp-text')}
+          {...register('mailchimpSubscribeText')}
+          error={t(errors.mailchimpSubscribeText?.message!)}
+          variant="outline"
+          className="mt-5"
+        />
+
+        <Input
+          label={t('form:input-label-cutomer-service-text')}
+          {...register('customerService')}
+          error={t(errors.customerService?.message!)}
+          variant="outline"
+          className="mt-5"
+        />
+      </Card>
+    </div>
+  );
+};
+
+const PaymentSettings = () => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const {
+    register,
+    control,
+    watch,
+    formState: { errors },
+  } = useFormContext();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
+  let paymentGateway = watch('paymentGateway');
+  let defaultPaymentGateway = watch('defaultPaymentGateway');
+  let useEnableGateway = watch('useEnableGateway');
+
+  let checkAvailableDefaultGateway = paymentGateway?.some(
+    (item: any) => item?.name === defaultPaymentGateway?.name
+  );
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+      <Description
+        title={t('Payment')}
+        details={t('Configure Payment Option')}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <div className="mb-5">
+          <div className="flex items-center gap-x-4">
+            <SwitchInput
+              name="useCashOnDelivery"
+              control={control}
+              disabled={isNotDefaultSettingsPage}
+            />
+            <Label className="mb-0">{t('Enable Cash On Delivery')}</Label>
+          </div>
+        </div>
+        <div className="mb-5">
+          <Label>{t('form:input-label-currency')}</Label>
+          <SelectInput
+            name="currency"
+            control={control}
+            getOptionLabel={(option: any) => option.name}
+            getOptionValue={(option: any) => option.code}
+            options={CURRENCY}
+            disabled={isNotDefaultSettingsPage}
+          />
+          <ValidationError message={t(errors.currency?.message)} />
+        </div>
+        <div className="flex items-center gap-x-4">
+          <SwitchInput
+            control={control}
+            disabled={isNotDefaultSettingsPage}
+            {...register('useEnableGateway')}
+          />
+          <Label className="mb-0">{t('Enable Gateway')}</Label>
+        </div>
+        {useEnableGateway ? (
+          <>
+            <div className="mb-5 mt-5">
+              <Label>{t('text-select-payment-gateway')}</Label>
+              <PaymentSelect
+                options={PAYMENT_GATEWAY}
+                control={control}
+                name="paymentGateway"
+                defaultItem={
+                  checkAvailableDefaultGateway
+                    ? defaultPaymentGateway?.name
+                    : ''
+                }
+                disable={isEmpty(paymentGateway)}
+              />
+            </div>
+
+            {isEmpty(paymentGateway) ? (
+              <div className="flex px-5 py-4">
+                <Loader
+                  simple={false}
+                  showText={true}
+                  text="Please wait payment method is preparing..."
+                  className="mx-auto !h-20 w-6"
                 />
               </div>
-
-              {isEmpty(paymentGateway) ? (
-                <div className="flex px-5 py-4">
-                  <Loader
-                    simple={false}
-                    showText={true}
-                    text="Please wait payment method is preparing..."
-                    className="mx-auto !h-20 w-6"
+            ) : (
+              <>
+                <div className="mb-5">
+                  <Label>{t('text-select-default-payment-gateway')}</Label>
+                  <SelectInput
+                    name="defaultPaymentGateway"
+                    control={control}
+                    getOptionLabel={(option: any) => option.title}
+                    getOptionValue={(option: any) => option.name}
+                    options={paymentGateway ?? []}
+                    disabled={isNotDefaultSettingsPage}
                   />
                 </div>
-              ) : (
-                <>
-                  <div className="mb-5">
-                    <Label>{t('text-select-default-payment-gateway')}</Label>
-                    <SelectInput
-                      name="defaultPaymentGateway"
-                      control={control}
-                      getOptionLabel={(option: any) => option.title}
-                      getOptionValue={(option: any) => option.name}
-                      options={paymentGateway ?? []}
-                      disabled={isNotDefaultSettingsPage}
-                    />
-                  </div>
-                  <Label>{t('text-webhook-url')}</Label>
-                  <div className="relative flex flex-col overflow-hidden rounded-md border border-solid border-[#D1D5DB]">
-                    {paymentGateway?.map((gateway: any, index: any) => {
-                      return <WebHookURL gateway={gateway} key={index} />;
-                    })}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            ''
-          )}
-        </Card>
-      </div>
-      <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
-        <Description
-          title="Currency Options"
-          details={t('form:currency-options-info-help-text')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pr-4 md:w-1/3 md:pr-5"
-        />
-
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div className="mb-5">
-            <Label>{`${t('form:input-label-currency-formations')} *`}</Label>
-            <SelectInput
-              {...register('currencyOptions.formation')}
-              control={control}
-              getOptionLabel={(option: any) => option.name}
-              getOptionValue={(option: any) => option.code}
-              options={COUNTRY_LOCALE}
-              disabled={isNotDefaultSettingsPage}
-            />
-          </div>
-          <Input
-            label={`${t('form:input-label-currency-number-of-decimal')} *`}
-            {...register('currencyOptions.fractions')}
-            type="number"
-            variant="outline"
-            placeholder={t('form:input-placeholder-currency-number-of-decimal')}
-            error={t(errors.currencyOptions?.fractions?.message!)}
-            className="mb-5"
-          />
-          {formation && (
-            <div className="mb-5">
-              <Label>
-                {`Sample Output: `}
-                <Badge
-                  text={formatPrice({
-                    amount: 987456321.123456789,
-                    currencyCode:
-                      currentCurrency?.code ?? settings?.options?.currency!,
-                    locale: (formation?.code! as string) ?? 'USD',
-                    fractions: currentFractions ?? 2,
+                <Label>{t('text-webhook-url')}</Label>
+                <div className="relative flex flex-col overflow-hidden rounded-md border border-solid border-[#D1D5DB]">
+                  {paymentGateway?.map((gateway: any, index: any) => {
+                    return <WebHookURL gateway={gateway} key={index} />;
                   })}
-                  color="bg-accent"
-                />
-              </Label>
-            </div>
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          ''
+        )}
+      </Card>
+    </div>
+  );
+};
+
+const CurrencySettings = () => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const {
+    register,
+    control,
+    watch,
+    formState: { errors },
+  } = useFormContext();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
+  const currentCurrency = watch('currency');
+  const formation = watch('currencyOptions.formation');
+  const currentFractions = watch('currencyOptions.fractions') as number;
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+      <Description
+        title="Currency Options"
+        details={t('form:currency-options-info-help-text')}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pr-4 md:w-1/3 md:pr-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <div className="mb-5">
+          <Label>{`${t('form:input-label-currency-formations')} *`}</Label>
+          <SelectInput
+            {...register('currencyOptions.formation')}
+            control={control}
+            getOptionLabel={(option: any) => option.name}
+            getOptionValue={(option: any) => option.code}
+            options={COUNTRY_LOCALE}
+            disabled={isNotDefaultSettingsPage}
+          />
+        </div>
+        <Input
+          label={`${t('form:input-label-currency-number-of-decimal')} *`}
+          {...register('currencyOptions.fractions')}
+          type="number"
+          variant="outline"
+          placeholder={t('form:input-placeholder-currency-number-of-decimal')}
+          error={t(errors.currencyOptions?.fractions?.message!)}
+          className="mb-5"
+        />
+        {formation && (
+          <div className="mb-5">
+            <Label>
+              {`Sample Output: `}
+              <Badge
+                text={formatPrice({
+                  amount: 987456321.123456789,
+                  currencyCode: currentCurrency?.code ?? 'USD',
+                  locale: (formation?.code as string) ?? Config.defaultLanguage,
+                  fractions: currentFractions ?? 2,
+                })}
+                color="bg-accent"
+              />
+            </Label>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+const SeoSettings = () => {
+  const { t } = useTranslation();
+  const { register, control, watch, setValue } = useFormContext();
+  const { openModal } = useModalAction();
+  const isAiEnabled = watch('useAi');
+
+  const generateName = watch('siteTitle');
+  const autoSuggestionList = useMemo(() => {
+    return chatbotAutoSuggestion({ name: generateName ?? '' });
+  }, [generateName]);
+
+  const handleGenerateDescription = useCallback(() => {
+    openModal('GENERATE_DESCRIPTION', {
+      control,
+      name: generateName,
+      set_value: setValue,
+      key: 'seo.metaDescription',
+      suggestion: autoSuggestionList as ItemProps[],
+    });
+  }, [generateName]);
+
+  const autoSuggestionList1 = useMemo(() => {
+    return chatbotAutoSuggestion1({ name: generateName ?? '' });
+  }, [generateName]);
+  const handleGenerateDescription1 = useCallback(() => {
+    openModal('GENERATE_DESCRIPTION', {
+      control,
+      name: generateName,
+      set_value: setValue,
+      key: 'seo.ogDescription',
+      suggestion: autoSuggestionList1 as ItemProps[],
+    });
+  }, [generateName]);
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+      <Description
+        title="SEO"
+        details={t('form:tax-form-seo-info-help-text')}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pr-4 md:w-1/3 md:pr-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <Input
+          label={t('form:input-label-meta-title')}
+          {...register('seo.metaTitle')}
+          variant="outline"
+          className="mb-5"
+        />
+        <div className="relative">
+          {isAiEnabled && (
+            <OpenAIButton
+              title="Generate Description With AI"
+              onClick={handleGenerateDescription}
+            />
           )}
-        </Card>
-      </div>
-      <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
-        <Description
-          title="SEO"
-          details={t('form:tax-form-seo-info-help-text')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pr-4 md:w-1/3 md:pr-5"
+          <TextArea
+            label={t('form:input-label-meta-description')}
+            {...register('seo.metaDescription')}
+            variant="outline"
+            className="mb-5"
+          />
+        </div>
+
+        <Input
+          label={t('form:input-label-meta-tags')}
+          {...register('seo.metaTags')}
+          variant="outline"
+          className="mb-5"
+        />
+        <Input
+          label={t('form:input-label-canonical-url')}
+          {...register('seo.canonicalUrl')}
+          variant="outline"
+          className="mb-5"
+        />
+        <Input
+          label={t('form:input-label-og-title')}
+          {...register('seo.ogTitle')}
+          variant="outline"
+          className="mb-5"
         />
 
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <Input
-            label={t('form:input-label-meta-title')}
-            {...register('seo.metaTitle')}
-            variant="outline"
-            className="mb-5"
-          />
-          <div className="relative">
-            {options?.useAi && (
-              <OpenAIButton
-                title="Generate Description With AI"
-                onClick={handleGenerateDescription}
-              />
-            )}
-            <TextArea
-              label={t('form:input-label-meta-description')}
-              {...register('seo.metaDescription')}
-              variant="outline"
-              className="mb-5"
+        <div className="relative">
+          {isAiEnabled && (
+            <OpenAIButton
+              title="Generate Description With AI"
+              onClick={handleGenerateDescription1}
             />
-          </div>
+          )}
+          <TextArea
+            label={t('form:input-label-og-description')}
+            {...register('seo.ogDescription')}
+            variant="outline"
+            className="mb-5"
+          />
+        </div>
 
-          <Input
-            label={t('form:input-label-meta-tags')}
-            {...register('seo.metaTags')}
-            variant="outline"
-            className="mb-5"
-          />
-          <Input
-            label={t('form:input-label-canonical-url')}
-            {...register('seo.canonicalUrl')}
-            variant="outline"
-            className="mb-5"
-          />
-          <Input
-            label={t('form:input-label-og-title')}
-            {...register('seo.ogTitle')}
-            variant="outline"
-            className="mb-5"
-          />
+        <div className="mb-5">
+          <Label>{t('form:input-label-og-image')}</Label>
+          <FileInput name="seo.ogImage" control={control} multiple={false} />
+        </div>
+        <Input
+          label={t('form:input-label-twitter-handle')}
+          {...register('seo.twitterHandle')}
+          variant="outline"
+          className="mb-5"
+          placeholder="your twitter username (exp: @username)"
+        />
+        <Input
+          label={t('form:input-label-twitter-card-type')}
+          {...register('seo.twitterCardType')}
+          variant="outline"
+          className="mb-5"
+          placeholder="one of summary, summary_large_image, app, or player"
+        />
+      </Card>
+    </div>
+  );
+};
 
-          <div className="relative">
-            {options?.useAi && (
-              <OpenAIButton
-                title="Generate Description With AI"
-                onClick={handleGenerateDescription1}
-              />
-            )}
-            <TextArea
-              label={t('form:input-label-og-description')}
-              {...register('seo.ogDescription')}
-              variant="outline"
-              className="mb-5"
-            />
-          </div>
+const SmsEmailSettings = () => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const {
+    control,
+    formState: { errors },
+  } = useFormContext();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
 
-          <div className="mb-5">
-            <Label>{t('form:input-label-og-image')}</Label>
-            <FileInput name="seo.ogImage" control={control} multiple={false} />
-          </div>
-          <Input
-            label={t('form:input-label-twitter-handle')}
-            {...register('seo.twitterHandle')}
-            variant="outline"
-            className="mb-5"
-            placeholder="your twitter username (exp: @username)"
-          />
-          <Input
-            label={t('form:input-label-twitter-card-type')}
-            {...register('seo.twitterCardType')}
-            variant="outline"
-            className="mb-5"
-            placeholder="one of summary, summary_large_image, app, or player"
-          />
-        </Card>
-      </div>
+  return (
+    <>
       <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
         <Description
           title={t('form:title-sms-event-settings')}
@@ -956,209 +1169,224 @@ export default function SettingsForm({
           </div>
         </Card>
       </div>
+    </>
+  );
+};
 
-      <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
-        <Description
-          title={t('form:text-delivery-schedule')}
-          details={t('form:delivery-schedule-help-text')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pr-4 md:w-1/3 md:pr-5"
+const DeliverySettings = () => {
+  const { t } = useTranslation();
+  const {
+    register,
+    control,
+    formState: { errors },
+  } = useFormContext();
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'deliveryTime',
+  });
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
+      <Description
+        title={t('form:text-delivery-schedule')}
+        details={t('form:delivery-schedule-help-text')}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pr-4 md:w-1/3 md:pr-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <div>
+          {fields.map((item: any & { id: string }, index: number) => (
+            <div
+              className="border-b border-dashed border-border-200 py-5 first:pt-0 last:border-0 md:py-8"
+              key={item.id}
+            >
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
+                <div className="grid grid-cols-1 gap-5 sm:col-span-4">
+                  <Input
+                    label={t('form:input-delivery-time-title')}
+                    variant="outline"
+                    {...register(`deliveryTime.${index}.title` as const)}
+                    defaultValue={item?.title!} // make sure to set up defaultValue
+                    // @ts-ignore
+                    error={t(errors?.deliveryTime?.[index]?.title?.message)}
+                  />
+                  <TextArea
+                    label={t('form:input-delivery-time-description')}
+                    variant="outline"
+                    {...register(`deliveryTime.${index}.description` as const)}
+                    defaultValue={item.description!} // make sure to set up defaultValue
+                  />
+                </div>
+
+                <button
+                  onClick={() => {
+                    remove(index);
+                  }}
+                  type="button"
+                  className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1 sm:mt-4"
+                >
+                  {t('form:button-label-remove')}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          onClick={() => append({ title: '', description: '' })}
+          className="w-full sm:w-auto"
+        >
+          {t('form:button-label-add-delivery-time')}
+        </Button>
+
+        {
+          /*@ts-ignore*/
+          errors?.deliveryTime?.message ? (
+            <Alert
+              // @ts-ignore
+              message={t(errors?.deliveryTime?.message)}
+              variant="error"
+              className="mt-5"
+            />
+          ) : null
+        }
+      </Card>
+    </div>
+  );
+};
+
+const ShopSettings = () => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const {
+    register,
+    control,
+    getValues,
+    formState: { errors },
+  } = useFormContext();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
+  const {
+    fields: socialFields,
+    append: socialAppend,
+    remove: socialRemove,
+  } = useFieldArray({
+    control,
+    name: 'contactDetails.socials',
+  });
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
+      <Description
+        title={t('form:shop-settings')}
+        details={t('form:shop-settings-helper-text')}
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <div className="mb-5">
+          <Label>{t('form:input-label-autocomplete')}</Label>
+          <Controller
+            control={control}
+            name="contactDetails.location"
+            render={({ field: { onChange } }) => (
+              <GooglePlacesAutocomplete
+                onChange={onChange}
+                data={getValues('contactDetails.location')!}
+                disabled={isNotDefaultSettingsPage}
+              />
+            )}
+          />
+        </div>
+        <Input
+          label={t('form:input-label-contact')}
+          {...register('contactDetails.contact')}
+          variant="outline"
+          className="mb-5"
+          error={t(errors.contactDetails?.contact?.message!)}
+          disabled={isNotDefaultSettingsPage}
         />
+        <Input
+          label={t('form:input-label-website')}
+          {...register('contactDetails.website')}
+          variant="outline"
+          className="mb-5"
+          error={t(errors.contactDetails?.website?.message!)}
+          disabled={isNotDefaultSettingsPage}
+        />
+        <div className="mt-6">
+          <div className="flex items-center gap-x-4">
+            <SwitchInput
+              name="isProductReview"
+              control={control}
+              disabled={isNotDefaultSettingsPage}
+            />
+            <Label className="mb-0">
+              {t('form:input-label-product-for-review')}
+            </Label>
+          </div>
+        </div>
 
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div>
-            {fields.map((item: any & { id: string }, index: number) => (
+        {/* Social and Icon picker */}
+        <div>
+          {socialFields.map(
+            (item: ShopSocialInput & { id: string }, index: number) => (
               <div
-                className="border-b border-dashed border-border-200 py-5 first:pt-0 last:border-0 md:py-8"
+                className="border-b border-dashed border-border-200 py-5 first:mt-5 first:border-t last:border-b-0 md:py-8 md:first:mt-10"
                 key={item.id}
               >
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
-                  <div className="grid grid-cols-1 gap-5 sm:col-span-4">
-                    <Input
-                      label={t('form:input-delivery-time-title')}
-                      variant="outline"
-                      {...register(`deliveryTime.${index}.title` as const)}
-                      defaultValue={item?.title!} // make sure to set up defaultValue
-                      // @ts-ignore
-                      error={t(errors?.deliveryTime?.[index]?.title?.message)}
-                    />
-                    <TextArea
-                      label={t('form:input-delivery-time-description')}
-                      variant="outline"
-                      {...register(
-                        `deliveryTime.${index}.description` as const
-                      )}
-                      defaultValue={item.description!} // make sure to set up defaultValue
-                    />
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      remove(index);
-                    }}
-                    type="button"
-                    className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1 sm:mt-4"
-                  >
-                    {t('form:button-label-remove')}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Button
-            type="button"
-            onClick={() => append({ title: '', description: '' })}
-            className="w-full sm:w-auto"
-          >
-            {t('form:button-label-add-delivery-time')}
-          </Button>
-
-          {
-            /*@ts-ignore*/
-            errors?.deliveryTime?.message ? (
-              <Alert
-                // @ts-ignore
-                message={t(errors?.deliveryTime?.message)}
-                variant="error"
-                className="mt-5"
-              />
-            ) : null
-          }
-        </Card>
-      </div>
-
-      <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
-        <Description
-          title={t('form:shop-settings')}
-          details={t('form:shop-settings-helper-text')}
-          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
-        />
-
-        <Card className="w-full sm:w-8/12 md:w-2/3">
-          <div className="mb-5">
-            <Label>{t('form:input-label-autocomplete')}</Label>
-            <Controller
-              control={control}
-              name="contactDetails.location"
-              render={({ field: { onChange } }) => (
-                <GooglePlacesAutocomplete
-                  onChange={onChange}
-                  data={getValues('contactDetails.location')!}
-                  disabled={isNotDefaultSettingsPage}
-                />
-              )}
-            />
-          </div>
-          <Input
-            label={t('form:input-label-contact')}
-            {...register('contactDetails.contact')}
-            variant="outline"
-            className="mb-5"
-            error={t(errors.contactDetails?.contact?.message!)}
-            disabled={isNotDefaultSettingsPage}
-          />
-          <Input
-            label={t('form:input-label-website')}
-            {...register('contactDetails.website')}
-            variant="outline"
-            className="mb-5"
-            error={t(errors.contactDetails?.website?.message!)}
-            disabled={isNotDefaultSettingsPage}
-          />
-
-          {/* <div className="mt-6">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="useGoogleMap"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">
-                {t('form:input-label-use-google-map-service')}
-              </Label>
-            </div>
-          </div> */}
-
-          <div className="mt-6">
-            <div className="flex items-center gap-x-4">
-              <SwitchInput
-                name="isProductReview"
-                control={control}
-                disabled={isNotDefaultSettingsPage}
-              />
-              <Label className="mb-0">
-                {t('form:input-label-product-for-review')}
-              </Label>
-            </div>
-          </div>
-
-          {/* Social and Icon picker */}
-          <div>
-            {socialFields.map(
-              (item: ShopSocialInput & { id: string }, index: number) => (
-                <div
-                  className="border-b border-dashed border-border-200 py-5 first:mt-5 first:border-t last:border-b-0 md:py-8 md:first:mt-10"
-                  key={item.id}
-                >
-                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
-                    <div className="sm:col-span-2">
-                      <Label className="whitespace-nowrap">
-                        {t('form:input-label-select-platform')}
-                      </Label>
-                      <SelectInput
-                        name={`contactDetails.socials.${index}.icon` as const}
-                        control={control}
-                        options={updatedIcons}
-                        isClearable={true}
-                        defaultValue={item?.icon!}
-                        disabled={isNotDefaultSettingsPage}
-                      />
-                    </div>
-                    <Input
-                      className="sm:col-span-2"
-                      label={t('form:input-label-social-url')}
-                      variant="outline"
-                      {...register(
-                        `contactDetails.socials.${index}.url` as const
-                      )}
-                      defaultValue={item.url!} // make sure to set up defaultValue
+                  <div className="sm:col-span-2">
+                    <Label className="whitespace-nowrap">
+                      {t('form:input-label-select-platform')}
+                    </Label>
+                    <SelectInput
+                      name={`contactDetails.socials.${index}.icon` as const}
+                      control={control}
+                      options={updatedIcons}
+                      isClearable={true}
+                      defaultValue={item?.icon!}
                       disabled={isNotDefaultSettingsPage}
                     />
-                    {!isNotDefaultSettingsPage && (
-                      <button
-                        onClick={() => {
-                          socialRemove(index);
-                        }}
-                        type="button"
-                        className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1 sm:mt-4"
-                        disabled={isNotDefaultSettingsPage}
-                      >
-                        {t('form:button-label-remove')}
-                      </button>
-                    )}
                   </div>
+                  <Input
+                    className="sm:col-span-2"
+                    label={t('form:input-label-social-url')}
+                    variant="outline"
+                    {...register(
+                      `contactDetails.socials.${index}.url` as const
+                    )}
+                    defaultValue={item.url!} // make sure to set up defaultValue
+                    disabled={isNotDefaultSettingsPage}
+                  />
+                  {!isNotDefaultSettingsPage && (
+                    <button
+                      onClick={() => {
+                        socialRemove(index);
+                      }}
+                      type="button"
+                      className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1 sm:mt-4"
+                      disabled={isNotDefaultSettingsPage}
+                    >
+                      {t('form:button-label-remove')}
+                    </button>
+                  )}
                 </div>
-              )
-            )}
-          </div>
-
-          {!isNotDefaultSettingsPage && (
-            <Button
-              type="button"
-              onClick={() => socialAppend({ icon: '', url: '' })}
-              className="w-full sm:w-auto"
-              disabled={isNotDefaultSettingsPage}
-            >
-              {t('form:button-label-add-social')}
-            </Button>
+              </div>
+            )
           )}
-        </Card>
-      </div>
+        </div>
 
-      <div className="mb-4 text-end">
-        <Button loading={loading} disabled={loading}>
-          {t('form:button-label-save-settings')}
-        </Button>
-      </div>
-    </form>
+        {!isNotDefaultSettingsPage && (
+          <Button
+            type="button"
+            onClick={() => socialAppend({ icon: '', url: '' })}
+            className="w-full sm:w-auto"
+            disabled={isNotDefaultSettingsPage}
+          >
+            {t('form:button-label-add-social')}
+          </Button>
+        )}
+      </Card>
+    </div>
   );
-}
+};

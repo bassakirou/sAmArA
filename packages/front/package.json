@@ -6,6 +6,7 @@
     "dev": "next dev -p 3003",
     "build": "next build",
     "start": "next start -p 3003",
+    "clean:next": "rimraf .next",
     "clean": "rimraf \"{.next,node_modules}\""
   },
   "dependencies": {

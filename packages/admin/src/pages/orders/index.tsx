@@ -53,6 +53,8 @@ export default function Orders() {
     limit: 20,
     page,
     tracking_number: searchTerm,
+  }, {
+    refetchInterval: 5000,
   });
   const { refetch } = useExportOrderQuery(
     {

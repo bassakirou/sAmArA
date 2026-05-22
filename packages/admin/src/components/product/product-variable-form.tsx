@@ -1,5 +1,5 @@
 import Input from '@/components/ui/input';
-import { useFieldArray, useFormContext } from 'react-hook-form';
+import { Controller, useFieldArray, useFormContext } from 'react-hook-form';
 import Button from '@/components/ui/button';
 import Description from '@/components/ui/description';
 import Card from '@/components/common/card';
@@ -16,6 +16,8 @@ import ValidationError from '@/components/ui/form-validation-error';
 import { getCartesianProduct, filterAttributes } from './form-utils';
 import { useRouter } from 'next/router';
 import { Config } from '@/config';
+import { useCurrency } from '@/utils/use-currency';
+import { formatPrice } from '@/utils/use-price';
 
 type IProps = {
   initialValues?: Product | null;
@@ -31,6 +33,8 @@ export default function ProductVariableForm({
   const { t } = useTranslation();
   const { locale } = useRouter();
   const upload_max_filesize = settings?.server_info?.upload_max_filesize / 1024;
+  const { convert, baseCurrency, targetCurrency, rates } = useCurrency();
+  const showConverted = targetCurrency !== baseCurrency && Boolean(rates);
 
   const { attributes, loading } = useAttributesQuery({
     shop_id: initialValues ? initialValues.shop_id : shopId,
@@ -43,7 +47,7 @@ export default function ProductVariableForm({
     setValue,
     getValues,
     formState: { errors },
-  } = useFormContext();
+  } = useFormContext<any>();
   // This field array will keep all the attribute dropdown fields
   const { fields, append, remove } = useFieldArray({
     shouldUnregister: true,
@@ -167,27 +171,162 @@ export default function ProductVariableForm({
                       />
 
                       <div className="grid grid-cols-2 gap-5">
-                        <Input
-                          label={`${t('form:input-label-price')}*`}
-                          type="number"
-                          {...register(`variation_options.${index}.price`)}
-                          error={t(
-                            errors.variation_options?.[index]?.price?.message
-                          )}
-                          variant="outline"
-                          className="mb-5"
-                        />
-                        <Input
-                          label={t('form:input-label-sale-price')}
-                          type="number"
-                          {...register(`variation_options.${index}.sale_price`)}
-                          error={t(
-                            errors.variation_options?.[index]?.sale_price
-                              ?.message
-                          )}
-                          variant="outline"
-                          className="mb-5"
-                        />
+                        {showConverted ? (
+                          <Controller
+                            name={`variation_options.${index}.price`}
+                            control={control}
+                            render={({ field }) => {
+                              const baseRaw = field.value;
+                              const baseValue =
+                                baseRaw === '' ||
+                                baseRaw === null ||
+                                baseRaw === undefined
+                                  ? null
+                                  : Number(baseRaw);
+                              const displayValue =
+                                baseValue === null || Number.isNaN(baseValue)
+                                  ? ''
+                                  : convert(
+                                      baseValue,
+                                      baseCurrency,
+                                      targetCurrency
+                                    );
+                              const noteBase =
+                                baseValue === null || Number.isNaN(baseValue)
+                                  ? undefined
+                                  : formatPrice({
+                                      amount: baseValue,
+                                      currencyCode: baseCurrency,
+                                      locale: 'fr-CM',
+                                      fractions: 0,
+                                    });
+                              return (
+                                <Input
+                                  label={`${t('form:input-label-price')}*`}
+                                  type="number"
+                                  step="any"
+                                  name={field.name}
+                                  value={displayValue}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === '') {
+                                      field.onChange('');
+                                      return;
+                                    }
+                                    const parsed = Number(value);
+                                    if (Number.isNaN(parsed)) {
+                                      field.onChange('');
+                                      return;
+                                    }
+                                    const convertedToBase = convert(
+                                      parsed,
+                                      targetCurrency,
+                                      baseCurrency
+                                    );
+                                    field.onChange(Math.round(convertedToBase));
+                                  }}
+                                  error={t(
+                                    errors.variation_options?.[index]?.price
+                                      ?.message
+                                  )}
+                                  note={noteBase}
+                                  variant="outline"
+                                  className="mb-5"
+                                />
+                              );
+                            }}
+                          />
+                        ) : (
+                          <Input
+                            label={`${t('form:input-label-price')}*`}
+                            type="number"
+                            {...register(`variation_options.${index}.price`)}
+                            error={t(
+                              errors.variation_options?.[index]?.price?.message
+                            )}
+                            variant="outline"
+                            className="mb-5"
+                          />
+                        )}
+
+                        {showConverted ? (
+                          <Controller
+                            name={`variation_options.${index}.sale_price`}
+                            control={control}
+                            render={({ field }) => {
+                              const baseRaw = field.value;
+                              const baseValue =
+                                baseRaw === '' ||
+                                baseRaw === null ||
+                                baseRaw === undefined
+                                  ? null
+                                  : Number(baseRaw);
+                              const displayValue =
+                                baseValue === null || Number.isNaN(baseValue)
+                                  ? ''
+                                  : convert(
+                                      baseValue,
+                                      baseCurrency,
+                                      targetCurrency
+                                    );
+                              const noteBase =
+                                baseValue === null || Number.isNaN(baseValue)
+                                  ? undefined
+                                  : formatPrice({
+                                      amount: baseValue,
+                                      currencyCode: baseCurrency,
+                                      locale: 'fr-CM',
+                                      fractions: 0,
+                                    });
+                              return (
+                                <Input
+                                  label={t('form:input-label-sale-price')}
+                                  type="number"
+                                  step="any"
+                                  name={field.name}
+                                  value={displayValue}
+                                  onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (value === '') {
+                                      field.onChange('');
+                                      return;
+                                    }
+                                    const parsed = Number(value);
+                                    if (Number.isNaN(parsed)) {
+                                      field.onChange('');
+                                      return;
+                                    }
+                                    const convertedToBase = convert(
+                                      parsed,
+                                      targetCurrency,
+                                      baseCurrency
+                                    );
+                                    field.onChange(Math.round(convertedToBase));
+                                  }}
+                                  error={t(
+                                    errors.variation_options?.[index]?.sale_price
+                                      ?.message
+                                  )}
+                                  note={noteBase}
+                                  variant="outline"
+                                  className="mb-5"
+                                />
+                              );
+                            }}
+                          />
+                        ) : (
+                          <Input
+                            label={t('form:input-label-sale-price')}
+                            type="number"
+                            {...register(`variation_options.${index}.sale_price`)}
+                            error={t(
+                              errors.variation_options?.[index]?.sale_price
+                                ?.message
+                            )}
+                            variant="outline"
+                            className="mb-5"
+                          />
+                        )}
                         <Input
                           label={`${t('form:input-label-sku')}*`}
                           note={

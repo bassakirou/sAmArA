@@ -355,5 +355,24 @@
   "text-order-completed": "Commande terminée",
   "text-order-cancelled": "Commande annulée",
   "text-order-refunded": "Commande remboursée",
-  "text-order-failed": "Echec de laa commande"
+  "text-order-failed": "Echec de laa commande",
+  "payment-gateway-settings": {
+    "configure": "Configurer",
+    "title": "Paramètres pour {{gateway}}",
+    "taramoney": {
+      "api_key": "Clé API Taramoney",
+      "business_id": "Identifiant Business Taramoney",
+      "webhook_secret": "Secret Webhook Taramoney",
+      "base_url": "Base URL Taramoney",
+      "payout_phone_number": "Numéro de téléphone",
+      "payout_beneficiary_name": "Nom du bénéficiaire",
+      "payout_amount_xaf": "Montant à retirer (XAF)",
+      "payout_note": "Si ces champs de retrait sont renseignés, un retrait automatique sera demandé après chaque paiement réussi."
+    },
+    "errors": {
+      "payout_all_fields_required": "Pour activer le retrait automatique, renseignez le numéro de téléphone, le nom du bénéficiaire et le montant.",
+      "invalid_phone": "Le format du numéro de téléphone est invalide.",
+      "invalid_amount": "Le montant doit être un entier positif."
+    }
+  }
 }

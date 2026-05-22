@@ -383,5 +383,24 @@
   "text-order-completed": "Order Completed",
   "text-order-cancelled": "Order Cancelled",
   "text-order-refunded": "Order Refunded",
-  "text-order-failed": "Order Failed"
+  "text-order-failed": "Order Failed",
+  "payment-gateway-settings": {
+    "configure": "Configure",
+    "title": "Settings for {{gateway}}",
+    "taramoney": {
+      "api_key": "Taramoney API Key",
+      "business_id": "Taramoney Business ID",
+      "webhook_secret": "Taramoney Webhook Secret",
+      "base_url": "Taramoney Base URL",
+      "payout_phone_number": "Phone number",
+      "payout_beneficiary_name": "Beneficiary name",
+      "payout_amount_xaf": "Amount to withdraw (XAF)",
+      "payout_note": "If these payout fields are filled in, an automatic payout will be requested after each successful payment."
+    },
+    "errors": {
+      "payout_all_fields_required": "To enable automatic payout, please fill in phone number, beneficiary name, and amount.",
+      "invalid_phone": "Phone number format is invalid.",
+      "invalid_amount": "Amount must be a positive integer."
+    }
+  }
 }

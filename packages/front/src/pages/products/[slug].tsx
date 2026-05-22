@@ -10,7 +10,9 @@ import dynamic from 'next/dynamic';
 
 export { getStaticPaths, getStaticProps } from '@framework/product.ssr';
 
-const RelatedProducts = dynamic(() => import('@containers/related-products'));
+const RelatedProducts = dynamic(() => import('@containers/related-products'), {
+  ssr: false,
+});
 
 export default function ProductPage({ product }: any) {
   const router = useRouter();

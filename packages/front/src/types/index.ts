@@ -285,12 +285,14 @@ export interface Card {
 }
 
 export interface PaymentIntentInfo {
-  client_secret: string;
-  payment_id: string;
   is_redirect: boolean;
-  redirect_url: string;
-  currency: string;
-  amount: string;
+  client_secret?: string;
+  payment_id?: string;
+  redirect_url?: string;
+  currency?: string;
+  amount?: string | number;
+  message?: string;
+  [key: string]: any;
 }
 
 export interface CreateOrderPaymentInput {
@@ -517,6 +519,7 @@ export enum PaymentGateway {
   RAZORPAY = 'RAZORPAY',
   PAYSTACK = 'PAYSTACK',
   IYZICO = 'IYZICO',
+  TARAMONEY = 'TARAMONEY',
 }
 
 export enum PaymentStatus {

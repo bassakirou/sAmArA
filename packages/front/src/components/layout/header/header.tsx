@@ -11,6 +11,7 @@ import { authorizationAtom } from '@store/authorization-atom';
 import { menu } from '@data/static/menus';
 import HeaderMenu from '@components/layout/header/header-menu';
 import LanguageSwitcher from '@components/ui/language-switcher';
+import CurrencySwitcher from '@components/ui/currency-switcher';
 import ContacImg from '@components/icons/contact-img';
 import SignInImg from '@components/icons/signin-img';
 import UserImg from '@components/icons/user-img';
@@ -108,6 +109,7 @@ const Header: React.FC<Props> = ({ variant = 'default' }) => {
             {isMultiLangEnable ? (
               <div className="flex-shrink-0 ms-auto">
                 <LanguageSwitcher />
+                <CurrencySwitcher />
               </div>
             ) : (
               ''

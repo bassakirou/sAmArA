@@ -18,6 +18,10 @@ interface CheckoutState {
   payment_gateway: PaymentMethodName;
   delivery_time: DeliveryTime | null;
   customer_contact: string;
+  taramoney_network: string | null;
+  taramoney_phone_number: string;
+  taramoney_email: string;
+  taramoney_auto_submit: boolean;
   verified_response: VerifiedResponse | null;
   coupon: Coupon | null;
   [key: string]: unknown;
@@ -28,10 +32,22 @@ export const defaultCheckout: CheckoutState = {
   delivery_time: null,
   payment_gateway: 'STRIPE',
   customer_contact: '',
+  taramoney_network: null,
+  taramoney_phone_number: '',
+  taramoney_email: '',
+  taramoney_auto_submit: false,
   verified_response: null,
   coupon: null,
 };
-export type PaymentMethodName = 'CASH_ON_DELIVERY' | 'STRIPE' | 'PAYPAL' | 'RAZORPAY' | 'MOLLIE' | 'PAYSTACK'  | 'IYZICO';
+export type PaymentMethodName =
+  | 'CASH_ON_DELIVERY'
+  | 'STRIPE'
+  | 'PAYPAL'
+  | 'RAZORPAY'
+  | 'MOLLIE'
+  | 'PAYSTACK'
+  | 'IYZICO'
+  | 'TARAMONEY';
 
 // Original atom.
 export const checkoutAtom = atomWithStorage(CHECKOUT, defaultCheckout);
@@ -92,6 +108,38 @@ export const orderNoteAtom = atom(
   (get, set, data: string) => {
     const prev = get(checkoutAtom);
     return set(checkoutAtom, { ...prev, note: data });
+  }
+);
+
+export const taramoneyNetworkAtom = atom(
+  (get) => get(checkoutAtom).taramoney_network,
+  (get, set, data: string | null) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, taramoney_network: data });
+  }
+);
+
+export const taramoneyPhoneNumberAtom = atom(
+  (get) => get(checkoutAtom).taramoney_phone_number,
+  (get, set, data: string) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, taramoney_phone_number: data });
+  }
+);
+
+export const taramoneyEmailAtom = atom(
+  (get) => get(checkoutAtom).taramoney_email,
+  (get, set, data: string) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, taramoney_email: data });
+  }
+);
+
+export const taramoneyAutoSubmitAtom = atom(
+  (get) => get(checkoutAtom).taramoney_auto_submit,
+  (get, set, data: boolean) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, taramoney_auto_submit: data });
   }
 );
 export const verifiedResponseAtom = atom(

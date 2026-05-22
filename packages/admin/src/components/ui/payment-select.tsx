@@ -5,12 +5,6 @@ import CheckboxGroup from '@/components/ui/checkbox/checkbox-group';
 import { StripeIcon } from '@/components/icons/payment-gateways/stripe';
 import { TaramoneyIcon } from '@/components/icons/payment-gateways/taramoney';
 import { PayPalIcon } from '@/components/icons/payment-gateways/paypal';
-import { MollieIcon } from '@/components/icons/payment-gateways/mollie';
-import { RazorPayIcon } from '@/components/icons/payment-gateways/razorpay';
-import { SSLComerz } from '@/components/icons/payment-gateways/sslcomerz';
-import { PayStack } from '@/components/icons/payment-gateways/paystack';
-import { IyzicoIcon } from '@/components/icons/payment-gateways/iyzico';
-import { XenditIcon } from '@/components/icons/payment-gateways/xendit';
 import { StarIcon } from '@/components/icons/star-icon';
 import cn from 'classnames';
 import Image from 'next/image';
@@ -48,14 +42,6 @@ const PaymentMethodCard = ({
   const icon: any = {
     stripe: <StripeIcon />,
     paypal: <PayPalIcon />,
-    razorpay: <RazorPayIcon />,
-    mollie: <MollieIcon />,
-    sslcommerz: <SSLComerz />,
-    paystack: <PayStack />,
-    iyzico: <IyzicoIcon />,
-    xendit: <XenditIcon />,
-    bkash: <BkashIcon />,
-    paymongo: <PaymongoIcon />,
     taramoney: <TaramoneyIcon />,
   };
   return (
@@ -80,13 +66,13 @@ const PaymentMethodCard = ({
           {icon[name] ? icon[name] : ''}
         </span>
         <div
-          className="absolute top-2 right-2 cursor-pointer"
+          className="pointer-events-auto absolute left-2 top-2 z-20 cursor-pointer"
           onClick={(e) => {
             e.preventDefault();
             openModal('GATEWAY_SETTINGS', { gateway: name });
           }}
         >
-          <GearIcon className="h-5 w-5 text-gray-400" />
+          <GearIcon className="h-5 w-5 text-gray-700" />
         </div>
         {isDefault && (
           <span className="absolute -top-7 -right-7 flex h-14 w-14 rotate-45 items-end justify-center bg-accent p-2 text-white">

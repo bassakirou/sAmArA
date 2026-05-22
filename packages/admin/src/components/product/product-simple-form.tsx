@@ -1,13 +1,15 @@
 import Input from '@/components/ui/input';
 import Description from '@/components/ui/description';
 import Card from '@/components/common/card';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { Controller, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'next-i18next';
 import Label from '@/components/ui/label';
 import FileInput from '@/components/ui/file-input';
 import Checkbox from '@/components/ui/checkbox/checkbox';
 import { Config } from '@/config';
 import { useRouter } from 'next/router';
+import { useCurrency } from '@/utils/use-currency';
+import { formatPrice } from '@/utils/use-price';
 
 type IProps = {
   initialValues: any;
@@ -23,6 +25,8 @@ export default function ProductSimpleForm({ initialValues }: IProps) {
   const { t } = useTranslation();
   const { locale } = useRouter();
   const isTranslateProduct = locale !== Config.defaultLanguage;
+  const { convert, baseCurrency, targetCurrency, rates } = useCurrency();
+  const showConverted = targetCurrency !== baseCurrency && Boolean(rates);
 
   const is_digital = watch('is_digital');
   const is_external = watch('is_external');
@@ -40,22 +44,139 @@ export default function ProductSimpleForm({ initialValues }: IProps) {
       />
 
       <Card className="w-full sm:w-8/12 md:w-2/3">
-        <Input
-          label={`${t('form:input-label-price')}*`}
-          {...register('price')}
-          type="number"
-          error={t(errors.price?.message!)}
-          variant="outline"
-          className="mb-5"
-        />
-        <Input
-          label={t('form:input-label-sale-price')}
-          type="number"
-          {...register('sale_price')}
-          error={t(errors.sale_price?.message!)}
-          variant="outline"
-          className="mb-5"
-        />
+        {showConverted ? (
+          <Controller
+            name="price"
+            control={control}
+            render={({ field }) => {
+              const baseRaw = field.value;
+              const baseValue =
+                baseRaw === '' || baseRaw === null || baseRaw === undefined
+                  ? null
+                  : Number(baseRaw);
+              const displayValue =
+                baseValue === null || Number.isNaN(baseValue)
+                  ? ''
+                  : convert(baseValue, baseCurrency, targetCurrency);
+              const noteBase =
+                baseValue === null || Number.isNaN(baseValue)
+                  ? undefined
+                  : formatPrice({
+                      amount: baseValue,
+                      currencyCode: baseCurrency,
+                      locale: 'fr-CM',
+                      fractions: 0,
+                    });
+              return (
+                <Input
+                  label={`${t('form:input-label-price')}*`}
+                  type="number"
+                  step="any"
+                  name={field.name}
+                  value={displayValue}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      field.onChange('');
+                      return;
+                    }
+                    const parsed = Number(value);
+                    if (Number.isNaN(parsed)) {
+                      field.onChange('');
+                      return;
+                    }
+                    const convertedToBase = convert(
+                      parsed,
+                      targetCurrency,
+                      baseCurrency
+                    );
+                    field.onChange(Math.round(convertedToBase));
+                  }}
+                  error={t(errors.price?.message!)}
+                  note={noteBase}
+                  variant="outline"
+                  className="mb-5"
+                />
+              );
+            }}
+          />
+        ) : (
+          <Input
+            label={`${t('form:input-label-price')}*`}
+            {...register('price')}
+            type="number"
+            error={t(errors.price?.message!)}
+            variant="outline"
+            className="mb-5"
+          />
+        )}
+
+        {showConverted ? (
+          <Controller
+            name="sale_price"
+            control={control}
+            render={({ field }) => {
+              const baseRaw = field.value;
+              const baseValue =
+                baseRaw === '' || baseRaw === null || baseRaw === undefined
+                  ? null
+                  : Number(baseRaw);
+              const displayValue =
+                baseValue === null || Number.isNaN(baseValue)
+                  ? ''
+                  : convert(baseValue, baseCurrency, targetCurrency);
+              const noteBase =
+                baseValue === null || Number.isNaN(baseValue)
+                  ? undefined
+                  : formatPrice({
+                      amount: baseValue,
+                      currencyCode: baseCurrency,
+                      locale: 'fr-CM',
+                      fractions: 0,
+                    });
+              return (
+                <Input
+                  label={t('form:input-label-sale-price')}
+                  type="number"
+                  step="any"
+                  name={field.name}
+                  value={displayValue}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      field.onChange('');
+                      return;
+                    }
+                    const parsed = Number(value);
+                    if (Number.isNaN(parsed)) {
+                      field.onChange('');
+                      return;
+                    }
+                    const convertedToBase = convert(
+                      parsed,
+                      targetCurrency,
+                      baseCurrency
+                    );
+                    field.onChange(Math.round(convertedToBase));
+                  }}
+                  error={t(errors.sale_price?.message!)}
+                  note={noteBase}
+                  variant="outline"
+                  className="mb-5"
+                />
+              );
+            }}
+          />
+        ) : (
+          <Input
+            label={t('form:input-label-sale-price')}
+            type="number"
+            {...register('sale_price')}
+            error={t(errors.sale_price?.message!)}
+            variant="outline"
+            className="mb-5"
+          />
+        )}
 
         <Input
           label={`${t('form:input-label-quantity')}*`}

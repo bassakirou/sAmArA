@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import { Table } from '@/components/ui/table';
-import usePrice from '@/utils/use-price';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
@@ -8,6 +7,7 @@ import { Order, OrderStatus } from '@/types';
 import { useTranslation } from 'next-i18next';
 import Badge from '@/components/ui/badge/badge';
 import StatusColor from '@/components/order/status-color';
+import OrderTotalCell from '@/components/order/order-total-cell';
 
 type IProps = {
   orders: Order[];
@@ -32,11 +32,8 @@ const RecentOrders = ({ orders, title }: IProps) => {
       dataIndex: 'total',
       key: 'total',
       align: 'center',
-      render: function Render(value: any) {
-        const { price } = usePrice({
-          amount: value,
-        });
-        return <span className="whitespace-nowrap">{price}</span>;
+      render: function Render(value: any, order: Order) {
+        return <OrderTotalCell order={order} amount={value} />;
       },
     },
     {

@@ -23,6 +23,18 @@ cartContext.displayName = 'CartContext';
 export const useCart = () => {
   const context = React.useContext(cartContext);
   if (context === undefined) {
+    if (typeof window === 'undefined') {
+      return {
+        ...initialState,
+        addItemToCart: () => {},
+        removeItemFromCart: () => {},
+        clearItemFromCart: () => {},
+        getItemFromCart: () => undefined,
+        isInCart: () => false,
+        isInStock: () => false,
+        resetCart: () => {},
+      } as unknown as CartProviderState;
+    }
     throw new Error(`useCart must be used within a CartProvider`);
   }
   return context;

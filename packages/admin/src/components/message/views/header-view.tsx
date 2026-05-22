@@ -59,6 +59,19 @@ const HeaderView = ({ className, shop, ...rest }: Props) => {
             {shop?.name}
           </h2>
         </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            size="small"
+            className="!h-8 !px-3 text-xs"
+            onClick={() => {
+              // Logic to generate special order
+              alert('Générer une commande spéciale');
+            }}
+          >
+            {t('form:button-label-generate-special-order')}
+          </Button>
+        </div>
         {/* {adminPermission ? (
           <PopOver
             iconStyle="vertical"

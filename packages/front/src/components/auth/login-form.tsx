@@ -66,28 +66,7 @@ const LoginForm: React.FC<Props> = ({ layout = 'modal' }) => {
   });
 
   function onSubmit({ email, password }: LoginInputType) {
-    login(
-      {
-        email,
-        password,
-      },
-      {
-        onSuccess: (data: any) => {
-          if (data?.token && data?.permissions?.length) {
-            if (layout === 'page') {
-              // Redirect to the my-account page
-              return router.push(ROUTES.ACCOUNT);
-            } else {
-              closeModal();
-              return;
-            }
-          }
-        },
-        onError: (error: any) => {
-          console.log(error.message);
-        },
-      }
-    );
+    login({ email, password });
   }
 
   function handleSignUp() {

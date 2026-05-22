@@ -22,6 +22,7 @@ import { ChatIcon } from '@/components/icons/chat';
 import { useCreateConversations } from '@/data/conversations';
 import { SUPER_ADMIN } from '@/utils/constants';
 import { getAuthCredentials } from '@/utils/auth-utils';
+import OrderTotalCell from '@/components/order/order-total-cell';
 
 type IProps = {
   orders: Order[] | undefined;
@@ -116,11 +117,8 @@ const OrderList = ({
       align: 'center',
       width: 120,
       onHeaderCell: () => onHeaderClick('total'),
-      render: function Render(value: any) {
-        const { price } = usePrice({
-          amount: value,
-        });
-        return <span className="whitespace-nowrap">{price}</span>;
+      render: function Render(value: any, order: Order) {
+        return <OrderTotalCell order={order} amount={value} />;
       },
     },
     {
