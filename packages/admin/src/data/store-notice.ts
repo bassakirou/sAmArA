@@ -15,10 +15,36 @@ import {
   StoreNotice,
   StoreNoticePaginator,
   StoreNoticeQueryOptions,
+  SortOrder,
 } from '@/types';
 import { Routes } from '@/config/routes';
 import { API_ENDPOINTS } from './client/api-endpoints';
 import { Config } from '@/config';
+import { getAuthCredentials } from '@/utils/auth-utils';
+
+const markNoticeCollectionAsRead = (collection: any, noticeIds: Set<string>) => {
+  if (!collection) return collection;
+
+  if (Array.isArray(collection?.pages)) {
+    return {
+      ...collection,
+      pages: collection.pages.map((page: any) => markNoticeCollectionAsRead(page, noticeIds)),
+    };
+  }
+
+  if (Array.isArray(collection?.data)) {
+    return {
+      ...collection,
+      data: collection.data.map((notice: any) =>
+        noticeIds.has(String(notice?.id))
+          ? { ...notice, is_read: true }
+          : notice
+      ),
+    };
+  }
+
+  return collection;
+};
 
 export const useCreateStoreNoticeMutation = () => {
   const queryClient = useQueryClient();
@@ -131,6 +157,34 @@ export const useStoreNoticesQuery = (
   };
 };
 
+export const useNotificationStoreNoticesQuery = (
+  options: Partial<StoreNoticeQueryOptions> = {}
+) => {
+  const { token } = getAuthCredentials();
+  const query = useQuery<StoreNoticePaginator, Error>(
+    [API_ENDPOINTS.STORE_NOTICES, 'notifications', options],
+    ({ queryKey, pageParam }) =>
+      storeNoticeClient.paginated({
+        limit: 50,
+        orderBy: 'created_at',
+        sortedBy: SortOrder.Desc,
+        ...(queryKey[2] as any),
+        ...(pageParam as any),
+      }),
+    {
+      keepPreviousData: true,
+      refetchInterval: 60000,
+      enabled: Boolean(token),
+    }
+  );
+  const storeNotices = query.data?.data ?? [];
+  const unreadCount = storeNotices.reduce(
+    (acc, notice) => acc + (notice?.is_read ? 0 : 1),
+    0
+  );
+  return { ...query, storeNotices, unreadCount };
+};
+
 export const useStoreNoticesLoadMoreQuery = (
   options: Partial<StoreNoticeQueryOptions>,
   config?: UseInfiniteQueryOptions<StoreNoticePaginator, Error>
@@ -211,7 +265,6 @@ export const useUsersOrShopsQuery = (
 
 export function useStoreNoticeRead() {
   const queryClient = useQueryClient();
-  const { t } = useTranslation('common');
   const {
     mutate: readStoreNotice,
     isLoading,
@@ -220,9 +273,43 @@ export function useStoreNoticeRead() {
     onSuccess: () => {},
     // Always refetch after error or success:
     onSettled: () => {
-      queryClient.invalidateQueries(API_ENDPOINTS.STORE_NOTICES_IS_READ);
+      queryClient.invalidateQueries(API_ENDPOINTS.STORE_NOTICES);
     },
   });
 
   return { readStoreNotice, isLoading, isSuccess };
+}
+
+export function useStoreNoticeReadAll() {
+  const queryClient = useQueryClient();
+  const {
+    mutate: readAllStoreNotices,
+    isLoading,
+    isSuccess,
+  } = useMutation(storeNoticeClient.readAll, {
+    onMutate: async (input: { notices: string[] }) => {
+      const noticeIds = new Set((input?.notices ?? []).map(String));
+      if (!noticeIds.size) return { previousQueries: [] };
+
+      await queryClient.cancelQueries([API_ENDPOINTS.STORE_NOTICES]);
+      const previousQueries = queryClient.getQueriesData([API_ENDPOINTS.STORE_NOTICES]);
+
+      queryClient.setQueriesData([API_ENDPOINTS.STORE_NOTICES], (oldData: any) =>
+        markNoticeCollectionAsRead(oldData, noticeIds)
+      );
+
+      return { previousQueries };
+    },
+    onSuccess: () => {},
+    onError: (_error, _variables, context: any) => {
+      context?.previousQueries?.forEach?.(([queryKey, data]: [unknown, unknown]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.STORE_NOTICES);
+    },
+  });
+
+  return { readAllStoreNotices, isLoading, isSuccess };
 }

@@ -12,7 +12,7 @@ export default function UpdateTypePage() {
   const { query, locale } = useRouter();
   const { t } = useTranslation();
   const {
-    data,
+    type: data,
     isLoading: loading,
     error,
   } = useTypeQuery({

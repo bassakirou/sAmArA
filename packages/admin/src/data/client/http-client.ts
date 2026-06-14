@@ -16,17 +16,22 @@ const Axios = axios.create({
 });
 // Change request data/error
 const AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? 'authToken';
+let isAuthRedirecting = false;
 Axios.interceptors.request.use((config) => {
   const cookies = Cookies.get(AUTH_TOKEN_KEY);
   let token = '';
   if (cookies) {
-    token = JSON.parse(cookies)['token'];
+    try {
+      token = JSON.parse(cookies)['token'];
+    } catch {
+      Cookies.remove(AUTH_TOKEN_KEY);
+    }
   }
 
   config.headers = {
     ...config.headers,
     Authorization: `Bearer ${token}`,
-  };
+  } as any;
   return config;
 });
 
@@ -34,14 +39,14 @@ Axios.interceptors.request.use((config) => {
 Axios.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (
-      (error.response && error.response.status === 401) ||
-      (error.response && error.response.status === 403) ||
-      (error.response &&
-        error.response.data.message === 'SAMARA_ERROR.NOT_AUTHORIZED')
-    ) {
+    const status = error?.response?.status;
+    const message = error?.response?.data?.message;
+    if (status === 401 || message === 'SAMARA_ERROR.NOT_AUTHORIZED') {
       Cookies.remove(AUTH_TOKEN_KEY);
-      Router.reload();
+      if (!isAuthRedirecting && Router.pathname !== '/login') {
+        isAuthRedirecting = true;
+        Router.replace('/login');
+      }
     }
     return Promise.reject(error);
   }
@@ -55,11 +60,15 @@ interface SearchParamOptions {
   categories: string;
   code: string;
   type: string;
+  title: string;
   name: string;
   shop_id: string;
   is_approved: boolean;
   tracking_number: string;
   notice: string;
+  status: string;
+  order: string;
+  is_deleted: string;
 }
 
 export class HttpClient {

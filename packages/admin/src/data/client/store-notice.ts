@@ -47,6 +47,9 @@ export const storeNoticeClient = {
   toggle: (input: { id: string; language?: string }) =>
     HttpClient.post<any>(API_ENDPOINTS.STORE_NOTICES_IS_READ, input),
 
+  readAll: (input: { notices: string[] }) =>
+    HttpClient.post<any>(API_ENDPOINTS.STORE_NOTICES_READ_ALL, input),
+
   getTypeList: ({ type }: { type: string }) =>
     HttpClient.get<any>(API_ENDPOINTS.STORE_NOTICE_GET_STORE_NOTICE_TYPE),
   getUserOrShopList: ({ type }: { type: string }) =>

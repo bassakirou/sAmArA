@@ -3,8 +3,12 @@ import Label from '@/components/ui/label';
 import { Control, useWatch, useFormState } from 'react-hook-form';
 import { useTranslation } from 'next-i18next';
 import { useEffect } from 'react';
-import { useManufacturersQuery } from '@/data/manufacturer';
+import {
+  useCreateManufacturerInlineMutation,
+  useManufacturersQuery,
+} from '@/data/manufacturer';
 import { useRouter } from 'next/router';
+import { toast } from 'react-toastify';
 
 interface Props {
   control: Control<any>;
@@ -18,6 +22,10 @@ const ProductManufacturerInput = ({ control, setValue }: Props) => {
   const type = useWatch({
     control,
     name: 'type',
+  });
+  const selectedManufacturer = useWatch({
+    control,
+    name: 'manufacturer',
   });
   const { dirtyFields } = useFormState({
     control,
@@ -36,6 +44,8 @@ const ProductManufacturerInput = ({ control, setValue }: Props) => {
     }),
     language: locale,
   });
+  const { mutateAsync: createManufacturer } =
+    useCreateManufacturerInlineMutation();
 
   return (
     <div className="mb-5">
@@ -48,6 +58,28 @@ const ProductManufacturerInput = ({ control, setValue }: Props) => {
         // @ts-ignore
         options={manufacturers}
         isLoading={loading}
+        isCreatable
+        onCreateOption={async (name: string) => {
+          const trimmed = name.trim();
+          if (!trimmed) return;
+          if (!type?.id) {
+            toast.error(t('common:inline-create-select-type-first'));
+            return;
+          }
+          try {
+            const created = await createManufacturer({
+              name: trimmed,
+              type_id: String(type.id),
+              is_approved: true,
+            });
+            if (selectedManufacturer?.id === created.id) return;
+            setValue('manufacturer', created, {
+              shouldDirty: true,
+            });
+          } catch {
+            toast.error(t('common:inline-create-failed'));
+          }
+        }}
       />
     </div>
   );

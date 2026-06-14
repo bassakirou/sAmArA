@@ -141,6 +141,7 @@ const CustomerList = ({
             {data?.id != id && (
               <ActionButtons
                 id={id}
+                deleteModalView="DELETE_USER"
                 userStatus={true}
                 isUserActive={is_active}
                 showAddWalletPoints={true}

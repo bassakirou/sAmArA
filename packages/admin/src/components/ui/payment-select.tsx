@@ -5,14 +5,14 @@ import CheckboxGroup from '@/components/ui/checkbox/checkbox-group';
 import { StripeIcon } from '@/components/icons/payment-gateways/stripe';
 import { TaramoneyIcon } from '@/components/icons/payment-gateways/taramoney';
 import { PayPalIcon } from '@/components/icons/payment-gateways/paypal';
+
 import { StarIcon } from '@/components/icons/star-icon';
 import cn from 'classnames';
-import Image from 'next/image';
-import { BkashIcon } from '../icons/payment-gateways/bkash';
-import { PaymongoIcon } from '../icons/payment-gateways/paymongo';
 import { GearIcon } from '@/components/icons/gear-icon';
+import { CampayIcon } from '@/components/icons/payment-gateways/campay';
 
 interface PaymentSelectProps {
+  className?: string;
   options: OptionType[];
   control: any;
   rules?: any;
@@ -43,6 +43,7 @@ const PaymentMethodCard = ({
     stripe: <StripeIcon />,
     paypal: <PayPalIcon />,
     taramoney: <TaramoneyIcon />,
+    campay: <CampayIcon />,
   };
   return (
     <label
@@ -85,6 +86,7 @@ const PaymentMethodCard = ({
 };
 
 const PaymentSelect = ({
+  className,
   options,
   control,
   rules,
@@ -94,38 +96,40 @@ const PaymentSelect = ({
   ...rest
 }: PaymentSelectProps) => {
   return (
-    <Controller
-      control={control}
-      name={name}
-      rules={rules}
-      {...rest}
-      render={({ field: { onChange, value } }) => {
-        return (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5">
-            <CheckboxGroup
-              values={value.map((value: any) => value?.name)}
-              onChange={(value) => {
-                const obj = value.map((value) => ({
-                  name: value,
-                  title: capitalize(value),
-                }));
-                onChange(obj);
-              }}
-            >
-              {options?.map((option) => (
-                <PaymentMethodCard
-                  key={option?.name}
-                  value={option.name}
-                  name={option.name}
-                  isDefault={option?.name === defaultItem}
-                  disable={disable}
-                />
-              ))}
-            </CheckboxGroup>
-          </div>
-        );
-      }}
-    />
+    <div className={cn('mb-3', className)}>
+      <Controller
+        control={control}
+        name={name}
+        rules={rules}
+        {...rest}
+        render={({ field: { onChange, value } }) => {
+          return (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5">
+              <CheckboxGroup
+                values={value.map((value: any) => value?.name)}
+                onChange={(value) => {
+                  const obj = value.map((value) => ({
+                    name: value,
+                    title: capitalize(value),
+                  }));
+                  onChange(obj);
+                }}
+              >
+                {options?.map((option) => (
+                  <PaymentMethodCard
+                    key={option?.name}
+                    value={option.name}
+                    name={option.name}
+                    isDefault={option?.name === defaultItem}
+                    disable={disable}
+                  />
+                ))}
+              </CheckboxGroup>
+            </div>
+          );
+        }}
+      />
+    </div>
   );
 };
 

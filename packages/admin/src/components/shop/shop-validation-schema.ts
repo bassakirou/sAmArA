@@ -8,9 +8,20 @@ export const shopValidationSchema = yup.object().shape({
         .string()
         .typeError('form: error-email-string')
         .email('form:error-email-format'),
-      account: yup
-        .number()
-        .transform((value) => (isNaN(value) ? undefined : value)),
-    }),
+      orange_money_phone: yup.string().nullable(),
+      mobile_money_phone: yup.string().nullable(),
+    }).test(
+      'payment-phone-required',
+      'form:error-payment-number-required',
+      function (value) {
+        const orange = value?.orange_money_phone;
+        const mobile = value?.mobile_money_phone;
+        if (orange || mobile) return true;
+        return this.createError({
+          path: `${this.path}.mobile_money_phone`,
+          message: 'form:error-payment-number-required',
+        });
+      }
+    ),
   }),
 });

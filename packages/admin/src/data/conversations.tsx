@@ -15,11 +15,36 @@ import {
   ConversationQueryOptions,
   MessagePaginator,
   Conversations,
+  SortOrder,
+  User,
 } from '@/types';
 import { mapPaginatorData } from '@/utils/data-mappers';
 import { conversationsClient } from './client/conversations';
 import { useModalAction } from '@/components/ui/modal/modal.context';
-import { adminOnly, getAuthCredentials, hasAccess } from '@/utils/auth-utils';
+import { getAuthCredentials, isSuperAdmin } from '@/utils/auth-utils';
+
+const reportVendorChatDebug = (
+  hypothesisId: string,
+  location: string,
+  msg: string,
+  data: Record<string, unknown> = {}
+) => {
+  fetch('http://127.0.0.1:7777/event', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      sessionId: 'vendor-chat-scroll-lag',
+      runId: 'post-fix',
+      hypothesisId,
+      location,
+      msg,
+      data,
+      ts: Date.now(),
+    }),
+  }).catch(() => {});
+};
 
 export const useConversationsQuery = (
   options: Partial<ConversationQueryOptions>
@@ -68,17 +93,50 @@ export const useConversationsQuery = (
   };
 };
 
+export const useConversationNotificationsQuery = (
+  options: Partial<ConversationQueryOptions> = {}
+) => {
+  const query = useQuery<ConversionPaginator, Error>(
+    [API_ENDPOINTS.CONVERSIONS, 'notifications', options],
+    () =>
+      conversationsClient.allConversation({
+        limit: 20,
+        sortedBy: SortOrder.Desc,
+        orderBy: 'updated_at',
+        ...options,
+      }),
+    {
+      refetchInterval: 5000,
+    }
+  );
+
+  const conversations = query.data?.data ?? [];
+  const unseenCount = conversations.reduce(
+    (acc: number, c: any) => acc + (Number(c?.unseen) || 0),
+    0
+  );
+
+  return {
+    ...query,
+    conversations,
+    unseenCount,
+  };
+};
+
 export const useCreateConversations = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const { closeModal } = useModalAction();
   const queryClient = useQueryClient();
-  const { permissions } = getAuthCredentials();
-  let permission = hasAccess(adminOnly, permissions);
+  const auth = getAuthCredentials();
+  const shopParam =
+    typeof router.query.shop === 'string' ? router.query.shop : undefined;
   return useMutation(conversationsClient.create, {
     onSuccess: (data) => {
       if (data?.id) {
-        const routes = permission
+        const routes = shopParam
+          ? `/${shopParam}${Routes.shopMessage.details(data?.id)}`
+          : isSuperAdmin(auth)
           ? Routes?.message?.details(data?.id)
           : Routes?.shopMessage?.details(data?.id);
         toast.success(t('common:successfully-created'));
@@ -145,12 +203,13 @@ export const useConversationQuery = ({ id }: { id: string }) => {
     [API_ENDPOINTS.CONVERSIONS, id],
     () => conversationsClient.getConversion({ id }),
     {
+      enabled: Boolean(id),
       keepPreviousData: true,
     }
   );
 
   return {
-    data: data ?? [],
+    data,
     error,
     loading: isLoading,
     isFetching,
@@ -161,11 +220,87 @@ export const useSendMessage = () => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   return useMutation(conversationsClient.messageCreate, {
+    onMutate: async (variables: any) => {
+      await queryClient.cancelQueries(API_ENDPOINTS.MESSAGE);
+
+      const me = queryClient.getQueryData<User>([API_ENDPOINTS.ME]);
+      const optimisticId = `optimistic-${Date.now()}`;
+      const conversationId = String(variables?.id ?? '');
+      const previousMessageQueries = queryClient.getQueriesData(
+        API_ENDPOINTS.MESSAGE
+      );
+
+      previousMessageQueries.forEach(([queryKey]) => {
+        const keyOptions =
+          Array.isArray(queryKey) && queryKey.length > 1
+            ? (queryKey[1] as any)
+            : null;
+
+        if (String(keyOptions?.slug ?? '') !== conversationId) {
+          return;
+        }
+
+        queryClient.setQueryData(queryKey, (current: any) => {
+          if (!current?.pages?.length) {
+            return current;
+          }
+
+          const optimisticMessage = {
+            id: optimisticId,
+            body: variables?.message ?? '',
+            conversation_id: conversationId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            user_id: String(me?.id ?? ''),
+            product_id: variables?.product_id,
+            product: null,
+            custom_offer: null,
+          };
+
+          return {
+            ...current,
+            pages: current.pages.map((page: any, index: number) =>
+              index === 0
+                ? {
+                    ...page,
+                    data: [optimisticMessage, ...(page?.data ?? [])],
+                  }
+                : page
+            ),
+          };
+        });
+      });
+
+      return {
+        previousMessageQueries,
+      };
+    },
     onSuccess: () => {
+      // #region debug-point E:mutation-success
+      reportVendorChatDebug(
+        'E',
+        'data/conversations.tsx:useSendMessage:onSuccess',
+        '[DEBUG] send message mutation resolved successfully'
+      );
+      // #endregion
       toast.success(t('common:text-message-sent'));
+    },
+    onError: (_error, _variables, context: any) => {
+      context?.previousMessageQueries?.forEach(
+        ([queryKey, data]: [unknown, unknown]) => {
+          queryClient.setQueryData(queryKey as any, data);
+        }
+      );
     },
     // Always refetch after error or success:
     onSettled: () => {
+      // #region debug-point E:mutation-settled
+      reportVendorChatDebug(
+        'E',
+        'data/conversations.tsx:useSendMessage:onSettled',
+        '[DEBUG] invalidating queries after send message'
+      );
+      // #endregion
       queryClient.invalidateQueries(API_ENDPOINTS.MESSAGE);
       queryClient.invalidateQueries(API_ENDPOINTS.CONVERSIONS);
     },

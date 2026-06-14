@@ -11,4 +11,4 @@ export const CHECKOUT = 'pickbazar-checkout';
 export const RESPONSIVE_WIDTH = 659 as number;
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
 export const ACCEPTED_FILE_TYPES =
-  'image/*,application/pdf,application/zip,application/vnd.rar,application/epub+zip,.psd';
+  'image/*,video/*,application/pdf,application/zip,application/vnd.rar,application/epub+zip,.psd';

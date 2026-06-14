@@ -3,6 +3,14 @@ import Modal from '@/components/ui/modal/modal';
 import dynamic from 'next/dynamic';
 import { MODAL_VIEWS, useModalAction, useModalState } from './modal.context';
 const TagDeleteView = dynamic(() => import('@/components/tag/tag-delete-view'));
+const FaqDeleteView = dynamic(() => import('@/components/faq/faq-delete-view'));
+const TermsAndConditionsDeleteView = dynamic(
+  () =>
+    import('@/components/terms-and-conditions/terms-and-conditions-delete-view')
+);
+const PrivacyPolicyDeleteView = dynamic(
+  () => import('@/components/privacy-policy/privacy-policy-delete-view')
+);
 const TaxDeleteView = dynamic(() => import('@/components/tax/tax-delete-view'));
 const BanCustomerView = dynamic(
   () => import('@/components/user/user-ban-view')
@@ -100,6 +108,9 @@ const AuthorDeleteView = dynamic(
 const ManufacturerDeleteView = dynamic(
   () => import('@/components/manufacturer/manufacturer-delete-view')
 );
+const UserDeleteView = dynamic(
+  () => import('@/components/user/user-delete-view')
+);
 
 const ProductVariation = dynamic(
   () => import('@/components/product/variation/variation')
@@ -109,8 +120,26 @@ const OpenAiModal = dynamic(() => import('@/components/openAI/openAI.modal'));
 const ComposerMessage = dynamic(
   () => import('@/components/message/compose-message')
 );
+const ChatProductPicker = dynamic(
+  () => import('@/components/message/product-picker-modal')
+);
+const ChatCustomOrderOffer = dynamic(
+  () => import('@/components/message/custom-order-offer-modal')
+);
 const GatewaySettingsModal = dynamic(
   () => import('@/components/settings/gateway-settings-modal')
+);
+const TypeCreateInlineView = dynamic(
+  () => import('@/components/group/group-create-inline-view')
+);
+const CategoryCreateInlineView = dynamic(
+  () => import('@/components/category/category-create-inline-view')
+);
+const TagCreateInlineView = dynamic(
+  () => import('@/components/tag/tag-create-inline-view')
+);
+const BrandCreateInlineView = dynamic(
+  () => import('@/components/brand/brand-create-inline-view')
 );
 
 function renderModal(view: MODAL_VIEWS | undefined, data: any) {
@@ -133,10 +162,18 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <ShippingDeleteView />;
     case 'DELETE_TAG':
       return <TagDeleteView />;
+    case 'DELETE_FAQ':
+      return <FaqDeleteView />;
+    case 'DELETE_TERMS':
+      return <TermsAndConditionsDeleteView />;
+    case 'DELETE_PRIVACY':
+      return <PrivacyPolicyDeleteView />;
     case 'DELETE_MANUFACTURER':
       return <ManufacturerDeleteView />;
     case 'DELETE_AUTHOR':
       return <AuthorDeleteView />;
+    case 'DELETE_USER':
+      return <UserDeleteView />;
     case 'BAN_CUSTOMER':
       return <BanCustomerView />;
     case 'SHOP_APPROVE_VIEW':
@@ -187,8 +224,20 @@ function renderModal(view: MODAL_VIEWS | undefined, data: any) {
       return <OpenAiModal />;
     case 'COMPOSE_MESSAGE':
       return <ComposerMessage />;
+    case 'CHAT_PRODUCT_PICKER':
+      return <ChatProductPicker />;
+    case 'CHAT_CUSTOM_ORDER_OFFER':
+      return <ChatCustomOrderOffer />;
     case 'GATEWAY_SETTINGS':
       return <GatewaySettingsModal />;
+    case 'CREATE_TYPE_INLINE':
+      return <TypeCreateInlineView />;
+    case 'CREATE_BRAND_INLINE':
+      return <BrandCreateInlineView />;
+    case 'CREATE_CATEGORY_INLINE':
+      return <CategoryCreateInlineView />;
+    case 'CREATE_TAG_INLINE':
+      return <TagCreateInlineView />;
     default:
       return null;
   }

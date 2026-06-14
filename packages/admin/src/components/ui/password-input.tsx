@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Input, { InputProps } from '@/components/ui/input';
 import { EyeIcon } from '@/components/icons/eye-icon';
 import { EyeOffIcon } from '@/components/icons/eye-off-icon';
+import cn from 'classnames';
 
 export interface PasswordInputProps extends InputProps {
   forgotPassHelpText?: string;
@@ -21,7 +22,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
     const [show, setShow] = useState(false);
 
     return (
-      <div className={className}>
+      <div className={cn('mb-4', className)}>
         <div className="flex items-center justify-between mb-3">
           <label
             htmlFor={rest.name}

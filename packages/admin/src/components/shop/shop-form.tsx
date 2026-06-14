@@ -114,6 +114,7 @@ export const updatedIcons = socialIcon.map((item: any) => {
 
 type FormValues = {
   name: string;
+  owner_id?: string;
   description: string;
   cover_image: any;
   logo: any;
@@ -190,6 +191,14 @@ const ShopForm = ({ initialValues }: { initialValues?: any }) => {
     control,
     name: 'settings.socials',
   });
+  const {
+    fields: deliveryFields,
+    append: deliveryAppend,
+    remove: deliveryRemove,
+  } = useFieldArray({
+    control,
+    name: 'settings.deliveryTime',
+  });
   function onSubmit(values: FormValues) {
     const settings = {
       ...values?.settings,
@@ -207,7 +216,7 @@ const ShopForm = ({ initialValues }: { initialValues?: any }) => {
         id: initialValues.id,
         ...values,
         address: restAddress,
-        settings,
+        settings: settings as any,
         balance: {
           id: initialValues.balance?.id,
           ...values.balance,
@@ -216,7 +225,7 @@ const ShopForm = ({ initialValues }: { initialValues?: any }) => {
     } else {
       createShop({
         ...values,
-        settings,
+        settings: settings as any,
         balance: {
           ...values.balance,
         },
@@ -272,6 +281,14 @@ const ShopForm = ({ initialValues }: { initialValues?: any }) => {
               className="mb-5"
               error={t(errors.name?.message!)}
             />
+            {permissions?.includes(SUPER_ADMIN) ? (
+              <Input
+                label="Propriétaire (ID utilisateur)"
+                {...register('owner_id')}
+                variant="outline"
+                className="mb-5"
+              />
+            ) : null}
 
             <div className="relative">
               {options?.useAi && (
@@ -311,19 +328,78 @@ const ShopForm = ({ initialValues }: { initialValues?: any }) => {
               className="mb-5"
               error={t(errors.balance?.payment_info?.email?.message!)}
             />
-            <Input
-              label={t('form:input-label-bank-name')}
-              {...register('balance.payment_info.bank')}
-              variant="outline"
-              className="mb-5"
-              error={t(errors.balance?.payment_info?.bank?.message!)}
-            />
-            <Input
-              label={t('form:input-label-account-number')}
-              {...register('balance.payment_info.account')}
-              variant="outline"
-              error={t(errors.balance?.payment_info?.account?.message!)}
-            />
+            <div className="grid gap-4 md:grid-cols-2">
+              <Input
+                label={t('form:input-label-orange-money-number')}
+                {...register('balance.payment_info.orange_money_phone')}
+                variant="outline"
+                className="mb-5"
+                error={t(
+                  errors.balance?.payment_info?.orange_money_phone?.message!
+                )}
+              />
+              <Input
+                label={t('form:input-label-mobile-money-number')}
+                {...register('balance.payment_info.mobile_money_phone')}
+                variant="outline"
+                className="mb-5"
+                error={t(
+                  errors.balance?.payment_info?.mobile_money_phone?.message!
+                )}
+              />
+            </div>
+          </Card>
+        </div>
+
+        <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
+          <Description
+            title={t('form:text-delivery-schedule')}
+            details={t('form:delivery-schedule-help-text')}
+            className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+          />
+          <Card className="w-full sm:w-8/12 md:w-2/3">
+            <div>
+              {deliveryFields.map((item: any & { id: string }, index: number) => (
+                <div
+                  className="border-b border-dashed border-border-200 py-5 first:pt-0 last:border-0 md:py-8"
+                  key={item.id}
+                >
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
+                    <div className="grid grid-cols-1 gap-5 sm:col-span-4">
+                      <Input
+                        label={t('form:input-delivery-time-title')}
+                        variant="outline"
+                        {...register(`settings.deliveryTime.${index}.title` as const)}
+                        defaultValue={item?.title ?? ''}
+                      />
+                      <TextArea
+                        label={t('form:input-delivery-time-description')}
+                        variant="outline"
+                        {...register(
+                          `settings.deliveryTime.${index}.description` as const
+                        )}
+                        defaultValue={item?.description ?? ''}
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => deliveryRemove(index)}
+                      type="button"
+                      className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1 sm:mt-4"
+                    >
+                      {t('form:button-label-remove')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button
+              type="button"
+              onClick={() => deliveryAppend({ title: '', description: '' })}
+              className="w-full sm:w-auto"
+            >
+              {t('form:button-label-add-delivery-time')}
+            </Button>
           </Card>
         </div>
         <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">

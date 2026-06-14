@@ -111,6 +111,13 @@ export const useUpdateOrderMutation = () => {
     onSuccess: () => {
       toast.success(t('common:successfully-updated'));
     },
+    onError: (error: any) => {
+      const message =
+        error?.response?.data?.message ??
+        error?.message ??
+        t('common:text-something-wrong');
+      toast.error(message);
+    },
     // Always refetch after error or success:
     onSettled: () => {
       queryClient.invalidateQueries(API_ENDPOINTS.ORDERS);

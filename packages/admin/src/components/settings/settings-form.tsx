@@ -5,6 +5,7 @@ import { CURRENCY } from '@/components/settings/currency';
 import { AI } from '@/components/settings/ai';
 import { PAYMENT_GATEWAY } from '@/components/settings/payment';
 import { TaramoneyIcon } from '@/components/icons/payment-gateways/taramoney';
+import { CampayIcon } from '@/components/icons/payment-gateways/campay';
 import WebHookURL from '@/components/settings/webhook-url';
 import Alert from '@/components/ui/alert';
 import Button from '@/components/ui/button';
@@ -55,7 +56,11 @@ import {
   formatEventAPIData,
   formatEventOptions,
 } from '@/utils/format-event-options';
-import { EMAIL_GROUP_OPTION, SMS_GROUP_OPTION } from './eventsOption';
+import {
+  EMAIL_GROUP_OPTION,
+  IN_APP_GROUP_OPTION,
+  SMS_GROUP_OPTION,
+} from './eventsOption';
 import OpenAIButton from '../openAI/openAI.button';
 import { useModalAction } from '../ui/modal/modal.context';
 import Tabs from '@/components/ui/tabs';
@@ -180,6 +185,11 @@ type FormValues = {
     title: string;
     description: string;
   }[];
+  deliveryTimeEnforcement: {
+    gracePeriodDays: number;
+    executionTime: string;
+    warningDays: { label: string; value: number }[];
+  };
   seo: {
     metaTitle: string;
     metaDescription: string;
@@ -203,6 +213,15 @@ type FormValues = {
   guestCheckout: boolean;
   smsEvent: any;
   emailEvent: any;
+  inAppEvent: any;
+  whatsapp?: {
+    enabled?: boolean;
+    twilio?: {
+      account_sid?: string;
+      auth_token?: string;
+      from?: string;
+    };
+  };
   server_info: ServerInfo;
 };
 
@@ -283,6 +302,29 @@ export default function SettingsForm({
           : [],
       },
       deliveryTime: options?.deliveryTime ? options?.deliveryTime : [],
+      deliveryTimeEnforcement: {
+        gracePeriodDays: options?.deliveryTimeEnforcement?.gracePeriodDays ?? 7,
+        executionTime:
+          options?.deliveryTimeEnforcement?.executionTime ?? '08:00',
+        warningDays: options?.deliveryTimeEnforcement?.warningDays
+          ? options.deliveryTimeEnforcement.warningDays.map((day) => {
+              const labelMap: Record<number, string> = {
+                1: 'Lundi',
+                2: 'Mardi',
+                3: 'Mercredi',
+                4: 'Jeudi',
+                5: 'Vendredi',
+                6: 'Samedi',
+                7: 'Dimanche',
+              };
+              return { label: labelMap[day] || String(day), value: day };
+            })
+          : [
+              { label: 'Lundi', value: 1 },
+              { label: 'Mercredi', value: 3 },
+              { label: 'Vendredi', value: 5 },
+            ],
+      },
       logo: options?.logo ?? '',
       useEnableGateway: options?.useEnableGateway ?? true,
       guestCheckout: options?.guestCheckout ?? true,
@@ -339,6 +381,9 @@ export default function SettingsForm({
       emailEvent: options?.emailEvent
         ? formatEventAPIData(options?.emailEvent)
         : null,
+      inAppEvent: options?.inAppEvent
+        ? formatEventAPIData(options?.inAppEvent)
+        : null,
     },
   });
   const {
@@ -354,8 +399,14 @@ export default function SettingsForm({
   const { openModal } = useModalAction();
 
   const getTabIndexForFieldPath = useCallback((path: string) => {
+    if (path.startsWith('options.subscriptions')) return 7;
     if (path.startsWith('deliveryTime')) return 6;
-    if (path.startsWith('smsEvent') || path.startsWith('emailEvent')) return 5;
+    if (
+      path.startsWith('smsEvent') ||
+      path.startsWith('emailEvent') ||
+      path.startsWith('inAppEvent')
+    )
+      return 5;
     if (path.startsWith('seo.')) return 4;
     if (
       path.startsWith('currency') ||
@@ -459,6 +510,7 @@ export default function SettingsForm({
       };
       const smsEvent = formatEventOptions(values.smsEvent as any);
       const emailEvent = formatEventOptions(values.emailEvent as any);
+      const inAppEvent = formatEventOptions(values.inAppEvent as any);
       updateSettingsMutation({
         language: locale,
         options: {
@@ -468,6 +520,16 @@ export default function SettingsForm({
           currencyToWalletRatio: Number(values.currencyToWalletRatio),
           minimumOrderAmount: Number(values.minimumOrderAmount),
           freeShippingAmount: Number(values.freeShippingAmount),
+          deliveryTimeEnforcement: {
+            gracePeriodDays: Number(
+              values.deliveryTimeEnforcement?.gracePeriodDays
+            ),
+            executionTime: values.deliveryTimeEnforcement?.executionTime,
+            warningDays:
+              values.deliveryTimeEnforcement?.warningDays?.map(
+                (d: any) => d.value
+              ) || [],
+          },
           currency: values.currency?.code,
           defaultAi: values?.defaultAi?.value,
           // paymentGateway: values.paymentGateway?.name,
@@ -488,6 +550,7 @@ export default function SettingsForm({
           logo: values?.logo,
           smsEvent,
           emailEvent,
+          inAppEvent,
           contactDetails,
           //@ts-ignore
           seo: {
@@ -548,7 +611,16 @@ export default function SettingsForm({
     { title: 'SEO', content: <SeoSettings /> },
     { title: 'SMS / Email', content: <SmsEmailSettings /> },
     { title: 'Delivery', content: <DeliverySettings /> },
-    { title: 'Shop', content: <ShopSettings /> },
+    {
+      title: 'Shop',
+      content: (
+        <>
+          <ShopSettings />
+          <ShopEnforcementSettings />
+        </>
+      ),
+    },
+    { title: 'Abonnements', content: <SubscriptionSettings /> },
   ];
 
   return (
@@ -660,7 +732,7 @@ const InformationSettings = ({
         />
         <Input
           label={`${t('form:input-label-min-order-amount')}`}
-          {...register('minimumOrderAmount')}
+          {...register('minimumOrderAmount', { valueAsNumber: true })}
           type="number"
           error={t(errors.minimumOrderAmount?.message!)}
           variant="outline"
@@ -766,7 +838,7 @@ const InformationSettings = ({
         {enableFreeShipping && (
           <Input
             label={t('form:free-shipping-input-label-amount')}
-            {...register('freeShippingAmount')}
+            {...register('freeShippingAmount', { valueAsNumber: true })}
             error={t(errors.freeShippingAmount?.message!)}
             variant="outline"
             type="number"
@@ -942,11 +1014,11 @@ const CurrencySettings = () => {
         </div>
         <Input
           label={`${t('form:input-label-currency-number-of-decimal')} *`}
-          {...register('currencyOptions.fractions')}
+          {...register('currencyOptions.fractions', { valueAsNumber: true })}
           type="number"
           variant="outline"
           placeholder={t('form:input-placeholder-currency-number-of-decimal')}
-          error={t(errors.currencyOptions?.fractions?.message!)}
+          error={t((errors.currencyOptions as any)?.fractions?.message!)}
           className="mb-5"
         />
         {formation && (
@@ -1169,7 +1241,117 @@ const SmsEmailSettings = () => {
           </div>
         </Card>
       </div>
+
+      <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+        <Description
+          title="Parametres des notifications in-app"
+          details="Choisis quels evenements doivent apparaitre dans le centre de notifications integre."
+          className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+        />
+
+        <Card className="w-full sm:w-8/12 md:w-2/3">
+          <div className="mb-5">
+            <Label>Options des notifications in-app</Label>
+            <SelectInput
+              name="inAppEvent"
+              control={control}
+              getOptionLabel={(option: any) => {
+                let optionUser = split(option.value, '-');
+                switch (optionUser[0].toLowerCase()) {
+                  case 'vendor':
+                    return `Owner: ${option.label}`;
+                  default:
+                    return `Admin: ${option.label}`;
+                }
+              }}
+              isCloseMenuOnSelect={false}
+              options={IN_APP_GROUP_OPTION}
+              isMulti
+              disabled={isNotDefaultSettingsPage}
+            />
+          </div>
+        </Card>
+      </div>
+
+      <SmsWhatsappApiSettings />
     </>
+  );
+};
+
+const SmsWhatsappApiSettings = () => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const { register, control, watch } = useFormContext<FormValues>();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
+  const whatsappEnabled = watch('whatsapp.enabled');
+
+  const tabs = [
+    {
+      title: 'SMS',
+      content: (
+        <Alert
+          message="Les SMS sont gérés via la configuration OTP/SMS existante."
+          variant="info"
+        />
+      ),
+    },
+    {
+      title: 'WhatsApp',
+      content: (
+        <div className="space-y-5">
+          <Input
+            label="Twilio Account SID"
+            {...register('whatsapp.twilio.account_sid')}
+            variant="outline"
+            disabled={isNotDefaultSettingsPage}
+          />
+          <Input
+            label="Twilio Auth Token"
+            type="password"
+            {...register('whatsapp.twilio.auth_token')}
+            variant="outline"
+            placeholder="********"
+            disabled={isNotDefaultSettingsPage}
+          />
+          <Input
+            label="WhatsApp From (numéro Twilio WhatsApp)"
+            {...register('whatsapp.twilio.from')}
+            variant="outline"
+            placeholder="whatsapp:+14155238886"
+            disabled={isNotDefaultSettingsPage}
+          />
+          <div className="flex items-center gap-x-4">
+            <SwitchInput
+              name="whatsapp.enabled"
+              control={control}
+              disabled={isNotDefaultSettingsPage}
+            />
+            <Label className="mb-0">
+              Envoyer aussi les notifications par WhatsApp
+            </Label>
+          </div>
+          {!whatsappEnabled ? (
+            <Alert
+              message="WhatsApp est désactivé. Active-le pour envoyer des notifications."
+              variant="warning"
+            />
+          ) : null}
+        </div>
+      ),
+    },
+  ];
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
+      <Description
+        title="Configuration API SMS et WhatsApp"
+        details="Renseigne les identifiants Twilio pour activer les notifications WhatsApp."
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <Tabs tabs={tabs} variant="pill" />
+      </Card>
+    </div>
   );
 };
 
@@ -1302,7 +1484,7 @@ const ShopSettings = () => {
           {...register('contactDetails.contact')}
           variant="outline"
           className="mb-5"
-          error={t(errors.contactDetails?.contact?.message!)}
+          error={t((errors.contactDetails as any)?.contact?.message!)}
           disabled={isNotDefaultSettingsPage}
         />
         <Input
@@ -1310,7 +1492,7 @@ const ShopSettings = () => {
           {...register('contactDetails.website')}
           variant="outline"
           className="mb-5"
-          error={t(errors.contactDetails?.website?.message!)}
+          error={t((errors.contactDetails as any)?.website?.message!)}
           disabled={isNotDefaultSettingsPage}
         />
         <div className="mt-6">
@@ -1386,6 +1568,88 @@ const ShopSettings = () => {
             {t('form:button-label-add-social')}
           </Button>
         )}
+      </Card>
+    </div>
+  );
+};
+
+const ShopEnforcementSettings = () => {
+  const { t } = useTranslation();
+  const { locale } = useRouter();
+  const { register, control } = useFormContext();
+  const isNotDefaultSettingsPage = Config.defaultLanguage !== locale;
+
+  const daysOptions = [
+    { label: 'Lundi', value: 1 },
+    { label: 'Mardi', value: 2 },
+    { label: 'Mercredi', value: 3 },
+    { label: 'Jeudi', value: 4 },
+    { label: 'Vendredi', value: 5 },
+    { label: 'Samedi', value: 6 },
+    { label: 'Dimanche', value: 7 },
+  ];
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
+      <Description
+        title="Gestion globale des boutiques"
+        details="Gérer les fréquences de relance et les sanctions pour les boutiques (ex: délais de livraison manquants)."
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <Input
+          label="Jours avant désactivation (si délais de livraison non remplis)"
+          {...register('deliveryTimeEnforcement.gracePeriodDays')}
+          type="number"
+          variant="outline"
+          className="mb-5"
+          disabled={isNotDefaultSettingsPage}
+        />
+        <Input
+          label="Heure d'exécution de la relance/désactivation (ex: 08:00)"
+          {...register('deliveryTimeEnforcement.executionTime')}
+          type="time"
+          variant="outline"
+          className="mb-5"
+          disabled={isNotDefaultSettingsPage}
+        />
+        <div className="mb-5">
+          <Label>Jours d’exécution des relances (warnings)</Label>
+          <SelectInput
+            name="deliveryTimeEnforcement.warningDays"
+            control={control}
+            getOptionLabel={(option: any) => option.label}
+            getOptionValue={(option: any) => option.value}
+            options={daysOptions}
+            isMulti
+            disabled={isNotDefaultSettingsPage}
+          />
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+const SubscriptionSettings = () => {
+  const { register } = useFormContext<FormValues>();
+
+  return (
+    <div className="my-5 flex flex-wrap border-b border-dashed border-gray-300 pb-8 sm:my-8">
+      <Description
+        title="Abonnements"
+        details="Paramètres d’abonnements (essai gratuit)."
+        className="w-full px-0 pb-5 sm:w-4/12 sm:py-8 sm:pe-4 md:w-1/3 md:pe-5"
+      />
+
+      <Card className="w-full sm:w-8/12 md:w-2/3">
+        <Input
+          label="Durée de l’essai gratuit (jours)"
+          type="number"
+          variant="outline"
+          className="mb-5"
+          {...register('options.subscriptions.trial_days' as any)}
+        />
       </Card>
     </div>
   );

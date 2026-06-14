@@ -1,4 +1,4 @@
-import { SUPER_ADMIN } from '@/utils/constants';
+import { getAuthCredentials, isSuperAdmin } from '@/utils/auth-utils';
 import dynamic from 'next/dynamic';
 
 const AdminLayout = dynamic(() => import('@/components/layouts/admin'));
@@ -8,9 +8,12 @@ export default function AppLayout({
   userPermissions,
   ...props
 }: {
-  userPermissions: string[];
+  userPermissions?: string[];
 }) {
-  if (userPermissions?.includes(SUPER_ADMIN)) {
+  const auth = getAuthCredentials();
+  const effectivePermissions = userPermissions ?? auth.permissions;
+
+  if (isSuperAdmin(userPermissions ? effectivePermissions : auth)) {
     return <AdminLayout {...props} />;
   }
   return <OwnerLayout {...props} />;

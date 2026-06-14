@@ -1,14 +1,11 @@
-import Cookies from 'js-cookie';
-import { SUPER_ADMIN } from './constants';
+import { adminOnly, getAuthCredentials, hasAccess } from './auth-utils';
 
 export function loggedIn() {
-  const token = Cookies.get('auth_token');
+  const auth = getAuthCredentials();
+  const token = auth.token;
   if (!token) return false;
-  if (token) {
-    const permissions = Cookies.get('auth_permissions');
-    if (!permissions?.includes(SUPER_ADMIN)) {
-      return false;
-    }
+  if (!hasAccess(adminOnly, auth)) {
+    return false;
   }
   return true;
 }

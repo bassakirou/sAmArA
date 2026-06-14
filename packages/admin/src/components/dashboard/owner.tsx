@@ -17,10 +17,10 @@ const tabList = [
     title: 'common:sidebar-nav-item-my-shops',
     children: 'ShopList',
   },
-  // {
-  //   title: 'common:sidebar-nav-item-message',
-  //   children: 'Message',
-  // },
+  {
+    title: 'common:sidebar-nav-item-discussions',
+    children: 'Message',
+  },
   // {
   //   title: 'common:sidebar-nav-item-store-notice',
   //   children: 'StoreNotices',

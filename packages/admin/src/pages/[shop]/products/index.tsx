@@ -44,6 +44,7 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [type, setType] = useState('');
   const [category, setCategory] = useState('');
+  const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [orderBy, setOrder] = useState('created_at');
   const [sortedBy, setColumn] = useState<SortOrder>(SortOrder.Desc);
@@ -63,6 +64,7 @@ export default function ProductsPage() {
       shop_id: shopId,
       type,
       categories: category,
+      status,
       orderBy,
       sortedBy,
       page,
@@ -169,6 +171,19 @@ export default function ProductsPage() {
                 setType(slug);
               }}
             />
+            <div className="mt-5 w-full md:mt-0 md:ms-6 md:w-64">
+              <select
+                className="w-full rounded border-border-base bg-white px-3 py-2 text-sm text-body shadow-sm focus:border-accent focus:ring-0"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">{t('common:text-all')}</option>
+                <option value="draft">{t('form:input-label-draft')}</option>
+              </select>
+            </div>
           </div>
         </div>
       </Card>

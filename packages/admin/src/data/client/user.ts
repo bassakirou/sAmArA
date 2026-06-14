@@ -34,6 +34,9 @@ export const userClient = {
   update: ({ id, input }: { id: string; input: UpdateUser }) => {
     return HttpClient.put<User>(`${API_ENDPOINTS.USERS}/${id}`, input);
   },
+  delete: ({ id }: { id: string }) => {
+    return HttpClient.delete<any>(`${API_ENDPOINTS.USERS}/${id}`);
+  },
   changePassword: (variables: ChangePasswordInput) => {
     return HttpClient.post<any>(API_ENDPOINTS.CHANGE_PASSWORD, variables);
   },

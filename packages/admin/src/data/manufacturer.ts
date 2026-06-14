@@ -36,6 +36,20 @@ export const useCreateManufacturerMutation = () => {
   });
 };
 
+export const useCreateManufacturerInlineMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation(manufacturerClient.create, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-created'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.MANUFACTURERS);
+    },
+  });
+};
+
 export const useDeleteManufacturerMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

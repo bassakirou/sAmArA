@@ -10,17 +10,20 @@ export const settingsValidationSchema = yup.object().shape({
   currencyOptions: yup.object().shape({
     fractions: yup
       .number()
-      .min(0, 'Fractional must be non-negative') // Allow 0
+      .min(0, 'Fractional must be non-negative')
       .max(5, 'Fractional number can not be grater than 5')
+      .transform((value) => (isNaN(value) ? undefined : value))
       .typeError('form:error-fractions-must-be-number')
       .required('form:error-currency-number of decimals-required'),
   }),
   minimumOrderAmount: yup
     .number()
     .transform((value) => (isNaN(value) ? undefined : value))
-    .moreThan(-1, 'form:error-sale-price-must-positive'),
+    .moreThan(-1, 'form:error-sale-price-must-positive')
+    .typeError('form:error-amount-number'),
   freeShippingAmount: yup
     .number()
+    .transform((value) => (isNaN(value) ? undefined : value))
     .moreThan(-1, 'form:error-free-shipping-amount-must-positive')
     .typeError('form:error-amount-number'),
   deliveryTime: yup

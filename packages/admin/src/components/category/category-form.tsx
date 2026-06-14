@@ -25,6 +25,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { categoryValidationSchema } from './category-validation-schema';
 import {
   useCategoriesQuery,
+  useCreateCategoryInlineMutation,
   useCreateCategoryMutation,
   useUpdateCategoryMutation,
 } from '@/data/category';
@@ -115,9 +116,11 @@ const defaultValues = {
 
 type IProps = {
   initialValues?: Category | undefined;
+  onCreated?: (created: Category) => void;
 };
 export default function CreateOrUpdateCategoriesForm({
   initialValues,
+  onCreated,
 }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
@@ -173,8 +176,14 @@ export default function CreateOrUpdateCategoriesForm({
     });
   }, [generateName]);
 
-  const { mutate: createCategory, isLoading: creating } =
-    useCreateCategoryMutation();
+  const createInlineMutation = useCreateCategoryInlineMutation();
+  const createStandardMutation = useCreateCategoryMutation();
+  const createMutation = onCreated ? createInlineMutation : createStandardMutation;
+  const {
+    mutate: createCategory,
+    mutateAsync: createCategoryAsync,
+    isLoading: creating,
+  } = createMutation;
   const { mutate: updateCategory, isLoading: updating } =
     useUpdateCategoryMutation();
 
@@ -183,18 +192,20 @@ export default function CreateOrUpdateCategoriesForm({
       language: router.locale,
       name: values.name,
       details: values.details,
-      image: values?.image?.map(({ thumbnail, original, id }) => ({
-        thumbnail,
-        original,
-        id,
-      })),
-      banner_image: values?.banner_image?.map(
-        ({ thumbnail, original, id }) => ({
-          thumbnail,
-          original,
-          id,
-        })
-      ),
+      image: values?.image?.[0]
+        ? {
+            thumbnail: values.image[0].thumbnail,
+            original: values.image[0].original,
+            id: values.image[0].id,
+          }
+        : undefined,
+      banner_image: values?.banner_image?.[0]
+        ? {
+            thumbnail: values.banner_image[0].thumbnail,
+            original: values.banner_image[0].original,
+            id: values.banner_image[0].id,
+          }
+        : undefined,
       icon: values.icon?.value || '',
       parent: values.parent?.id ?? null,
       // type_id: values.type?.id,
@@ -204,10 +215,18 @@ export default function CreateOrUpdateCategoriesForm({
       !initialValues ||
       !initialValues.translated_languages.includes(router.locale!)
     ) {
+      if (onCreated) {
+        const created = await createCategoryAsync({
+          ...input,
+          ...(initialValues?.slug && { slug: initialValues.slug }),
+        } as any);
+        onCreated(created as any);
+        return;
+      }
       createCategory({
         ...input,
         ...(initialValues?.slug && { slug: initialValues.slug }),
-      });
+      } as any);
     } else {
       updateCategory({
         ...input,

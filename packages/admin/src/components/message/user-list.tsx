@@ -10,6 +10,7 @@ import { LIMIT } from '@/utils/constants';
 import UserListNotFound from '@/components/message/views/conversation-not-found';
 import { SortOrder } from '@/types';
 import cn from 'classnames';
+import { useMemo } from 'react';
 
 interface Props {
   className?: string;
@@ -69,6 +70,33 @@ const UserList = ({ className, filterText, permission, ...rest }: Props) => {
     observer?.observe(element);
   }, [loadMoreRef?.current, filterText, hasMore]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  const orderedConversations = useMemo(() => {
+    return [...conversations].sort((left: any, right: any) => {
+      const unseenDelta =
+        Number(right?.unseen ?? 0) - Number(left?.unseen ?? 0);
+
+      if (unseenDelta !== 0) {
+        return unseenDelta;
+      }
+
+      const leftTimestamp = new Date(
+        left?.latest_message?.created_at ?? left?.updated_at ?? 0
+      ).getTime();
+      const rightTimestamp = new Date(
+        right?.latest_message?.created_at ?? right?.updated_at ?? 0
+      ).getTime();
+
+      return rightTimestamp - leftTimestamp;
+    });
+  }, [conversations]);
+
   // if (loading)
   //   return (
   //     <Loader
@@ -104,7 +132,7 @@ const UserList = ({ className, filterText, permission, ...rest }: Props) => {
               }}
             >
               {isSuccess &&
-                conversations?.map((conversation: any, key: number) => (
+                orderedConversations?.map((conversation: any, key: number) => (
                   <ListView
                     key={key}
                     conversation={conversation}

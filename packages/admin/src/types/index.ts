@@ -82,6 +82,7 @@ export type QueryOptionsType = {
   limit?: number;
   orderBy?: string;
   sortedBy?: SortOrder;
+  permission?: Permission;
 };
 
 export enum OrderStatus {
@@ -157,6 +158,7 @@ export interface LoginInput {
 export interface AuthResponse {
   token: string;
   permissions: string[];
+  primary_permission?: string | null;
 }
 
 export interface Type {
@@ -164,6 +166,7 @@ export interface Type {
   name: string;
   icon: string;
   slug: string;
+  images?: { key?: string; image?: Attachment[] }[];
   promotional_sliders?: AttachmentInput[];
   settings?: TypeSettings;
   products?: ProductPaginator;
@@ -294,6 +297,8 @@ export interface Shop {
   owner?: User;
   staffs?: User[];
   is_active?: boolean;
+  is_plan_restrictions_exempt?: boolean;
+  can_use_chat_negotiation?: boolean;
   orders_count?: number;
   products_count?: number;
   balance?: Balance;
@@ -323,6 +328,8 @@ export interface PaymentInfo {
   name?: string;
   email?: string;
   bank?: string;
+  orange_money_phone?: string;
+  mobile_money_phone?: string;
 }
 
 export interface PaymentInfoInput {
@@ -330,6 +337,8 @@ export interface PaymentInfoInput {
   name?: string;
   email?: string;
   bank?: string;
+  orange_money_phone?: string;
+  mobile_money_phone?: string;
 }
 
 export interface BalanceInput {
@@ -342,6 +351,9 @@ export interface ShopSettings {
   contact?: string;
   location?: Location;
   website?: string;
+  deliveryTime?: DeliveryTime[];
+  faqs?: { question: string; answer: string }[];
+  terms_and_conditions?: string;
   notifications: {
     email: string;
     enable: boolean;
@@ -381,6 +393,7 @@ export interface User {
   shops: Shop[];
   managed_shop: Shop;
   is_active: boolean;
+  is_connected?: boolean;
   email: string;
   phone: string;
   created_at: string;
@@ -389,6 +402,7 @@ export interface User {
   address: Address[];
   orders?: OrderPaginator;
   email_verified: boolean;
+  primary_permission?: string | null;
 }
 
 export interface UpdateUser {
@@ -468,6 +482,7 @@ export interface StoreNotice {
   updated_at: string;
   deleted_at?: string;
   creator?: any;
+  data?: any;
 }
 
 export interface StoreNoticeInput {
@@ -482,6 +497,39 @@ export interface StoreNoticeInput {
 
 export interface StoreNoticeUserToNotifyInput {
   type: string;
+}
+
+export interface SubscriptionPlan {
+  id: string;
+  name: string;
+  description: string;
+  level?: number | null;
+  monthly_price: number;
+  annual_monthly_prorata_price: number;
+  permissions?: string[];
+  max_products?: number | null;
+  platform_commission_rate?: number | null;
+  discount_percent?: number | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionPlanInput {
+  name: string;
+  description: string;
+  level?: number | null;
+  monthly_price: number;
+  annual_monthly_prorata_price: number;
+  permissions?: string[];
+  max_products?: number | null;
+  platform_commission_rate?: number | null;
+  discount_percent?: number | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  is_active?: boolean;
 }
 
 export interface Order {
@@ -517,6 +565,10 @@ export interface Order {
   order_status: string;
   payment_status: string;
   shop_id?: string;
+  shop?: Shop;
+  parent_id?: string | null;
+  parent_order?: Order;
+  children?: Order[];
 }
 
 export interface OrderProductPivot {
@@ -548,6 +600,7 @@ export interface Product {
   id: string;
   translated_languages: string[];
   shop_id: string;
+  shop?: Shop;
   name: string;
   slug: string;
   type: Type;
@@ -569,6 +622,8 @@ export interface Product {
   sale_price?: number;
   video?: {
     url: string;
+    type?: 'youtube' | 'vimeo' | 'external' | 'upload';
+    attachment_id?: string;
   }[];
   sku?: string;
   gallery?: Attachment[];
@@ -612,6 +667,10 @@ export interface CreateProduct {
   variation_options?: UpsertVariationsHasMany;
   video: {
     url: string;
+    type?: 'youtube' | 'vimeo' | 'external' | 'upload';
+    attachment_id?: string;
+    source?: any;
+    file?: AttachmentInput;
   }[];
   sku?: string;
   gallery?: AttachmentInput[];
@@ -675,6 +734,93 @@ export interface CreateTagInput {
   image?: AttachmentInput;
   icon?: string;
 }
+
+export enum FaqType {
+  Customer = 'customer',
+  Seller = 'seller',
+}
+
+export interface Faq {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  type: FaqType;
+  language: string;
+  order: number;
+  translated_languages: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateFaqInput {
+  title: string;
+  description: string;
+  type: FaqType;
+  language?: string;
+  slug?: string;
+  order?: number;
+}
+
+export interface FaqQueryOptions extends QueryOptions {
+  title?: string;
+  type?: FaqType;
+}
+
+export interface FaqPaginator extends PaginatorInfo<Faq> {}
+
+export interface TermsAndCondition {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  language: string;
+  order: number;
+  translated_languages: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreateTermsAndConditionInput {
+  title: string;
+  description: string;
+  language?: string;
+  slug?: string;
+  order?: number;
+}
+
+export interface TermsAndConditionQueryOptions extends QueryOptions {
+  title?: string;
+}
+
+export interface TermsAndConditionPaginator
+  extends PaginatorInfo<TermsAndCondition> {}
+
+export interface PrivacyPolicy {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  language: string;
+  order: number;
+  translated_languages: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CreatePrivacyPolicyInput {
+  title: string;
+  description: string;
+  language?: string;
+  slug?: string;
+  order?: number;
+}
+
+export interface PrivacyPolicyQueryOptions extends QueryOptions {
+  title?: string;
+}
+
+export interface PrivacyPolicyPaginator extends PaginatorInfo<PrivacyPolicy> {}
 
 export interface Author {
   bio?: string;
@@ -875,9 +1021,12 @@ export interface CreateAbuseReportInput {
 }
 
 export interface CreateMessageInput {
-  message: string;
-  id: string;
-  shop_id: string;
+  message?: string;
+  id?: string;
+  shop_id?: string;
+  product_id?: string;
+  negotiated_price?: number | string | null;
+  via?: string;
 }
 export interface CreateMessageSeenInput {
   id: string;
@@ -887,6 +1036,12 @@ export interface Tax {
   id?: string;
   name?: string;
   rate?: number;
+}
+
+export interface DeliveryTimeEnforcement {
+  gracePeriodDays?: number;
+  executionTime?: string;
+  warningDays?: number[];
 }
 
 export interface SettingsOptions {
@@ -906,6 +1061,7 @@ export interface SettingsOptions {
   signupPoints?: number;
   maximumQuestionLimit?: number;
   deliveryTime?: DeliveryTime[];
+  deliveryTimeEnforcement?: DeliveryTimeEnforcement;
   logo?: Attachment;
   taxClass?: string;
   shippingClass?: string;
@@ -917,7 +1073,19 @@ export interface SettingsOptions {
   guestCheckout: boolean;
   smsEvent?: SmsEvent;
   emailEvent?: EmailEvent;
+  whatsapp?: WhatsAppSettings;
   server_info?: ServerInfo;
+}
+
+export interface WhatsAppTwilioSettings {
+  account_sid?: string;
+  auth_token?: string;
+  from?: string;
+}
+
+export interface WhatsAppSettings {
+  enabled?: boolean;
+  twilio?: WhatsAppTwilioSettings;
 }
 
 export interface ContactDetails {
@@ -963,6 +1131,28 @@ export interface Message extends LatestMessage {
   product?: Product;
   product_id?: string;
   negotiated_price?: number;
+  custom_offer?: CustomOrderOffer | null;
+}
+
+export interface CustomOrderOffer {
+  id: string;
+  conversation_id: string;
+  message_id?: string | null;
+  order_id?: string | null;
+  product_id: string;
+  shop_id: string;
+  seller_id: string;
+  customer_id: string;
+  original_price: number;
+  negotiated_price: number;
+  minimum_allowed_price: number;
+  maximum_discount_percent: number;
+  status: string;
+  accepted_at?: string | null;
+  converted_at?: string | null;
+  product?: Product;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ShopSocials {
@@ -997,6 +1187,10 @@ export interface Settings {
   id: string;
   language: string;
   options: SettingsOptions;
+  server_info?: {
+    upload_max_filesize?: number;
+    [key: string]: any;
+  };
 }
 
 export interface SettingsInput {
@@ -1096,9 +1290,10 @@ export interface SettingsOptions {
   facebook?: FacebookSettings;
   useEnableGateway?: boolean;
   currencyOptions?: SettingCurrencyOptions;
-  guestCheckout: boolean
-  smsEvent?: SmsEvent
-  emailEvent?: EmailEvent
+  guestCheckout: boolean;
+  smsEvent?: SmsEvent;
+  emailEvent?: EmailEvent;
+  whatsapp?: WhatsAppSettings;
   server_info?: ServerInfo;
   mailchimpSubscribeText?: string;
   customerService?: string;
@@ -1130,6 +1325,7 @@ export interface SettingsOptionsInput {
   signupPoints?: number;
   maximumQuestionLimit?: number;
   deliveryTime?: DeliveryTimeInput[];
+  deliveryTimeEnforcement?: DeliveryTimeEnforcement;
   logo?: AttachmentInput;
   taxClass?: string;
   shippingClass?: string;
@@ -1141,6 +1337,7 @@ export interface SettingsOptionsInput {
   guestCheckout: boolean;
   smsEvent?: SmsEvent;
   emailEvent?: EmailEvent;
+  whatsapp?: WhatsAppSettings;
   server_info?: ServerInfo;
 }
 
@@ -1289,10 +1486,14 @@ export interface ShopSettingsInput {
   contact?: string;
   location?: LocationInput;
   website?: string;
+  deliveryTime?: DeliveryTimeInput[];
+  faqs?: { question: string; answer: string }[];
+  terms_and_conditions?: string;
 }
 
 export interface ShopInput {
   name: string;
+  owner_id?: string;
   description?: string;
   cover_image?: AttachmentInput;
   logo?: AttachmentInput;
@@ -1436,6 +1637,7 @@ export interface ProductQueryOptions extends QueryOptions {
 
 export interface UserQueryOptions extends QueryOptions {
   name: string;
+  permission?: Permission;
 }
 
 export interface ManufacturerQueryOptions extends QueryOptions {
@@ -1460,18 +1662,27 @@ export interface WithdrawQueryOptions extends Omit<QueryOptions, 'language'> {
 }
 
 export interface OrderQueryOptions extends QueryOptions {
-  type: string;
-  name: string;
-  shop_id: string;
-  tracking_number: string;
+  type?: string;
+  name?: string;
+  shop_id?: string;
+  tracking_number?: string;
+  order_status?: string;
+  from?: string;
+  to?: string;
 }
 
 export interface CouponQueryOptions extends QueryOptions {
   code: string;
 }
 export interface StoreNoticeQueryOptions extends QueryOptions {
-  notice: string;
-  shop_id: string;
+  notice?: string;
+  shop_id?: string;
+  text?: string;
+}
+
+export interface SubscriptionPlanQueryOptions extends QueryOptions {
+  name?: string;
+  is_active?: boolean;
 }
 
 export interface MessageQueryOptions extends QueryOptions {
@@ -1524,48 +1735,51 @@ export interface ItemProps {
   title: string;
 }
 
+export interface ShopPaginator extends PaginatorInfo<Shop> {}
 
-export interface ShopPaginator extends PaginatorInfo<Shop> { }
+export interface WithdrawPaginator extends PaginatorInfo<Withdraw> {}
 
-export interface WithdrawPaginator extends PaginatorInfo<Withdraw> { }
+export interface UserPaginator extends PaginatorInfo<User> {}
 
-export interface UserPaginator extends PaginatorInfo<User> { }
+export interface QuestionPaginator extends PaginatorInfo<Question> {}
 
-export interface QuestionPaginator extends PaginatorInfo<Question> { }
+export interface StaffPaginator extends PaginatorInfo<User> {}
 
-export interface StaffPaginator extends PaginatorInfo<User> { }
+export interface OrderPaginator extends PaginatorInfo<Order> {}
 
-export interface OrderPaginator extends PaginatorInfo<Order> { }
+export interface CouponPaginator extends PaginatorInfo<Coupon> {}
 
-export interface CouponPaginator extends PaginatorInfo<Coupon> { }
+export interface SubscriptionPlanPaginator
+  extends PaginatorInfo<SubscriptionPlan> {}
 
-export interface StoreNoticePaginator extends PaginatorInfo<StoreNotice> { }
+export interface StoreNoticePaginator extends PaginatorInfo<StoreNotice> {}
 
-export interface ProductPaginator extends PaginatorInfo<Product> { }
+export interface ProductPaginator extends PaginatorInfo<Product> {}
 
-export interface CategoryPaginator extends PaginatorInfo<Category> { }
+export interface CategoryPaginator extends PaginatorInfo<Category> {}
 
-export interface ReviewPaginator extends PaginatorInfo<Review> { }
+export interface ReviewPaginator extends PaginatorInfo<Review> {}
 
-export interface TagPaginator extends PaginatorInfo<Tag> { }
+export interface TagPaginator extends PaginatorInfo<Tag> {}
 
-export interface TypePaginator extends PaginatorInfo<Type> { }
+export interface TypePaginator extends PaginatorInfo<Type> {}
 
-export interface AttributePaginator extends PaginatorInfo<Attribute> { }
+export interface AttributePaginator extends PaginatorInfo<Attribute> {}
 
-export interface TaxPaginator extends PaginatorInfo<Tax> { }
-export interface AttributeValuePaginator extends PaginatorInfo<AttributeValue> { }
+export interface TaxPaginator extends PaginatorInfo<Tax> {}
+export interface AttributeValuePaginator
+  extends PaginatorInfo<AttributeValue> {}
 
-export interface ShippingPaginator extends PaginatorInfo<Shipping> { }
+export interface ShippingPaginator extends PaginatorInfo<Shipping> {}
 
-export interface OrderStatusPaginator extends PaginatorInfo<OrderStatus> { }
+export interface OrderStatusPaginator extends PaginatorInfo<OrderStatus> {}
 
-export interface AuthorPaginator extends PaginatorInfo<Author> { }
+export interface AuthorPaginator extends PaginatorInfo<Author> {}
 
-export interface ManufacturerPaginator extends PaginatorInfo<Manufacturer> { }
+export interface ManufacturerPaginator extends PaginatorInfo<Manufacturer> {}
 
-export interface OrderStatusPaginator extends PaginatorInfo<OrderStatus> { }
+export interface OrderStatusPaginator extends PaginatorInfo<OrderStatus> {}
 
-export interface ConversionPaginator extends PaginatorInfo<Conversations> { }
+export interface ConversionPaginator extends PaginatorInfo<Conversations> {}
 
-export interface MessagePaginator extends PaginatorInfo<Message> { }
+export interface MessagePaginator extends PaginatorInfo<Message> {}

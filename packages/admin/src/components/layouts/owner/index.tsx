@@ -1,13 +1,18 @@
 import Navbar from '@/components/layouts/navigation/top-navbar';
 import OwnerInformation from '@/components/user/user-details';
 import MobileNavigation from '@/components/layouts/navigation/mobile-navigation';
+import SubscriptionCtaBanner from '@/components/subscription/subscription-cta-banner';
 import { useRouter } from 'next/router';
 
 const OwnerLayout: React.FC<{ children?: React.ReactNode }> = ({
   children,
 }) => {
-  const { locale } = useRouter();
+  const router = useRouter();
+  const { locale } = router;
   const dir = locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr';
+  const isMessageRoute =
+    router.pathname === '/shop-message' ||
+    router.pathname === '/shop-message/[id]';
   return (
     <div
       className="flex min-h-screen flex-col bg-gray-100 transition-colors duration-150"
@@ -23,7 +28,10 @@ const OwnerLayout: React.FC<{ children?: React.ReactNode }> = ({
           <OwnerInformation />
         </aside>
         <main className="ltr:xl:pl-76 rtl:xl:pr-76 w-full ltr:lg:pl-72 rtl:lg:pr-72 rtl:lg:pl-0">
-          <div className="h-full p-5 md:p-8">{children}</div>
+          <div className={`h-full ${isMessageRoute ? 'p-0 md:p-8' : 'p-5 md:p-8'}`}>
+            {!isMessageRoute ? <SubscriptionCtaBanner /> : null}
+            {children}
+          </div>
         </main>
       </div>
     </div>

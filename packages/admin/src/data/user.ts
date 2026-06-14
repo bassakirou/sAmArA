@@ -174,6 +174,25 @@ export const useMakeOrRevokeAdminMutation = () => {
   });
 };
 
+export const useDeleteUserMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation(userClient.delete, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-deleted'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.USERS);
+      queryClient.invalidateQueries(API_ENDPOINTS.ADMIN_LIST);
+      queryClient.invalidateQueries(API_ENDPOINTS.STAFFS);
+    },
+    onError: (error: any) => {
+      toast.error(t(`common:${error?.response?.data.message}`));
+    },
+  });
+};
+
 export const useBlockUserMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

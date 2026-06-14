@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 
 export default function ImportCsv({ onDrop, loading, title }: any) {
   const { getRootProps, getInputProps } = useDropzone({
-    accept: '.csv',
+    accept: { 'text/csv': ['.csv'] },
     multiple: false,
     onDrop,
   });

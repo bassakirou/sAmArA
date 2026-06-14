@@ -5,9 +5,9 @@ import {
   allowedRoles,
   getAuthCredentials,
   hasAccess,
+  isSuperAdmin,
   isAuthenticated,
 } from '@/utils/auth-utils';
-import { SUPER_ADMIN } from '@/utils/constants';
 import AppLayout from '@/components/layouts/app';
 import { Routes } from '@/config/routes';
 import { Config } from '@/config';
@@ -17,10 +17,17 @@ const OwnerDashboard = dynamic(() => import('@/components/dashboard/owner'));
 
 export default function Dashboard({
   userPermissions,
+  primaryPermission,
 }: {
   userPermissions: string[];
+  primaryPermission?: string | null;
 }) {
-  if (userPermissions?.includes(SUPER_ADMIN)) {
+  if (
+    isSuperAdmin({
+      permissions: userPermissions,
+      primary_permission: primaryPermission,
+    })
+  ) {
     return <AdminDashboard />;
   }
   return <OwnerDashboard />;
@@ -35,10 +42,10 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     locale !== Config.defaultLanguage
       ? `/${locale}${Routes.login}`
       : Routes.login;
-  const { token, permissions } = getAuthCredentials(ctx);
+  const { token, permissions, primary_permission } = getAuthCredentials(ctx);
   if (
     !isAuthenticated({ token, permissions }) ||
-    !hasAccess(allowedRoles, permissions)
+    !hasAccess(allowedRoles, { token, permissions, primary_permission })
   ) {
     return {
       redirect: {
@@ -56,12 +63,14 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
           'widgets',
         ])),
         userPermissions: permissions,
+        primaryPermission: primary_permission ?? null,
       },
     };
   }
   return {
     props: {
       userPermissions: permissions,
+      primaryPermission: primary_permission ?? null,
     },
   };
 };

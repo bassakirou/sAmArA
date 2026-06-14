@@ -89,6 +89,25 @@ const OrderList = ({
       width: 150,
     },
     {
+      title: t('table:table-item-shop'),
+      dataIndex: 'shop',
+      key: 'shop',
+      align: alignLeft,
+      width: 180,
+      render: (_: any, order: Order) => {
+        const shopName =
+          order?.shop?.name ??
+          order?.parent_order?.shop?.name ??
+          (Array.isArray(order?.children) && order.children.length === 1
+            ? order.children[0]?.shop?.name
+            : undefined) ??
+          (Array.isArray(order?.children) && order.children.length > 1
+            ? t('common:text-multiple-shops')
+            : undefined);
+        return <span>{shopName ?? '—'}</span>;
+      },
+    },
+    {
       title: t('table:table-item-delivery-fee'),
       dataIndex: 'delivery_fee',
       key: 'delivery_fee',

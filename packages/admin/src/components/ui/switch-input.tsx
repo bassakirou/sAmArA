@@ -1,3 +1,4 @@
+import cn from 'classnames';
 import React from 'react';
 import { Control, Controller, FieldErrors } from 'react-hook-form';
 import { Switch } from '@headlessui/react';
@@ -5,6 +6,7 @@ import ValidationError from './form-validation-error';
 import { useTranslation } from 'next-i18next';
 
 interface Props {
+  className?: string;
   control: Control<any>;
   errors?: FieldErrors;
   label?: string;
@@ -14,11 +16,15 @@ interface Props {
 }
 
 const SwitchInput = React.forwardRef<HTMLDivElement, Props>(
-  ({ control, label, name, errors, disabled, ...rest }, ref) => {
+  ({ className, control, label, name, errors, disabled, ...rest }, ref) => {
     const { t } = useTranslation();
     return (
-      <div>
-        {label && <div>{label}</div>}
+      <div ref={ref} className={cn('mb-4', className)}>
+        {label ? (
+          <div className="mb-3 block text-sm font-semibold leading-none text-body-dark">
+            {label}
+          </div>
+        ) : null}
         <Controller
           name={name}
           control={control}
@@ -49,5 +55,7 @@ const SwitchInput = React.forwardRef<HTMLDivElement, Props>(
     );
   }
 );
+
+SwitchInput.displayName = 'SwitchInput';
 
 export default SwitchInput;

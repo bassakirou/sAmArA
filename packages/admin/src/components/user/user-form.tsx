@@ -43,7 +43,7 @@ const CustomerCreateForm = () => {
         name,
         email,
         password,
-        permission: Permission.StoreOwner,
+        permission: Permission.Customer,
       },
       {
         onError: (error: any) => {

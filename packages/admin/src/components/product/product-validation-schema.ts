@@ -8,20 +8,28 @@ const SUPPORTED_IMAGE_FORMATS = ['image/jpg', 'image/jpeg', 'image/png'];
 export const productValidationSchema = yup.object().shape({
   name: yup.string().required('form:error-name-required'),
   product_type: yup.object().required('form:error-product-type-required'),
-  sku: yup.mixed().when('product_type', {
-    is: (productType: {
-      name: string;
-      value: string;
-      [key: string]: unknown;
-    }) => productType?.value === ProductType.Simple,
+  sku: yup.mixed().when(['product_type', 'status'], {
+    is: (
+      productType: {
+        name: string;
+        value: string;
+        [key: string]: unknown;
+      },
+      status: string
+    ) =>
+      productType?.value === ProductType.Simple && status !== ProductStatus.Draft,
     then: yup.string().nullable().required('form:error-sku-required'),
   }),
-  price: yup.mixed().when('product_type', {
-    is: (productType: {
-      name: string;
-      value: string;
-      [key: string]: unknown;
-    }) => productType?.value === ProductType.Simple,
+  price: yup.mixed().when(['product_type', 'status'], {
+    is: (
+      productType: {
+        name: string;
+        value: string;
+        [key: string]: unknown;
+      },
+      status: string
+    ) =>
+      productType?.value === ProductType.Simple && status !== ProductStatus.Draft,
     then: yup
       .number()
       .typeError('form:error-price-must-number')
@@ -33,12 +41,16 @@ export const productValidationSchema = yup.object().shape({
     .transform((value) => (isNaN(value) ? undefined : value))
     .lessThan(yup.ref('price'), 'Sale Price should be less than ${less}')
     .positive('form:error-sale-price-must-positive'),
-  quantity: yup.mixed().when('product_type', {
-    is: (productType: {
-      name: string;
-      value: string;
-      [key: string]: unknown;
-    }) => productType?.value === ProductType.Simple,
+  quantity: yup.mixed().when(['product_type', 'status'], {
+    is: (
+      productType: {
+        name: string;
+        value: string;
+        [key: string]: unknown;
+      },
+      status: string
+    ) =>
+      productType?.value === ProductType.Simple && status !== ProductStatus.Draft,
     then: yup
       .number()
       .typeError('form:error-quantity-must-number')
@@ -47,7 +59,7 @@ export const productValidationSchema = yup.object().shape({
       .required('form:error-quantity-required'),
   }),
   unit: yup.string().required('form:error-unit-required'),
-  type: yup.object().nullable().required('form:error-type-required'),
+  type: yup.object().nullable(),
   status: yup.string().nullable().required('form:error-status-required'),
   is_negotiable: yup.boolean(),
   variation_options: yup.array().of(
@@ -69,8 +81,8 @@ export const productValidationSchema = yup.object().shape({
         .integer('form:error-quantity-must-integer')
         .required('form:error-quantity-required'),
       sku: yup.string().required('form:error-sku-required'),
-      digital_file_input: yup.mixed().when('is_digital', (isDigital) => {
-        if (isDigital) {
+      digital_file_input: yup.mixed().when(['is_digital', 'status'], (isDigital, status) => {
+        if (status !== ProductStatus.Draft && isDigital) {
           return yup
             .object()
             .test(
@@ -83,8 +95,8 @@ export const productValidationSchema = yup.object().shape({
       }),
     })
   ),
-  digital_file_input: yup.mixed().when('is_digital', (isDigital) => {
-    if (isDigital) {
+  digital_file_input: yup.mixed().when(['is_digital', 'status'], (isDigital, status) => {
+    if (status !== ProductStatus.Draft && isDigital) {
       return yup
         .object()
         .test(
@@ -95,11 +107,30 @@ export const productValidationSchema = yup.object().shape({
     }
     return yup.string().nullable();
   }),
-  video: yup.array().of(
-    yup.object().shape({
-      url: yup.string().required('Video URL is required'),
-    })
-  ),
+  video: yup
+    .array()
+    .max(1)
+    .of(
+      yup.object().shape({
+        source: yup.mixed().nullable(),
+        url: yup.string().when('source', {
+          is: (source: any) => (source?.value ?? source) !== 'upload',
+          then: yup.string().required('form:error-video-url-required'),
+          otherwise: yup.string().nullable(),
+        }),
+        file: yup.mixed().when('source', {
+          is: (source: any) => (source?.value ?? source) === 'upload',
+          then: yup
+            .object()
+            .test(
+              'check-video-file',
+              'form:error-video-file-required',
+              (file) => file && (file as any)?.original
+            ),
+          otherwise: yup.mixed().nullable(),
+        }),
+      })
+    ),
   // image: yup
   //   .mixed()
   //   .nullable()

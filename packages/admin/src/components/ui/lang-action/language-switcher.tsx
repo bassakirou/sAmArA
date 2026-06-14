@@ -15,6 +15,7 @@ import ActionButtons from '@/components/common/action-buttons';
 import LanguageListbox from './lang-list-box';
 import { Config } from '@/config';
 import PopOver from '@/components/ui/popover';
+import { getAuthCredentials, isStoreOwner } from '@/utils/auth-utils';
 
 export type LanguageSwitcherProps = {
   record: any;
@@ -34,6 +35,14 @@ const LanguageSwitcher = ({
   const router = useRouter();
   const { t } = useTranslation('common');
   const { locales, locale } = router;
+  const { permissions } = getAuthCredentials();
+  const isOwner = isStoreOwner(permissions);
+  const shopSlug =
+    typeof router.query.shop === 'string'
+      ? router.query.shop
+      : isOwner
+      ? record?.shop?.slug
+      : undefined;
 
   let filterItem = [...languageMenu]?.filter((element) =>
     locales?.includes(element?.id)
@@ -68,7 +77,7 @@ const LanguageSwitcher = ({
     <div className={`flex w-full items-center justify-end gap-5 ${className}`}>
       <ActionButtons
         id={record?.id}
-        editUrl={routes.editWithoutLang(slug)}
+        editUrl={routes.editWithoutLang(slug, shopSlug)}
         deleteModalView={deleteModalView}
       />
       {Config.defaultLanguage === router.locale && (

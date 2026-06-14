@@ -32,7 +32,9 @@ export default function ProductVariableForm({
 }: IProps) {
   const { t } = useTranslation();
   const { locale } = useRouter();
-  const upload_max_filesize = settings?.server_info?.upload_max_filesize / 1024;
+  const upload_max_filesize = settings?.server_info?.upload_max_filesize
+    ? settings.server_info.upload_max_filesize / 1024
+    : undefined;
   const { convert, baseCurrency, targetCurrency, rates } = useCurrency();
   const showConverted = targetCurrency !== baseCurrency && Boolean(rates);
 
@@ -126,7 +128,10 @@ export default function ProductVariableForm({
 
           <div className="px-5 md:px-8">
             <Button
-              disabled={fields.length === attributes?.length}
+              disabled={
+                Boolean(attributes?.length) &&
+                fields.length >= attributes.length
+              }
               onClick={(e: any) => {
                 e.preventDefault();
                 append({ attribute: '', value: [] });
@@ -226,8 +231,8 @@ export default function ProductVariableForm({
                                     field.onChange(Math.round(convertedToBase));
                                   }}
                                   error={t(
-                                    errors.variation_options?.[index]?.price
-                                      ?.message
+                                    (errors.variation_options as any)?.[index]
+                                      ?.price?.message
                                   )}
                                   note={noteBase}
                                   variant="outline"
@@ -242,7 +247,8 @@ export default function ProductVariableForm({
                             type="number"
                             {...register(`variation_options.${index}.price`)}
                             error={t(
-                              errors.variation_options?.[index]?.price?.message
+                              (errors.variation_options as any)?.[index]?.price
+                                ?.message
                             )}
                             variant="outline"
                             className="mb-5"
@@ -304,8 +310,8 @@ export default function ProductVariableForm({
                                     field.onChange(Math.round(convertedToBase));
                                   }}
                                   error={t(
-                                    errors.variation_options?.[index]?.sale_price
-                                      ?.message
+                                    (errors.variation_options as any)?.[index]
+                                      ?.sale_price?.message
                                   )}
                                   note={noteBase}
                                   variant="outline"
@@ -318,10 +324,12 @@ export default function ProductVariableForm({
                           <Input
                             label={t('form:input-label-sale-price')}
                             type="number"
-                            {...register(`variation_options.${index}.sale_price`)}
+                            {...register(
+                              `variation_options.${index}.sale_price`
+                            )}
                             error={t(
-                              errors.variation_options?.[index]?.sale_price
-                                ?.message
+                              (errors.variation_options as any)?.[index]
+                                ?.sale_price?.message
                             )}
                             variant="outline"
                             className="mb-5"
@@ -336,7 +344,8 @@ export default function ProductVariableForm({
                           }
                           {...register(`variation_options.${index}.sku`)}
                           error={t(
-                            errors.variation_options?.[index]?.sku?.message
+                            (errors.variation_options as any)?.[index]?.sku
+                              ?.message
                           )}
                           variant="outline"
                           className="mb-5"
@@ -346,7 +355,8 @@ export default function ProductVariableForm({
                           type="number"
                           {...register(`variation_options.${index}.quantity`)}
                           error={t(
-                            errors.variation_options?.[index]?.quantity?.message
+                            (errors.variation_options as any)?.[index]?.quantity
+                              ?.message
                           )}
                           variant="outline"
                           className="mb-5"
@@ -383,7 +393,7 @@ export default function ProductVariableForm({
                             />
                             <ValidationError
                               message={t(
-                                errors?.variation_options?.[index]
+                                (errors?.variation_options as any)?.[index]
                                   ?.digital_file_input?.message
                               )}
                             />
@@ -401,8 +411,8 @@ export default function ProductVariableForm({
                         <Checkbox
                           {...register(`variation_options.${index}.is_disable`)}
                           error={t(
-                            errors.variation_options?.[index]?.is_disable
-                              ?.message
+                            (errors.variation_options as any)?.[index]
+                              ?.is_disable?.message
                           )}
                           label={t('form:input-label-disable-variant')}
                         />

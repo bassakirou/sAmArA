@@ -27,6 +27,20 @@ export const useCreateTagMutation = () => {
   });
 };
 
+export const useCreateTagInlineMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation(tagClient.create, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-created'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.TAGS);
+    },
+  });
+};
+
 export const useDeleteTagMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

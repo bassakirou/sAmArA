@@ -26,7 +26,7 @@ export default function AllShopPage() {
     orderBy,
     sortedBy,
     is_deleted: isDeleted ? 'true' : 'false',
-  });
+  } as any);
 
   if (loading) return <Loader text={t('common:text-loading')} />;
   if (error) return <ErrorMessage message={error.message} />;
@@ -43,7 +43,11 @@ export default function AllShopPage() {
       <Card className="mb-8 flex flex-col items-center justify-between md:flex-row">
         <div className="mb-4 md:mb-0 md:w-1/4">
           <h1 className="text-lg font-semibold text-heading">
-            {isDeleted ? t('common:text-trash') + ' - ' + t('common:sidebar-nav-item-shops') : t('common:sidebar-nav-item-shops')}
+            {isDeleted
+              ? t('common:text-trash') +
+                ' - ' +
+                t('common:sidebar-nav-item-shops')
+              : t('common:sidebar-nav-item-shops')}
           </h1>
         </div>
 
@@ -54,7 +58,9 @@ export default function AllShopPage() {
             className="w-full md:w-auto"
             variant="outline"
           >
-            {isDeleted ? t('common:text-back-to-list') ?? 'Retour à la liste' : t('common:text-trash') ?? 'Corbeille'}
+            {isDeleted
+              ? t('common:text-back-to-list') ?? 'Retour à la liste'
+              : t('common:text-trash') ?? 'Corbeille'}
           </Button>
         </div>
       </Card>

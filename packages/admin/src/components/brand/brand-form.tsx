@@ -16,6 +16,7 @@ import {
 // import { useUpdateTypeMutation } from "@/data/type/use-type-update.mutation";
 import {
   useCreateTypeMutation,
+  useCreateTypeInlineMutation,
   useUpdateTypeMutation,
 } from '@/data/type';
 
@@ -71,16 +72,14 @@ type FormValues = {
   name?: string | null;
   icon?: any;
   settings: TypeSettingsInput;
-  images: [{
-    key: {},
-    image: [Attachment]
-  }]
+  images?: { key?: any; image?: Attachment[] }[];
 };
 
 type IProps = {
   initialValues?: Type | null;
+  onCreated?: (created: Type) => void;
 };
-export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
+export default function CreateOrUpdateTypeForm({ initialValues, onCreated }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const {
@@ -121,7 +120,14 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
     name: "images",
   });
 
-  const { mutate: createType, isLoading: creating } = useCreateTypeMutation();
+  const createInlineMutation = useCreateTypeInlineMutation();
+  const createStandardMutation = useCreateTypeMutation();
+  const createMutation = onCreated ? createInlineMutation : createStandardMutation;
+  const {
+    mutate: createType,
+    mutateAsync: createTypeAsync,
+    isLoading: creating,
+  } = createMutation;
   const { mutate: updateType, isLoading: updating } = useUpdateTypeMutation();
 
   const onSubmit = async (values: FormValues) => {
@@ -165,10 +171,18 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
       !initialValues ||
       !initialValues.translated_languages.includes(router.locale!)
     ) {
+      if (onCreated) {
+        const created = await createTypeAsync({
+          ...input,
+          ...(initialValues?.slug && { slug: initialValues.slug }),
+        } as any);
+        onCreated(created);
+        return;
+      }
       createType({
         ...input,
         ...(initialValues?.slug && { slug: initialValues.slug }),
-      });
+      } as any);
     } else {
       updateType({
         ...input,

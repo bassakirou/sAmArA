@@ -231,6 +231,7 @@ export function getProductInputValues(
     categories,
     tags,
     digital_file_input,
+    video,
     variation_options,
     variations,
     ...simpleValues
@@ -241,6 +242,28 @@ export function getProductInputValues(
 
   return {
     ...simpleValues,
+    video: (video ?? [])
+      .slice(0, 1)
+      .map((entry: any) => {
+        const source = entry?.source?.value ?? entry?.type ?? entry?.source;
+        if (source === 'upload') {
+          const file = entry?.file ?? entry?.attachment;
+          const attachmentId = file?.id ?? entry?.attachment_id ?? null;
+          return {
+            type: 'upload',
+            url: file?.original ?? entry?.url ?? null,
+            attachment_id:
+              attachmentId === null || attachmentId === undefined
+                ? null
+                : String(attachmentId),
+          };
+        }
+        return {
+          type: source ?? null,
+          url: entry?.url ?? null,
+        };
+      })
+      .filter((entry: any) => Boolean(entry?.url)),
     is_digital,
     // language: router.locale,
     author_id: author?.id,

@@ -23,9 +23,11 @@ const StickerCard = ({
           <span className="mb-1 text-base font-semibold text-heading">
             {t(titleTransKey)}
           </span>
-          <span className="text-xs font-semibold text-body">
-            {t(subtitleTransKey)}
-          </span>
+          {subtitleTransKey ? (
+            <span className="text-xs font-semibold text-body">
+              {t(subtitleTransKey)}
+            </span>
+          ) : null}
         </div>
 
         <div

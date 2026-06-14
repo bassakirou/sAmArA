@@ -14,9 +14,21 @@ const BarChart = ({
   percentage,
   categories,
 }: any) => {
+  const normalizedSeries =
+    Array.isArray(series) && series.length > 0 && typeof series[0] === 'object'
+      ? series
+      : [
+          {
+            name: 'Sale',
+            data: series ?? [],
+          },
+        ];
+  const isMultiSeries = normalizedSeries.length > 1;
+
   const options = {
     options: {
       chart: {
+        stacked: isMultiSeries,
         toolbar: {
           show: false,
         },
@@ -41,6 +53,10 @@ const BarChart = ({
             show: false,
           },
         },
+      },
+      legend: {
+        show: isMultiSeries,
+        position: 'top',
       },
       colors: colors,
       xaxis: {
@@ -72,12 +88,7 @@ const BarChart = ({
         },
       },
     },
-    series: [
-      {
-        name: 'Sale',
-        data: series,
-      },
-    ],
+    series: normalizedSeries,
   };
 
   return (

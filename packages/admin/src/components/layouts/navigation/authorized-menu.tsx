@@ -6,10 +6,13 @@ import Link from '@/components/ui/link';
 import { siteSettings } from '@/settings/site.settings';
 import { useTranslation } from 'next-i18next';
 import { useMeQuery } from '@/data/user';
+import { useVendorSubscriptionStatusQuery } from '@/data/vendor-subscription';
 
 export default function AuthorizedMenu() {
   const { data } = useMeQuery();
   const { t } = useTranslation('common');
+  const { data: subscriptionStatus } = useVendorSubscriptionStatusQuery();
+  const activePlan = subscriptionStatus?.active_subscription_plan;
 
   // Again, we're using framer-motion for the transition effect
   return (
@@ -44,6 +47,11 @@ export default function AuthorizedMenu() {
             >
               <span className="font-semibold capitalize">{data?.name}</span>
               <span className="text-xs truncate">{data?.email}</span>
+              {activePlan?.name ? (
+                <span className="text-xs truncate">
+                  Abonnement : {activePlan.name}
+                </span>
+              ) : null}
             </li>
           </Menu.Item>
 

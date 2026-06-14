@@ -4,11 +4,12 @@ import { Fragment, useRef } from 'react';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
 
-export default function Modal({ open, onClose, children }: any) {
+export default function Modal({ open, onClose, children, disableClose }: any) {
   const cancelButtonRef = useRef(null);
   const { t } = useTranslation('common');
   const { locale } = useRouter();
   const dir = locale === 'ar' || locale === 'he' ? 'rtl' : 'ltr';
+  const effectiveOnClose = disableClose ? () => {} : onClose;
 
   return (
     <Transition show={open} as={Fragment}>
@@ -18,7 +19,7 @@ export default function Modal({ open, onClose, children }: any) {
         initialFocus={cancelButtonRef}
         static
         open={open}
-        onClose={onClose}
+        onClose={effectiveOnClose}
         dir={dir}
       >
         <div className="min-h-full text-center md:p-5">
@@ -51,15 +52,17 @@ export default function Modal({ open, onClose, children }: any) {
             leaveTo="opacity-0 scale-95"
           >
             <Dialog.Panel className="relative inline-block max-w-full align-middle transition-all min-w-content ltr:text-left rtl:text-right">
-              <button
-                onClick={onClose}
-                aria-label="Close panel"
-                ref={cancelButtonRef}
-                className="absolute top-4 z-[60] inline-block outline-none focus:outline-none ltr:right-4 rtl:left-4 lg:hidden"
-              >
-                <span className="sr-only">{t('text-close')}</span>
-                <CloseIcon className="w-4 h-4" />
-              </button>
+              {!disableClose ? (
+                <button
+                  onClick={onClose}
+                  aria-label="Close panel"
+                  ref={cancelButtonRef}
+                  className="absolute top-4 z-[60] inline-block outline-none focus:outline-none ltr:right-4 rtl:left-4 lg:hidden"
+                >
+                  <span className="sr-only">{t('text-close')}</span>
+                  <CloseIcon className="w-4 h-4" />
+                </button>
+              ) : null}
               {children}
             </Dialog.Panel>
           </Transition.Child>

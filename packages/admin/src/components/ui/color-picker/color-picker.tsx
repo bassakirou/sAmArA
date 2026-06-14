@@ -37,7 +37,7 @@ const ColorPicker = React.forwardRef<HTMLInputElement, Props>(
             aria-invalid={error ? 'true' : 'false'}
             {...rest}
           />
-          {children}
+          {children as React.ReactNode}
         </div>
         {error && <p className="my-2 text-xs text-end text-red-500">{error}</p>}
       </div>

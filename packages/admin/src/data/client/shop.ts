@@ -15,6 +15,9 @@ export const shopClient = {
   get({ slug }: { slug: String }) {
     return HttpClient.get<Shop>(`${API_ENDPOINTS.SHOPS}/${slug}`);
   },
+  myShops: () => {
+    return HttpClient.get<Shop[]>(API_ENDPOINTS.MY_SHOPS);
+  },
   paginated: ({ name, ...params }: Partial<ShopQueryOptions>) => {
     return HttpClient.get<ShopPaginator>(API_ENDPOINTS.SHOPS, {
       searchJoin: 'and',

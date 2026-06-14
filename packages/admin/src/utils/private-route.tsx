@@ -10,12 +10,13 @@ const PrivateRoute: React.FC<{
   children?: React.ReactNode;
 }> = ({ children, authProps }) => {
   const router = useRouter();
-  const { token, permissions } = getAuthCredentials();
+  const auth = getAuthCredentials();
+  const { token, permissions } = auth;
   const isUser = !!token;
   const hasPermission =
     Array.isArray(permissions) &&
     !!permissions.length &&
-    hasAccess(authProps.permissions, permissions);
+    hasAccess(authProps.permissions, auth);
   React.useEffect(() => {
     if (!isUser) router.replace(Routes.login); // If not authenticated, force log in
   }, [isUser]);

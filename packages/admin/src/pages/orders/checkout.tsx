@@ -72,7 +72,7 @@ export default function CheckoutPage() {
             addresses={user?.address?.filter(
               (address) => address?.type === AddressType.Billing
             )}
-            atom={billingAddressAtom}
+            atom={billingAddressAtom as any}
             type={AddressType.Billing}
           />
           <AddressGrid
@@ -84,7 +84,7 @@ export default function CheckoutPage() {
             addresses={user?.address?.filter(
               (address) => address?.type === AddressType.Shipping
             )}
-            atom={shippingAddressAtom}
+            atom={shippingAddressAtom as any}
             type={AddressType.Shipping}
           />
           <ScheduleGrid

@@ -106,6 +106,14 @@ export const useShopQuery = ({ slug }: { slug: string }, options?: any) => {
   );
 };
 
+export const useMyShopsQuery = (options?: any) => {
+  return useQuery<Shop[], Error>(
+    [API_ENDPOINTS.MY_SHOPS],
+    () => shopClient.myShops(),
+    options
+  );
+};
+
 export const useShopsQuery = (options: Partial<ShopQueryOptions>) => {
   const { data, error, isLoading } = useQuery<ShopPaginator, Error>(
     [API_ENDPOINTS.SHOPS, options],

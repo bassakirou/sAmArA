@@ -8,12 +8,19 @@ import Loader from '@/components/ui/loader/loader';
 import { useMeQuery } from '@/data/user';
 import { useRouter } from 'next/router';
 import { useSettings } from '@/contexts/settings.context';
+import { useVendorSubscriptionStatusQuery } from '@/data/vendor-subscription';
+import dayjs from 'dayjs';
 
 const UserDetails: React.FC = () => {
   const { t } = useTranslation('common');
   const { data, isLoading: loading } = useMeQuery();
   const { locale } = useRouter();
   const { customerService } = useSettings();
+  const { data: subscriptionStatus } = useVendorSubscriptionStatusQuery();
+  const activePlan = subscriptionStatus?.active_subscription_plan;
+  const endsAt = subscriptionStatus?.active_subscription_ends_at;
+  const hasActivePaid =
+    !!activePlan && !!endsAt && dayjs(endsAt).isAfter(dayjs());
 
   if (loading) return <Loader text={t('text-loading')} />;
 
@@ -50,6 +57,17 @@ const UserDetails: React.FC = () => {
         )}
         {data?.is_active ? t('text-enabled') : t('text-disabled')}
       </div>
+      {activePlan ? (
+        <div className="mt-3 w-full rounded border border-gray-200 px-3 py-2 text-center text-sm text-body-dark">
+          <span className="font-semibold">Abonnement :</span>{' '}
+          <span className="font-semibold text-heading">{activePlan?.name}</span>
+          {hasActivePaid && endsAt ? (
+            <div className="mt-1 text-xs text-muted">
+              Valable jusqu’au {dayjs(endsAt).format('DD/MM/YYYY')}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <div className="flex grow items-end justify-end">
         <p className="mt-1 text-sm text-muted">
           {' '}

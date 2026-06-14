@@ -18,6 +18,18 @@ module.exports = withPWA({
       'lh3.googleusercontent.com',
       'samara-api.appaa-cameroun.net',
     ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.ngrok-free.dev',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '*.ngrok-free.dev',
+        pathname: '/**',
+      },
+    ],
   },
   ...(process.env.APPLICATION_MODE === 'production' && {
     typescript: {

@@ -64,7 +64,11 @@ const RegistrationForm = () => {
         onSuccess: (data) => {
           if (data?.token) {
             if (hasAccess(allowedRoles, data?.permissions)) {
-              setAuthCredentials(data?.token, data?.permissions);
+          setAuthCredentials(
+            data?.token,
+            data?.permissions,
+            data?.primary_permission ?? null
+          );
               router.push(Routes.dashboard);
               return;
             }

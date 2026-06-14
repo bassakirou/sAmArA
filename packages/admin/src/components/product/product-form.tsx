@@ -5,10 +5,12 @@ import Button from '@/components/ui/button';
 import Description from '@/components/ui/description';
 import Card from '@/components/common/card';
 import Label from '@/components/ui/label';
+import PopOver from '@/components/ui/popover';
 import Radio from '@/components/ui/radio/radio';
 import { useRouter } from 'next/router';
 import { yupResolver } from '@hookform/resolvers/yup';
 import FileInput from '@/components/ui/file-input';
+import SelectInput from '@/components/ui/select-input';
 import Checkbox from '@/components/ui/checkbox/checkbox';
 import { productValidationSchema } from './product-validation-schema';
 import ProductVariableForm from './product-variable-form';
@@ -19,10 +21,11 @@ import ProductTypeInput from './product-type-input';
 import { ProductType, Product, ProductStatus } from '@/types';
 import { useTranslation } from 'next-i18next';
 import { useShopQuery } from '@/data/shop';
+import { useVendorSubscriptionStatusQuery } from '@/data/vendor-subscription';
 import ProductTagInput from './product-tag-input';
 import { Config } from '@/config';
 import Alert from '@/components/ui/alert';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ProductAuthorInput from './product-author-input';
 import ProductManufacturerInput from './product-manufacturer-input';
 import { EditIcon } from '@/components/icons/edit';
@@ -33,17 +36,29 @@ import {
 } from './form-utils';
 import { getErrorMessage } from '@/utils/form-error';
 import {
+  useCreateProductInlineMutation,
   useCreateProductMutation,
+  useDeleteProductMutation,
   useUpdateProductMutation,
+  useUpdateProductInlineMutation,
 } from '@/data/product';
 import { split, join, isEmpty } from 'lodash';
-import { adminOnly, getAuthCredentials, hasAccess } from '@/utils/auth-utils';
+import {
+  adminOnly,
+  getAuthCredentials,
+  hasAccess,
+  isStoreOwner,
+  ownerOnly,
+  isSuperAdmin,
+} from '@/utils/auth-utils';
 import { useSettingsQuery } from '@/data/settings';
-import Tooltip from '@/components/ui/tooltip';
 import { useModalAction } from '@/components/ui/modal/modal.context';
-import { useCallback } from 'react';
 import OpenAIButton from '@/components/openAI/openAI.button';
 import { ItemProps } from '@/types';
+import { toast } from 'react-toastify';
+import { Routes } from '@/config/routes';
+import { useQueryClient } from 'react-query';
+import { API_ENDPOINTS } from '@/data/client/api-endpoints';
 
 export const chatbotAutoSuggestion = ({ name }: { name: string }) => {
   return [
@@ -107,9 +122,13 @@ export default function CreateOrUpdateProductForm({
   });
   const [isSlugDisable, setIsSlugDisable] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSubmittingFinal, setIsSubmittingFinal] = useState<boolean>(false);
   const { t } = useTranslation();
   const { openModal } = useModalAction();
+  const queryClient = useQueryClient();
   const { permissions } = getAuthCredentials();
+  const isSuperAdminUser = isSuperAdmin(permissions);
+  const isOwner = isStoreOwner(permissions);
   let permission = hasAccess(adminOnly, permissions);
   let statusList = [
     {
@@ -124,13 +143,72 @@ export default function CreateOrUpdateProductForm({
     },
   ];
 
-  const { data: shopData } = useShopQuery(
-    { slug: router.query.shop as string },
+  const shopSlug = useMemo(() => {
+    if (typeof router.query.shop === 'string') {
+      return router.query.shop;
+    }
+
+    return (initialValues as any)?.shop?.slug ?? null;
+  }, [initialValues, router.query.shop]);
+  const { data: shopData, isLoading: shopDataLoading } = useShopQuery(
+    { slug: shopSlug as string },
     {
-      enabled: !!router.query.shop,
+      enabled: !!shopSlug,
     }
   );
-  const shopId = shopData?.id!;
+  const {
+    data: vendorSubscriptionStatus,
+    isLoading: vendorSubscriptionStatusLoading,
+  } = useVendorSubscriptionStatusQuery({
+    enabled: isOwner,
+  });
+  const isPlanRestrictionsExempt = Boolean(
+    shopData?.is_plan_restrictions_exempt ??
+      (initialValues as any)?.shop?.is_plan_restrictions_exempt
+  );
+  const shopNegotiationPermission = shopData?.can_use_chat_negotiation;
+  const vendorPlanCanUseNegotiation = useMemo(() => {
+    if (isSuperAdminUser) return true;
+    if (!isOwner) return undefined;
+    if (isPlanRestrictionsExempt) return true;
+
+    const trialEndsAt = vendorSubscriptionStatus?.trial_ends_at
+      ? new Date(vendorSubscriptionStatus.trial_ends_at)
+      : null;
+    const trialActive =
+      trialEndsAt && !Number.isNaN(trialEndsAt.getTime())
+        ? Date.now() <= trialEndsAt.getTime()
+        : false;
+    const permissions = Array.isArray(
+      vendorSubscriptionStatus?.active_subscription_plan?.permissions
+    )
+      ? vendorSubscriptionStatus.active_subscription_plan.permissions
+      : [];
+
+    return (
+      trialActive ||
+      permissions.includes('all') ||
+      permissions.includes('chat_negotiation')
+    );
+  }, [
+    isOwner,
+    isPlanRestrictionsExempt,
+    isSuperAdminUser,
+    vendorSubscriptionStatus,
+  ]);
+  const shopCanUseNegotiation =
+    vendorPlanCanUseNegotiation ??
+    shopNegotiationPermission ??
+    (initialValues as any)?.shop?.can_use_chat_negotiation ??
+    isPlanRestrictionsExempt;
+  const shopPermissionLoading =
+    !isSuperAdminUser &&
+    !isPlanRestrictionsExempt &&
+    ((isOwner && vendorSubscriptionStatusLoading) ||
+      (!!shopSlug &&
+        shopDataLoading &&
+        shopNegotiationPermission === undefined));
+  const shopId = shopData?.id ?? initialValues?.shop_id;
   const isNewTranslation = router?.query?.action === 'translate';
   const isSlugEditable =
     router?.query?.action === 'edit' &&
@@ -148,41 +226,158 @@ export default function CreateOrUpdateProductForm({
     setValue,
     setError,
     watch,
-    formState: { errors },
+    getValues,
+    reset,
+    formState,
   } = methods;
+  const { errors, isDirty } = formState;
 
   // const upload_max_filesize = options?.server_info?.upload_max_filesize / 1024;
   const upload_max_filesize = 5;
 
-  const { mutate: createProduct, isLoading: creating } =
+  const { mutateAsync: createProduct, isLoading: creating } =
     useCreateProductMutation();
-  const { mutate: updateProduct, isLoading: updating } =
+  const { mutateAsync: updateProduct, isLoading: updating } =
     useUpdateProductMutation();
+  const product_type = watch('product_type');
+  const is_digital = watch('is_digital');
+  const is_external = watch('is_external');
+  const isNegotiable = watch('is_negotiable');
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'video',
+  });
+  const videoSourceOptions = useMemo(
+    () => [
+      { label: t('form:video-source-youtube'), value: 'youtube' },
+      { label: t('form:video-source-vimeo'), value: 'vimeo' },
+      { label: t('form:video-source-external'), value: 'external' },
+      { label: t('form:video-source-upload'), value: 'upload' },
+    ],
+    [t]
+  );
+  const productName = watch('name');
+
+  const autoSuggestionList = useMemo(() => {
+    return chatbotAutoSuggestion({ name: productName ?? '' });
+  }, [productName]);
+  const canUseNegotiation = useMemo(() => {
+    if (!shopSlug && !initialValues?.shop_id) return true;
+    return Boolean(shopCanUseNegotiation);
+  }, [initialValues?.shop_id, shopCanUseNegotiation, shopSlug]);
+  const negotiationBlockedByPlan = !shopPermissionLoading && !canUseNegotiation;
+  const negotiationDisabled = shopPermissionLoading || negotiationBlockedByPlan;
+
+  const draftStorageKey = useMemo(() => {
+    const shop =
+      typeof router.query.shop === 'string' ? router.query.shop : null;
+    const locale = router.locale ?? 'fr';
+    return `samara:product-draft:${shop ?? 'admin'}:${locale}`;
+  }, [router.locale, router.query.shop]);
+
+  const [localDraftCandidate, setLocalDraftCandidate] = useState<any | null>(
+    null
+  );
+  const [draftServerId, setDraftServerId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!negotiationBlockedByPlan || !isNegotiable) return;
+    setValue('is_negotiable', false, { shouldDirty: true });
+  }, [isNegotiable, negotiationBlockedByPlan, setValue]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (initialValues) return;
+    const raw = window.localStorage.getItem(draftStorageKey);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      setLocalDraftCandidate(parsed);
+    } catch {}
+  }, [draftStorageKey, initialValues, isNewTranslation, reset, t]);
+
+  const { mutateAsync: createDraft } = useCreateProductInlineMutation();
+  const { mutateAsync: updateDraft } = useUpdateProductInlineMutation();
+  const { mutateAsync: deleteDraft, isLoading: deletingDraft } =
+    useDeleteProductMutation();
 
   const onSubmit = async (values: ProductFormValues) => {
+    const currentStatus = initialValues?.status ?? values.status;
+    const isDraftLike =
+      !initialValues ||
+      currentStatus === ProductStatus.Draft ||
+      currentStatus === ProductStatus.UnderReview ||
+      currentStatus === ProductStatus.Rejected;
+
+    const normalizedValues: ProductFormValues =
+      !permission && isDraftLike && values.status === ProductStatus.Publish
+        ? { ...values, status: ProductStatus.UnderReview }
+        : values;
+
     const inputValues = {
       language: router.locale,
-      ...getProductInputValues(values, initialValues),
+      ...getProductInputValues(normalizedValues, initialValues),
     };
 
     try {
-      if (
-        !initialValues ||
-        !initialValues.translated_languages.includes(router.locale!)
-      ) {
-        //@ts-ignore
-        createProduct({
+      setIsSubmittingFinal(true);
+
+      if (!initialValues && draftServerId) {
+        const createdOrUpdated = await updateDraft({
           ...inputValues,
-          ...(initialValues?.slug && { slug: initialValues.slug }),
-          shop_id: shopId || initialValues?.shop_id,
+          id: draftServerId,
+          shop_id: shopId,
+        } as any);
+
+        clearLocalDraft();
+        setDraftServerId(null);
+
+        const generateRedirectUrl = router.query.shop
+          ? `/${router.query.shop}${Routes.product.list}`
+          : Routes.product.list;
+        await router.push(generateRedirectUrl, undefined, {
+          locale: Config.defaultLanguage,
         });
-      } else {
+
+        const status = (createdOrUpdated as any)?.status;
+        if (String(status ?? '').toLowerCase() === 'draft') {
+          toast.info(t('form:input-label-draft'));
+        } else if (String(status ?? '').toLowerCase() === 'under_review') {
+          toast.success(t('common:product-sent-for-review'));
+        } else {
+          toast.success(t('common:successfully-created'));
+        }
+        return;
+      }
+
+      if (initialValues?.id) {
         //@ts-ignore
-        updateProduct({
+        await updateProduct({
           ...inputValues,
           id: initialValues.id!,
           shop_id: initialValues.shop_id!,
         });
+        if (
+          !permission &&
+          isDraftLike &&
+          values.status === ProductStatus.Publish &&
+          normalizedValues.status === ProductStatus.UnderReview
+        ) {
+          toast.success(t('common:product-sent-for-review'));
+        }
+      } else {
+        //@ts-ignore
+        await createProduct({
+          ...inputValues,
+          shop_id: shopId || initialValues?.shop_id,
+        });
+        if (
+          !permission &&
+          values.status === ProductStatus.Publish &&
+          normalizedValues.status === ProductStatus.UnderReview
+        ) {
+          toast.success(t('common:product-sent-for-review'));
+        }
       }
     } catch (error) {
       const serverErrors = getErrorMessage(error);
@@ -192,20 +387,137 @@ export default function CreateOrUpdateProductForm({
           message: serverErrors?.validation[field][0],
         });
       });
+    } finally {
+      setIsSubmittingFinal(false);
     }
   };
-  const product_type = watch('product_type');
-  const is_digital = watch('is_digital');
-  const is_external = watch('is_external');
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'video',
-  });
-  const productName = watch('name');
 
-  const autoSuggestionList = useMemo(() => {
-    return chatbotAutoSuggestion({ name: productName ?? '' });
-  }, [productName]);
+  const clearLocalDraft = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.removeItem(draftStorageKey);
+    } catch {}
+    setLocalDraftCandidate(null);
+  }, [draftStorageKey]);
+
+  const restoreLocalDraft = useCallback(() => {
+    if (!localDraftCandidate) return;
+    reset({
+      ...getProductDefaultValues(initialValues as any, isNewTranslation),
+      ...localDraftCandidate,
+    });
+    setLocalDraftCandidate(null);
+    toast.info(t('common:draft-restored'));
+  }, [initialValues, isNewTranslation, localDraftCandidate, reset, t]);
+
+  const saveLocalDraft = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    if (initialValues) return;
+    try {
+      const values = getValues();
+      window.localStorage.setItem(draftStorageKey, JSON.stringify(values));
+    } catch {}
+  }, [draftStorageKey, getValues, initialValues]);
+
+  const saveDraftToServer = useCallback(
+    async (withToast = false) => {
+      if (isSubmittingFinal) return;
+      if (initialValues) return;
+      const ok = await methods.trigger(['name', 'product_type', 'unit']);
+      if (!ok) return;
+
+      try {
+        const inputValues = {
+          ...getProductInputValues(getValues(), initialValues),
+          language: router.locale,
+          shop_id: shopId,
+          status: ProductStatus.Draft,
+        };
+
+        const createdOrUpdated = draftServerId
+          ? await updateDraft({
+              ...inputValues,
+              id: draftServerId,
+            } as any)
+          : await createDraft(inputValues as any);
+
+        if (!draftServerId) {
+          setDraftServerId((createdOrUpdated as any)?.id ?? null);
+        }
+
+        clearLocalDraft();
+        if (withToast) {
+          toast.success(t('common:draft-saved'));
+        }
+      } catch (error: any) {
+        if (!withToast) return;
+        const data = error?.response?.data;
+        const firstKey =
+          data && typeof data === 'object' ? Object.keys(data)[0] : null;
+        const firstValue = firstKey ? (data as any)[firstKey] : null;
+        const message = Array.isArray(firstValue)
+          ? firstValue[0]
+          : typeof firstValue === 'string'
+          ? firstValue
+          : null;
+        toast.error(message ?? t('common:inline-create-failed'));
+      }
+    },
+    [
+      clearLocalDraft,
+      createDraft,
+      draftServerId,
+      getValues,
+      isSubmittingFinal,
+      initialValues,
+      methods,
+      router.locale,
+      shopId,
+      t,
+      updateDraft,
+    ]
+  );
+
+  const deleteDraftEverywhere = useCallback(async () => {
+    if (initialValues) return;
+    clearLocalDraft();
+    if (draftServerId) {
+      await deleteDraft({ id: draftServerId } as any);
+      setDraftServerId(null);
+    }
+    reset(
+      getProductDefaultValues(initialValues as any, isNewTranslation) as any
+    );
+  }, [
+    clearLocalDraft,
+    deleteDraft,
+    draftServerId,
+    initialValues,
+    isNewTranslation,
+    reset,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (initialValues) return;
+    if (!isDirty) return;
+    if (isSubmittingFinal) return;
+    const id = window.setInterval(() => {
+      saveLocalDraft();
+    }, 30000);
+    return () => window.clearInterval(id);
+  }, [initialValues, isDirty, isSubmittingFinal, saveLocalDraft]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (initialValues) return;
+    if (!isDirty) return;
+    if (isSubmittingFinal) return;
+    const id = window.setInterval(() => {
+      saveDraftToServer(false);
+    }, 30000);
+    return () => window.clearInterval(id);
+  }, [initialValues, isDirty, isSubmittingFinal, saveDraftToServer]);
 
   const handleGenerateDescription = useCallback(() => {
     openModal('GENERATE_DESCRIPTION', {
@@ -220,38 +532,38 @@ export default function CreateOrUpdateProductForm({
   const slugAutoSuggest = join(split(watch('name'), ' '), '-').toLowerCase();
   if (Boolean(options?.isProductReview)) {
     if (permission) {
-      if (initialValues?.status !== ProductStatus?.Draft) {
-        statusList = [
-          {
-            label: 'form:input-label-published',
-            id: 'published',
-            value: ProductStatus.Publish,
-          },
-          {
-            label: 'form:input-label-approved',
-            id: 'approved',
-            value: ProductStatus.Approved,
-          },
-          {
-            label: 'form:input-label-rejected',
-            id: 'rejected',
-            value: ProductStatus.Rejected,
-          },
-          {
-            label: 'form:input-label-soft-disabled',
-            id: 'unpublish',
-            value: ProductStatus.UnPublish,
-          },
-        ];
-      } else {
-        statusList = [
-          {
-            label: 'form:input-label-draft',
-            id: 'draft',
-            value: ProductStatus.Draft,
-          },
-        ];
-      }
+      statusList = [
+        {
+          label: 'form:input-label-published',
+          id: 'published',
+          value: ProductStatus.Publish,
+        },
+        {
+          label: 'form:input-label-approved',
+          id: 'approved',
+          value: ProductStatus.Approved,
+        },
+        {
+          label: 'form:input-label-rejected',
+          id: 'rejected',
+          value: ProductStatus.Rejected,
+        },
+        {
+          label: 'form:input-label-soft-disabled',
+          id: 'unpublish',
+          value: ProductStatus.UnPublish,
+        },
+        {
+          label: 'form:input-label-under-review',
+          id: 'under_review',
+          value: ProductStatus.UnderReview,
+        },
+        {
+          label: 'form:input-label-draft',
+          id: 'draft',
+          value: ProductStatus.Draft,
+        },
+      ];
     } else {
       if (
         initialValues?.status === ProductStatus.Publish ||
@@ -316,6 +628,21 @@ export default function CreateOrUpdateProductForm({
           onClose={() => setErrorMessage(null)}
         />
       ) : null}
+      {localDraftCandidate && !initialValues && !draftServerId ? (
+        <div className="mt-5 rounded border border-border-base bg-white p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="text-sm text-body">{t('common:draft-found')}</div>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="outline" onClick={clearLocalDraft}>
+                {t('form:button-label-ignore-draft')}
+              </Button>
+              <Button type="button" onClick={restoreLocalDraft}>
+                {t('form:button-label-restore-draft')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <FormProvider {...methods}>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="my-5 flex flex-wrap border-b border-dashed border-border-base pb-8 sm:my-8">
@@ -355,47 +682,107 @@ export default function CreateOrUpdateProductForm({
             />
 
             <Card className="w-full sm:w-8/12 md:w-2/3">
-              {/* Video url picker */}
               <div>
-                {fields.map((item: any, index: number) => (
-                  <div
-                    className="py-5 border-b border-dashed border-border-200 first:pt-0 last:border-b-0 md:py-8 md:first:pt-0"
-                    key={index}
-                  >
-                    {' '}
-                    <div className="flex gap-1 mb-3 text-sm font-semibold leading-none text-body-dark">
-                      {`${t('form:input-label-video-embed')} ${index + 1}`}
-                      <Tooltip content={t('common:text-video-tooltip')} />
+                {fields.map((item: any, index: number) => {
+                  const source = watch(`video.${index}.source`);
+                  const resolvedSource =
+                    item?.source ??
+                    videoSourceOptions.find(
+                      (opt) => opt.value === (item?.type ?? item?.source?.value)
+                    ) ??
+                    videoSourceOptions[0];
+                  const sourceValue =
+                    source?.value ?? source ?? resolvedSource.value;
+                  return (
+                    <div
+                      className="py-5 border-b border-dashed border-border-200 first:pt-0 last:border-b-0 md:py-8 md:first:pt-0"
+                      key={index}
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="mb-3 text-sm font-semibold leading-none text-body-dark">
+                          {t('form:video-title')}
+                        </div>
+                        <button
+                          onClick={() => {
+                            remove(index);
+                          }}
+                          type="button"
+                          className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none"
+                        >
+                          {t('form:button-label-remove')}
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
+                        <div className="sm:col-span-2">
+                          <Label>{t('form:input-label-video-source')}</Label>
+                          <SelectInput
+                            name={`video.${index}.source`}
+                            control={control}
+                            options={videoSourceOptions}
+                            defaultValue={resolvedSource}
+                          />
+                        </div>
+
+                        {sourceValue === 'upload' ? (
+                          <div className="sm:col-span-3">
+                            <Label>{t('form:input-label-video-upload')}</Label>
+                            <FileInput
+                              name={`video.${index}.file`}
+                              control={control}
+                              multiple={false}
+                              acceptFile={true}
+                              accept="video/*"
+                              helperText={t('form:text-upload-video')}
+                              defaultValue={
+                                item?.file ??
+                                (item?.type === 'upload' && item?.url
+                                  ? {
+                                      original: item.url,
+                                      thumbnail: item.url,
+                                      id: item?.attachment_id,
+                                    }
+                                  : {})
+                              }
+                            />
+                            {errors?.video?.[index]?.file?.message && (
+                              <p className="my-2 text-xs text-red-500">
+                                {t(
+                                  errors?.video?.[index]?.file?.message as any
+                                )}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="sm:col-span-3">
+                            <Input
+                              label={t('form:input-label-video-url')}
+                              type="url"
+                              {...register(`video.${index}.url` as const)}
+                              defaultValue={item?.url!}
+                              error={t(
+                                errors?.video?.[index]?.url?.message as any
+                              )}
+                              variant="outline"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
-                      <TextArea
-                        className="sm:col-span-4"
-                        variant="outline"
-                        {...register(`video.${index}.url` as const)}
-                        defaultValue={item?.url!}
-                        // @ts-ignore
-                        error={t(errors?.video?.[index]?.url?.message)}
-                      />
-                      <button
-                        onClick={() => {
-                          remove(index);
-                        }}
-                        type="button"
-                        className="text-sm text-red-500 transition-colors duration-200 hover:text-red-700 focus:outline-none sm:col-span-1"
-                      >
-                        {t('form:button-label-remove')}
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <Button
                 type="button"
                 onClick={() => {
-                  append({ url: '' });
+                  append({
+                    source: videoSourceOptions[0],
+                    url: '',
+                  });
                 }}
                 className="w-full sm:w-auto"
+                disabled={fields.length >= 1}
               >
                 {t('form:button-label-add-video')}
               </Button>
@@ -413,6 +800,7 @@ export default function CreateOrUpdateProductForm({
               <ProductGroupInput
                 control={control}
                 error={t((errors?.type as any)?.message)}
+                setValue={setValue}
               />
               <ProductCategoryInput control={control} setValue={setValue} />
               {/* it's not needed in chawkbazar */}
@@ -474,9 +862,30 @@ export default function CreateOrUpdateProductForm({
                 label={`${t('form:input-label-unit')}*`}
                 {...register('unit')}
                 error={t(errors.unit?.message!)}
+                placeholder={t('form:input-placeholder-unit')}
+                note={t('form:input-note-unit')}
+                list="unit-options"
                 variant="outline"
                 className="mb-5"
               />
+              <datalist id="unit-options">
+                {[
+                  'pièce',
+                  'kg',
+                  'g',
+                  'mg',
+                  'litre',
+                  'ml',
+                  'm',
+                  'cm',
+                  'mm',
+                  'pack',
+                  'boîte',
+                  'lot',
+                ].map((u) => (
+                  <option key={u} value={u} />
+                ))}
+              </datalist>
               <div className="relative">
                 {options?.useAi && (
                   <OpenAIButton
@@ -504,12 +913,7 @@ export default function CreateOrUpdateProductForm({
                         id={status?.id}
                         value={status?.value}
                         className="mb-2"
-                        disabled={
-                          permission &&
-                          initialValues?.status === ProductStatus?.Draft
-                            ? true
-                            : false
-                        }
+                        disabled={false}
                       />
                     ))
                   : ''}
@@ -521,11 +925,27 @@ export default function CreateOrUpdateProductForm({
               </div>
 
               <div className="mt-5">
-                <Checkbox
-                  {...register('is_negotiable')}
-                  label={t('form:input-label-is-negotiable')}
-                  className="mb-5"
-                />
+                <div className="mb-5 flex items-center gap-2">
+                  <Checkbox
+                    {...register('is_negotiable')}
+                    label={t('form:input-label-is-negotiable')}
+                    className="mb-0"
+                    disabled={negotiationDisabled}
+                  />
+                  {negotiationBlockedByPlan ? (
+                    <PopOver
+                      iconStyle="vertical"
+                      popOverButtonClass="!p-0 text-amber-500 hover:text-amber-600"
+                      popOverPanelClass="!w-[20rem] rounded bg-white px-4 py-3 text-sm leading-6 text-body shadow-card"
+                    >
+                      <div className="px-1 py-1">
+                        Impossible d&apos;activer la negociation du prix: votre
+                        plan d&apos;abonnement ne permet pas l&apos;acces au
+                        chat de negociation.
+                      </div>
+                    </PopOver>
+                  ) : null}
+                </div>
               </div>
             </Card>
           </div>
@@ -558,13 +978,44 @@ export default function CreateOrUpdateProductForm({
             {initialValues && (
               <Button
                 variant="outline"
-                onClick={router.back}
+                onClick={async () => {
+                  await queryClient.invalidateQueries(API_ENDPOINTS.PRODUCTS);
+                  const generateRedirectUrl = router.query.shop
+                    ? `/${router.query.shop}${Routes.product.list}`
+                    : Routes.product.list;
+                  await router.push(generateRedirectUrl, undefined, {
+                    locale: Config.defaultLanguage,
+                  });
+                }}
                 className="me-4"
                 type="button"
               >
                 {t('form:button-label-back')}
               </Button>
             )}
+            {!initialValues ? (
+              <>
+                {draftServerId || isDirty ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="me-4"
+                    loading={deletingDraft}
+                    onClick={deleteDraftEverywhere}
+                  >
+                    {t('form:button-label-delete-draft')}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="me-4"
+                  onClick={() => saveDraftToServer(true)}
+                >
+                  {t('form:button-label-save-draft')}
+                </Button>
+              </>
+            ) : null}
             <Button loading={updating || creating}>
               {initialValues
                 ? t('form:button-label-update-product')

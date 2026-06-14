@@ -18,10 +18,19 @@ export const orderClient = {
       language,
     });
   },
-  paginated: ({ tracking_number, ...params }: Partial<OrderQueryOptions>) => {
+  paginated: ({
+    tracking_number,
+    order_status,
+    from,
+    to,
+    ...params
+  }: Partial<OrderQueryOptions>) => {
     return HttpClient.get<OrderPaginator>(API_ENDPOINTS.ORDERS, {
       searchJoin: 'and',
       ...params,
+      order_status,
+      from,
+      to,
       search: HttpClient.formatSearchParams({ tracking_number }),
     });
   },

@@ -19,7 +19,11 @@ import Alert from '@/components/ui/alert';
 import TextArea from '@/components/ui/text-area';
 import RadioCard from '@/components/ui/radio-card/radio-card';
 import Checkbox from '@/components/ui/checkbox/checkbox';
-import { useCreateTypeMutation, useUpdateTypeMutation } from '@/data/type';
+import {
+  useCreateTypeInlineMutation,
+  useCreateTypeMutation,
+  useUpdateTypeMutation,
+} from '@/data/type';
 
 export const updatedIcons = typeIconList.map((item: any) => {
   item.label = (
@@ -113,8 +117,9 @@ type FormValues = {
 
 type IProps = {
   initialValues?: Type | null;
+  onCreated?: (created: Type) => void;
 };
-export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
+export default function CreateOrUpdateTypeForm({ initialValues, onCreated }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const {
@@ -151,9 +156,16 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
   });
   const layoutType = watch('settings.layoutType');
 
-  const { mutate: createType, isLoading: creating } = useCreateTypeMutation();
+  const createInlineMutation = useCreateTypeInlineMutation();
+  const createStandardMutation = useCreateTypeMutation();
+  const createMutation = onCreated ? createInlineMutation : createStandardMutation;
+  const {
+    mutate: createType,
+    mutateAsync: createTypeAsync,
+    isLoading: creating,
+  } = createMutation;
   const { mutate: updateType, isLoading: updating } = useUpdateTypeMutation();
-  const onSubmit = (values: FormValues) => {
+  const onSubmit = async (values: FormValues) => {
     const input = {
       language: router.locale,
       name: values.name!,
@@ -184,10 +196,18 @@ export default function CreateOrUpdateTypeForm({ initialValues }: IProps) {
       !initialValues ||
       !initialValues.translated_languages.includes(router.locale!)
     ) {
+      if (onCreated) {
+        const created = await createTypeAsync({
+          ...input,
+          ...(initialValues?.slug && { slug: initialValues.slug }),
+        } as any);
+        onCreated(created);
+        return;
+      }
       createType({
         ...input,
         ...(initialValues?.slug && { slug: initialValues.slug }),
-      });
+      } as any);
     } else {
       updateType({
         ...input,

@@ -24,8 +24,20 @@ export function formatPrice({
   const formatCurrency = new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: currencyCode,
+    minimumFractionDigits:
+      typeof fractions === 'number' &&
+      !isNaN(fractions) &&
+      fractions >= 0 &&
+      fractions <= 20
+        ? fractions
+        : 2,
     maximumFractionDigits:
-      fractions > 20 || fractions < 0 || !fractions ? 2 : fractions,
+      typeof fractions === 'number' &&
+      !isNaN(fractions) &&
+      fractions >= 0 &&
+      fractions <= 20
+        ? fractions
+        : 2,
   });
 
   return normalizeCurrencyDisplay(formatCurrency.format(amount), currencyCode);

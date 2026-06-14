@@ -18,23 +18,92 @@ const getPreviewImage = (value: any) => {
   }
   return images;
 };
+
+const IMAGE_EXTENSIONS = [
+  'tif',
+  'tiff',
+  'bmp',
+  'jpg',
+  'jpeg',
+  'gif',
+  'png',
+  'raw',
+  'svg',
+  'webp',
+];
+
+const VIDEO_EXTENSIONS = ['mp4', 'webm', 'ogg', 'mov', 'm4v'];
+
+const getFileExtension = (file: any) => {
+  const candidate =
+    file?.file_name || file?.original || file?.thumbnail || file?.url || '';
+  const cleanCandidate = String(candidate).split('?')[0];
+  const segments = cleanCandidate.split('.');
+  return String(segments.pop() ?? '').toLowerCase();
+};
+
+const getBestPreviewSrc = (file: any) => {
+  return file?.thumbnail || file?.original || file?.url || null;
+};
+
+const getAbsoluteMediaSrc = (url: string | null) => {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(url);
+    if (['http:', 'https:'].includes(parsed.protocol)) {
+      return url;
+    }
+  } catch {
+    const apiBaseUrl = process.env.NEXT_PUBLIC_REST_API_ENDPOINT;
+    if (apiBaseUrl && url.startsWith('/')) {
+      return `${apiBaseUrl.replace(/\/+$/, '')}${url}`;
+    }
+  }
+
+  return url;
+};
+
+const getProxiedMediaSrc = (url: string | null) => {
+  const absoluteUrl = getAbsoluteMediaSrc(url);
+  if (!absoluteUrl) return null;
+
+  try {
+    const parsed = new URL(absoluteUrl);
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return absoluteUrl;
+    }
+
+    return `/api/media-proxy?url=${encodeURIComponent(absoluteUrl)}`;
+  } catch {
+    return absoluteUrl;
+  }
+};
+
 export default function Uploader({
   onChange,
   value,
   multiple,
   acceptFile,
+  accept,
   helperText,
 }: any) {
   const { t } = useTranslation();
   const [files, setFiles] = useState<Attachment[]>(getPreviewImage(value));
   const { mutate: upload, isLoading: loading } = useUploadMutation();
   const [error, setError] = useState<string | null>(null);
+  const wantsLargeVideoPreview =
+    !multiple && typeof accept === 'string' && accept.includes('video');
 
   useEffect(() => {
     setFiles(getPreviewImage(value));
   }, [value]);
   const { getRootProps, getInputProps } = useDropzone({
-    ...(!acceptFile ? { accept: 'image/*' } : { accept: ACCEPTED_FILE_TYPES }),
+    ...(accept
+      ? { accept }
+      : !acceptFile
+      ? { accept: 'image/*' }
+      : { accept: ACCEPTED_FILE_TYPES }),
     multiple,
     onDrop: async (acceptedFiles) => {
       if (acceptedFiles.length) {
@@ -84,68 +153,76 @@ export default function Uploader({
   });
 
   const handleDelete = (image: string) => {
-    const images = files.filter((file) => file.thumbnail !== image);
+    const images = files.filter(
+      (file: any) => (file?.thumbnail || file?.original) !== image
+    );
     setFiles(images);
     if (onChange) {
       onChange(images);
     }
   };
   const thumbs = files?.map((file: any, idx) => {
-    const imgTypes = [
-      'tif',
-      'tiff',
-      'bmp',
-      'jpg',
-      'jpeg',
-      'gif',
-      'png',
-      'raw',
-      'svg',
-    ];
-    // let filename, fileType, isImage;
     if (file && file.id) {
-      // const processedFile = processFileWithName(file);
-      const splitArray = file?.file_name
-        ? file?.file_name.split('.')
-        : file?.thumbnail?.split('.');
-      const fileType = splitArray?.pop(); // it will pop the last item from the fileSplitName arr which is the file ext
-      const filename = splitArray?.join('.'); // it will join the array with dot, which restore the original filename
-      const isImage = file?.thumbnail && imgTypes.includes(fileType); // check if the original filename has the img ext
-
-      // Old Code *******
-
-      // const splitArray = file?.original?.split('/');
-      // let fileSplitName = splitArray[splitArray?.length - 1]?.split('.'); // it will create an array of words of filename
-      // const fileType = fileSplitName.pop(); // it will pop the last item from the fileSplitName arr which is the file ext
-      // const filename = fileSplitName.join('.'); // it will join the array with dot, which restore the original filename
-      // const isImage = file?.thumbnail && imgTypes.includes(fileType); // check if the original filename has the img ext
+      const fileType = getFileExtension(file);
+      const displayNameSource = String(
+        file?.file_name || file?.original || file?.thumbnail || ''
+      )
+        .split('?')[0]
+        .split('/')
+        .pop();
+      const filename = displayNameSource?.replace(/\.[^.]+$/, '') || 'media';
+      const previewSrc = getBestPreviewSrc(file);
+      const proxiedPreviewSrc = getProxiedMediaSrc(previewSrc);
+      const isImage = Boolean(
+        proxiedPreviewSrc && IMAGE_EXTENSIONS.includes(String(fileType))
+      );
+      const isVideo = Boolean(
+        file?.original && VIDEO_EXTENSIONS.includes(fileType)
+      );
 
       return (
         <div
           className={`relative mt-2 inline-flex flex-col overflow-hidden rounded me-2 ${
-            isImage ? 'border border-border-200' : ''
-          }`}
+            isVideo && wantsLargeVideoPreview ? 'w-full me-0' : ''
+          } ${isImage ? 'border border-border-200' : ''}`}
           key={idx}
         >
-          {/* {file?.thumbnail && isImage ? ( */}
           {isImage ? (
-            // <div className="flex items-center justify-center w-16 h-16 min-w-0 overflow-hidden">
-            //   <Image
-            //     src={file.thumbnail}
-            //     width={56}
-            //     height={56}
-            //     alt="uploaded image"
-            //   />
-            // </div>
             <figure className="relative h-16 w-28">
               <Image
-                src={file.thumbnail}
+                src={proxiedPreviewSrc || previewSrc}
                 alt={filename}
                 fill
                 sizes="(max-width: 768px) 100vw"
                 className="object-contain"
               />
             </figure>
+          ) : isVideo ? (
+            <div
+              className={
+                wantsLargeVideoPreview ? 'w-full' : 'inline-flex flex-col'
+              }
+            >
+              <figure
+                className={
+                  wantsLargeVideoPreview
+                    ? 'relative w-full overflow-hidden rounded border border-border-200 aspect-[16/10] bg-black'
+                    : 'relative h-16 w-28 overflow-hidden rounded bg-black'
+                }
+              >
+                <video
+                  src={getProxiedMediaSrc(file.original) || file.original}
+                  controls
+                  preload="metadata"
+                  className="h-full w-full object-cover"
+                />
+              </figure>
+              {wantsLargeVideoPreview ? (
+                <p className="mt-2 text-xs text-body">
+                  {filename}.{fileType}
+                </p>
+              ) : null}
+            </div>
           ) : (
             <div className="flex flex-col items-center">
               <div className="flex h-14 w-14 min-w-0 items-center justify-center overflow-hidden">
@@ -170,7 +247,7 @@ export default function Uploader({
           {multiple ? (
             <button
               className="absolute top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-xs text-light shadow-xl outline-none end-1"
-              onClick={() => handleDelete(file.thumbnail)}
+              onClick={() => handleDelete(file?.thumbnail || file?.original)}
             >
               <CloseIcon width={10} height={10} />
             </button>

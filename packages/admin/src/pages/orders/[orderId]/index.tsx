@@ -42,7 +42,7 @@ export default function OrderDetailsPage() {
 
   useEffect(() => {
     resetCart();
-    resetCheckout();
+    resetCheckout(undefined as any);
   }, [resetCart, resetCheckout]);
 
   const { mutate: updateOrder, isLoading: updating } = useUpdateOrderMutation();
@@ -85,7 +85,7 @@ export default function OrderDetailsPage() {
     if (data) {
       const a = document.createElement('a');
       a.href = data;
-      a.setAttribute('download', 'order-invoice');
+      a.setAttribute('download', `invoice-order-${query.orderId}.pdf`);
       a.click();
     }
   }

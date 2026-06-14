@@ -32,6 +32,20 @@ export const useCreateCategoryMutation = () => {
   });
 };
 
+export const useCreateCategoryInlineMutation = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation(categoryClient.create, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-created'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.CATEGORIES);
+    },
+  });
+};
+
 export const useDeleteCategoryMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

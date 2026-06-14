@@ -16,7 +16,11 @@ import FileInput from '@/components/ui/file-input';
 import SelectInput from '@/components/ui/select-input';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { tagValidationSchema } from './tag-validation-schema';
-import { useCreateTagMutation, useUpdateTagMutation } from '@/data/tag';
+import {
+  useCreateTagInlineMutation,
+  useCreateTagMutation,
+  useUpdateTagMutation,
+} from '@/data/tag';
 import { useTypesQuery } from '@/data/type';
 import OpenAIButton from '../openAI/openAI.button';
 import { useSettingsQuery } from '@/data/settings';
@@ -135,8 +139,9 @@ const defaultValues = {
 
 type IProps = {
   initialValues?: any;
+  onCreated?: (created: any) => void;
 };
-export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
+export default function CreateOrUpdateTagForm({ initialValues, onCreated }: IProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const isNewTranslation = router?.query?.action === 'translate';
@@ -191,7 +196,11 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
     });
   }, [generateName]);
 
-  const { mutate: createTag, isLoading: creating } = useCreateTagMutation();
+  const createInlineMutation = useCreateTagInlineMutation();
+  const createStandardMutation = useCreateTagMutation();
+  const createMutation = onCreated ? createInlineMutation : createStandardMutation;
+  const { mutate: createTag, mutateAsync: createTagAsync, isLoading: creating } =
+    createMutation;
   const { mutate: updateTag, isLoading: updating } = useUpdateTagMutation();
 
   const onSubmit = async (values: FormValues) => {
@@ -213,10 +222,18 @@ export default function CreateOrUpdateTagForm({ initialValues }: IProps) {
         !initialValues ||
         !initialValues.translated_languages.includes(router.locale)
       ) {
+        if (onCreated) {
+          const created = await createTagAsync({
+            ...input,
+            ...(initialValues?.slug && { slug: initialValues.slug }),
+          } as any);
+          onCreated(created);
+          return;
+        }
         createTag({
           ...input,
           ...(initialValues?.slug && { slug: initialValues.slug }),
-        });
+        } as any);
       } else {
         updateTag({
           ...input,

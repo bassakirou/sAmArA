@@ -14,6 +14,20 @@ export const Routes = {
   profileUpdate: '/profile-update',
   checkout: '/orders/checkout',
   verifyEmail: '/verify-email',
+  faq: {
+    ...routesFactory('/faqs'),
+  },
+  termsAndConditions: {
+    ...routesFactory('/terms-and-conditions'),
+  },
+  privacyPolicies: {
+    ...routesFactory('/privacy-policies'),
+  },
+  becameSeller: '/become-seller',
+  admins: '/admins',
+  vendors: '/vendors',
+  customers: '/customers',
+  staffUsers: '/staff',
   user: {
     ...routesFactory('/users'),
   },
@@ -98,6 +112,19 @@ export const Routes = {
   storeNoticeRead: {
     ...routesFactory('/store-notices/read'),
   },
+  notifications: {
+    ...routesFactory('/notifications'),
+  },
+  subscriptionPlans: {
+    ...routesFactory('/subscription-plans'),
+    subscribers: '/subscription-plans/subscribers',
+    history: '/subscription-plans/history',
+  },
+  subscriptions: {
+    list: '/subscriptions',
+    payment: '/subscriptions/payment',
+  },
+  shopDeliveryTimes: (shop: string) => `/${shop}/delivery-times`,
 };
 
 function routesFactory(endpoint: string) {

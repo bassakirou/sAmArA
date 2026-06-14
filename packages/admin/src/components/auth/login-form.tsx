@@ -40,7 +40,11 @@ const LoginForm = () => {
         onSuccess: (data) => {
           if (data?.token) {
             if (hasAccess(allowedRoles, data?.permissions)) {
-              setAuthCredentials(data?.token, data?.permissions);
+              setAuthCredentials(
+                data?.token,
+                data?.permissions,
+                data?.primary_permission ?? null
+              );
               Router.push(Routes.dashboard);
               return;
             }

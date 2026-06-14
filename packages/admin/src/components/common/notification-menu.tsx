@@ -4,18 +4,36 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell } from '@/components/icons/bell';
 import { Dot } from '@/components/icons/dot';
 import NotificationCard from '@/components/ui/notification-card';
+import Button from '@/components/ui/button';
+import { useTranslation } from 'next-i18next';
+import { useRouter } from 'next/router';
 
 type ItemType = {
   source?: string;
   text?: string | React.ReactNode;
   time?: string;
+  href?: string;
 };
 
 interface MenuType {
-  data: object[];
+  data: ItemType[];
+  title?: string;
+  total?: number;
+  onClear?: () => void;
+  seeAllHref?: string;
+  seeAllLabel?: string;
 }
 
-const NotificationMenu: React.FC<MenuType> = ({ data }) => {
+const NotificationMenu: React.FC<MenuType> = ({
+  data,
+  title,
+  total,
+  onClear,
+  seeAllHref,
+  seeAllLabel,
+}) => {
+  const { t } = useTranslation();
+  const router = useRouter();
   const [isOpen, setOpen] = useState(false);
 
   // helper function to close the menu
@@ -46,9 +64,17 @@ const NotificationMenu: React.FC<MenuType> = ({ data }) => {
       >
         <Bell className="h-5 w-5" />
 
-        <div className="end-0 absolute -top-1 flex text-green-500">
-          <Dot />
-        </div>
+        {typeof total === 'number' ? (
+          total > 0 ? (
+            <span className="absolute -bottom-2 -right-2 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1 text-xs font-semibold text-white shadow-sm">
+              {total > 99 ? '99+' : total}
+            </span>
+          ) : null
+        ) : (
+          <div className="absolute -bottom-1.5 -right-1.5 flex text-red-600">
+            <Dot />
+          </div>
+        )}
       </button>
 
       {renderLayer(
@@ -64,16 +90,25 @@ const NotificationMenu: React.FC<MenuType> = ({ data }) => {
                 stiffness: 800,
                 damping: 35,
               }}
-              className="z-20 w-80 overflow-hidden rounded bg-light shadow-base"
+              className="z-[80] w-80 overflow-hidden rounded bg-light shadow-base"
             >
               <div className="flex items-center justify-between border-b border-border-200 px-4 py-3">
                 <span className="text-lg font-semibold text-heading">
-                  Notification
+                  {title ?? t('common:text-notifications')}
                 </span>
 
-                <button className="text-sm font-semibold text-red-500 transition duration-200 hover:text-red-600 focus:outline-none focus:ring-1">
-                  Clear all
-                </button>
+                {onClear ? (
+                  <button
+                    onClick={(event) => {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      onClear();
+                    }}
+                    className="text-sm font-semibold text-red-500 transition duration-200 hover:text-red-600 focus:outline-none focus:ring-1"
+                  >
+                    {t('common:text-clear-all')}
+                  </button>
+                ) : null}
               </div>
               {!!data.length ? (
                 data?.map((item: ItemType, index) => (
@@ -82,22 +117,32 @@ const NotificationMenu: React.FC<MenuType> = ({ data }) => {
                     src={item.source}
                     text={item.text}
                     time={item.time}
+                    href={item.href}
                   />
                 ))
               ) : (
                 <div className="flex items-center justify-center border-b border-border-200 bg-light">
                   <p className="py-5 text-sm text-body">
-                    You dont have any notifications.
+                    {t('common:text-no-notifications')}
                   </p>
                 </div>
               )}
 
-              <a
-                href="#"
-                className="flex h-11 items-center justify-center bg-light px-4 text-sm font-semibold text-green-500 transition duration-200 ease-in-out hover:text-green-600"
-              >
-                See all notifications
-              </a>
+              {seeAllHref ? (
+                <div className="border-t border-border-200 bg-light px-4 py-3">
+                  <Button
+                    size="small"
+                    variant="outline"
+                    className="w-full border-gray-300 text-gray-600 hover:border-gray-400 hover:bg-gray-100 hover:text-gray-700"
+                    onClick={() => {
+                      close();
+                      router.push(seeAllHref);
+                    }}
+                  >
+                  {seeAllLabel ?? t('common:text-see-all')}
+                  </Button>
+                </div>
+              ) : null}
             </motion.div>
           )}
         </AnimatePresence>

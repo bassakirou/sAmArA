@@ -26,6 +26,19 @@ export const useCreateTypeMutation = () => {
   });
 };
 
+export const useCreateTypeInlineMutation = () => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  return useMutation(typeClient.create, {
+    onSuccess: () => {
+      toast.success(t('common:successfully-created'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries(API_ENDPOINTS.TYPES);
+    },
+  });
+};
+
 export const useDeleteTypeMutation = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

@@ -103,7 +103,7 @@ export default function ShopPage() {
                 fill
                 sizes="(max-width: 768px) 100vw"
                 alt={String(name)}
-                className="object-contain"
+                className="object-cover"
               />
             </div>
 
@@ -166,7 +166,7 @@ export default function ShopPage() {
           fill
           sizes="(max-width: 768px) 100vw"
           alt={Object(name)}
-          className="object-contain"
+          className="object-cover"
         />
 
         {hasAccess(adminAndOwnerOnly, permissions) && (

@@ -3,8 +3,10 @@ import Label from '@/components/ui/label';
 import { Control, useFormState, useWatch } from 'react-hook-form';
 import { useEffect } from 'react';
 import { useTranslation } from 'next-i18next';
+import Button from '@/components/ui/button';
 import { useCategoriesQuery } from '@/data/category';
 import { useRouter } from 'next/router';
+import { useModalAction } from '@/components/ui/modal/modal.context';
 
 interface Props {
   control: Control<any>;
@@ -18,6 +20,11 @@ const ProductCategoryInput = ({ control, setValue }: Props) => {
     control,
     name: 'type',
   });
+  const selectedCategories = useWatch({
+    control,
+    name: 'categories',
+  });
+  const { openModal } = useModalAction();
   const { dirtyFields } = useFormState({
     control,
   });
@@ -35,7 +42,28 @@ const ProductCategoryInput = ({ control, setValue }: Props) => {
 
   return (
     <div className="mb-5">
-      <Label>{t('form:input-label-categories')}</Label>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <Label className="mb-0">{t('form:input-label-categories')}</Label>
+        <Button
+          type="button"
+          size="small"
+          variant="outline"
+          onClick={() => {
+            openModal('CREATE_CATEGORY_INLINE', {
+              onCreated: (created: any) => {
+                const current = Array.isArray(selectedCategories)
+                  ? selectedCategories
+                  : [];
+                setValue('categories', [...current, created], {
+                  shouldDirty: true,
+                });
+              },
+            });
+          }}
+        >
+          + {t('form:button-label-add-category')}
+        </Button>
+      </div>
       <SelectInput
         name="categories"
         isMulti

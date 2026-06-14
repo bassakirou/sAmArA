@@ -23,6 +23,7 @@ export const productClient = {
     type,
     name,
     categories,
+    status,
     shop_id,
     ...params
   }: Partial<ProductQueryOptions>) => {
@@ -34,6 +35,7 @@ export const productClient = {
         type,
         name,
         categories,
+        status,
         shop_id,
       }),
     });

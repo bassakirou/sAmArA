@@ -1,10 +1,24 @@
 {
   "sticker-card-title-rev": "Total Revenue",
-  "sticker-card-subtitle-rev": "(Last 30 Days)",
+  "sticker-card-subtitle-rev": "(Selected period)",
   "sticker-card-title-order": "Total Order",
-  "sticker-card-subtitle-order": "(Last 30 Days)",
+  "sticker-card-subtitle-order": "(Selected period)",
   "sticker-card-title-customer": "New Customer",
-  "sticker-card-subtitle-customer": "(Last 30 Days)",
+  "sticker-card-subtitle-customer": "(Selected period)",
   "sticker-card-title-today-rev": "Todays Revenue",
-  "sticker-card-title-total-shops": "Total Shops"
+  "sticker-card-title-subscription-rev": "Subscription Revenue",
+  "sticker-card-title-total-shops": "Total Shops",
+  "order-status-card-pending": "Pending Orders",
+  "order-status-card-processing": "Processing Orders",
+  "order-status-card-at-local-facility": "At Local Facility",
+  "order-status-card-out-for-delivery": "Out for Delivery",
+  "order-status-card-completed": "Completed Orders",
+  "platform-analytics-title": "Platform Revenue (Commissions)",
+  "platform-card-gross-sales": "Gross Sales",
+  "platform-card-vendor-earnings": "Vendor Earnings",
+  "platform-card-commission": "Samara Commission",
+  "platform-card-gap": "Gap (gross - vendors)",
+  "platform-commission-history": "Commission History",
+  "sales-series-products": "Products",
+  "sales-series-subscriptions": "Subscriptions"
 }
