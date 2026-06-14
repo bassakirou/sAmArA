@@ -17,7 +17,7 @@ const ProfileContactNumber = ({ userId, profileId, contact }: Props) => {
     setModalData({
       customerId: userId,
       profileId,
-      contact,
+      contactNumber: contact,
     });
     setModalView("ADD_OR_UPDATE_PROFILE_CONTACT");
 

@@ -7,6 +7,7 @@ import dynamic from "next/dynamic";
 import { useTranslation } from "next-i18next";
 import { useRouter } from "next/router";
 import { ROUTES } from "@lib/routes";
+import { useMemo } from "react";
 
 const EnterEmailView = dynamic(() => import("./enter-email-view"));
 const EnterTokenView = dynamic(() => import("./enter-token-view"));
@@ -19,7 +20,12 @@ type Props = {
 const ForgotPassword: React.FC<Props> = ({ layout = "modal" }) => {
   const router = useRouter();
   const { t } = useTranslation();
-  const { setModalView, openModal, closeModal } = useUI();
+  const { setModalView, openModal, closeModal, modalData } = useUI();
+  const isSellerSubscriptionFlow = Boolean(modalData?.sellerSubscriptionFlow);
+  const dividerBgClass = useMemo(
+    () => (isSellerSubscriptionFlow ? "bg-sable" : "bg-white"),
+    [isSellerSubscriptionFlow]
+  );
   const { mutateAsync: forgetPassword, isLoading, formError } = useForgotPassword();
   const { mutateAsync: verifyToken, isLoading: verifying } = useVerifyForgotPasswordToken();
   const { mutateAsync: resetPassword, isLoading: resetting } = useResetPassword();
@@ -91,7 +97,12 @@ const ForgotPassword: React.FC<Props> = ({ layout = "modal" }) => {
   }
 
   return (
-    <div className="py-6 px-5 sm:p-8 bg-white mx-auto rounded-lg w-full sm:w-96 md:w-450px border border-gray-300">
+    <div
+      className={`mx-auto w-full rounded-lg border border-gray-300 px-5 py-6 sm:w-96 sm:p-8 md:w-450px ${
+        isSellerSubscriptionFlow ? "bg-sable" : "bg-white"
+      }`}
+    >
+      {isSellerSubscriptionFlow ? <div className="motif"></div> : null}
       <div className="text-center mb-9 pt-2.5">
         <div onClick={closeModal}>
           <Logo />
@@ -123,7 +134,7 @@ const ForgotPassword: React.FC<Props> = ({ layout = "modal" }) => {
       )}
       <div className="flex flex-col items-center justify-center relative text-sm text-heading mt-8 sm:mt-10 mb-6 sm:mb-7">
         <hr className="w-full border-gray-300" />
-        <span className="absolute -top-2.5 px-2 bg-white">
+        <span className={`absolute -top-2.5 px-2 ${dividerBgClass}`}>
           {t("common:text-or")}
         </span>
       </div>

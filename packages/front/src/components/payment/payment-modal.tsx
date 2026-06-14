@@ -3,6 +3,7 @@ import StripePaymentModal from '@components/payment/stripe/stripe-payment-modal'
 import Modal from '@components/common/modal/modal';
 import RazorpayPaymentModal from "@components/payment/razorpay/razorpay-payment-modal";
 import TaramoneyPaymentModal from '@components/payment/taramoney/taramoney-payment-modal';
+import CampayPaymentModal from '@components/payment/campay/campay-payment-modal';
 
 
 const PAYMENTS_FORM_COMPONENTS: any = {
@@ -16,6 +17,10 @@ const PAYMENTS_FORM_COMPONENTS: any = {
   },
   TARAMONEY: {
     component: TaramoneyPaymentModal,
+    type: 'locked',
+  },
+  CAMPAY: {
+    component: CampayPaymentModal,
     type: 'locked',
   },
 };

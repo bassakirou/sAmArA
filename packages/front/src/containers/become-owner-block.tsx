@@ -1,5 +1,6 @@
 import ButtonSamara from '@components/ui/button-samara';
 import Link from '@components/ui/link';
+import { ROUTES } from '@lib/routes';
 import Image from 'next/image';
 import { useTranslation } from 'next-i18next';
 
@@ -57,9 +58,7 @@ const BecomeOwnerBlock: React.FC<BecomeOwnerProps> = ({
 
             <ButtonSamara type="submit" variant="normal" className="mt-6">
               <Link
-                href="https://admin.samara-shopping.com/register"
-                // href={`${process?.env?.NEXT_ADMIN_SITE_URL}/register`}
-                target="_blank"
+                href={ROUTES.BECOME_SELLER}
               >
                 {t('text-become-owner-action')}
               </Link>

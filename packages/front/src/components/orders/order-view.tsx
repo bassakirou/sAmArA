@@ -17,6 +17,12 @@ export default function OrderView({ order, loadingStatus }: any) {
   });
   const { price: tax } = usePrice({ amount: order?.sales_tax ?? 0 });
   const { price: discount } = usePrice({ amount: order?.discount ?? 0 });
+  const { price: negotiatedPrice } = usePrice({
+    amount: order?.custom_order_offer?.negotiated_price ?? 0,
+  });
+  const { price: originalOfferPrice } = usePrice({
+    amount: order?.custom_order_offer?.original_price ?? 0,
+  });
   return (
     <div className="max-w-[1280px] mx-auto mb-14 lg:mb-16">
       {!loadingStatus ?
@@ -72,6 +78,31 @@ export default function OrderView({ order, loadingStatus }: any) {
             </p>
           </div>
         </div>
+        {order?.custom_order_offer ? (
+          <div className="mb-8 rounded-md border border-[#D8E1EA] bg-[#F8FAFC] p-5 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-olive">
+              Offre negociee
+            </p>
+            <div className="mt-3 flex flex-wrap gap-x-8 gap-y-3 text-sm text-body">
+              <p>
+                <span className="font-semibold text-heading">Produit:</span>{' '}
+                {order?.custom_order_offer?.product?.name}
+              </p>
+              <p>
+                <span className="font-semibold text-heading">Prix convenu:</span>{' '}
+                {negotiatedPrice}
+              </p>
+              <p>
+                <span className="font-semibold text-heading">Prix initial:</span>{' '}
+                {originalOfferPrice}
+              </p>
+              <p>
+                <span className="font-semibold text-heading">Statut:</span>{' '}
+                {order?.custom_order_offer?.status}
+              </p>
+            </div>
+          </div>
+        ) : null}
         {/* end of order received  */}
 
         <div className="flex flex-col md:flex-row border border-gray-100 rounded-md">
@@ -174,7 +205,10 @@ export default function OrderView({ order, loadingStatus }: any) {
         </div>
 
         <div className="mt-11">
-          <OrderItems products={order?.products} />
+          <OrderItems
+            products={order?.products}
+            negotiatedOfferId={order?.custom_order_offer?.id}
+          />
         </div>
         {order?.children?.length ? (
           <div className="mt-11">

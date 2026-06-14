@@ -9,6 +9,48 @@ export interface GetParams {
   language?: string;
 }
 
+export type FaqType = 'customer' | 'seller';
+
+export type Faq = {
+  id: number | string;
+  slug: string;
+  title: string;
+  description: string;
+  type: FaqType;
+  language: string;
+  order: number;
+};
+
+export type FaqQueryOptionsType = QueryOptions & {
+  title?: string;
+  type?: FaqType;
+  limit?: number;
+  page?: number;
+  orderBy?: string;
+  sortedBy?: string;
+};
+
+export type FaqPaginator = PaginatorInfo<Faq>;
+
+export type TermsAndCondition = {
+  id: number | string;
+  slug: string;
+  title: string;
+  description: string;
+  language: string;
+  order: number;
+};
+
+export type TermsAndConditionsQueryOptionsType = QueryOptions & {
+  title?: string;
+  limit?: number;
+  page?: number;
+  orderBy?: string;
+  sortedBy?: string;
+};
+
+export type TermsAndConditionPaginator = PaginatorInfo<TermsAndCondition>;
+
 export interface ParamsType extends QueryOptions {
   type?: string;
   text?: string;
@@ -152,6 +194,12 @@ export declare type Attachment = {
   original?: string;
 };
 
+export declare type ProductVideo = {
+  url?: string;
+  type?: string;
+  attachment_id?: number | string;
+};
+
 export declare type AttributeValue = {
   id: string;
   attribute_id: string;
@@ -183,12 +231,16 @@ export declare type Product = {
   shop?: any;
   description?: string;
   in_stock?: boolean;
+  is_negotiable?: boolean;
+  can_discuss_price?: boolean;
   is_taxable?: boolean;
   sale_price?: number;
   sku?: string;
+  video?: ProductVideo[];
   gallery?: Attachment[];
   image?: Attachment;
   // status?: ProductStatus
+  status?: string;
   height?: string;
   length?: string;
   width?: string;
@@ -212,6 +264,7 @@ export declare type Tag = {
   icon?: string;
   image?: string;
   details?: string;
+  products_count?: number;
 };
 
 export declare type UserAddress = {
@@ -248,6 +301,7 @@ export declare type Order = {
   payment_intent?: PaymentIntent;
   payment_status?: string;
   order_status?: string;
+  custom_order_offer?: CustomOrderOffer | null;
 };
 
 export interface PaymentIntent {
@@ -387,6 +441,56 @@ export interface PaginatorInfo<T> {
   paginatorInfo?: any;
 }
 
+export type Message = {
+  id: number | string;
+  conversation_id: number | string;
+  user_id: number | string;
+  user?: User;
+  body: string;
+  product_id?: number | string | null;
+  negotiated_price?: number | string | null;
+  custom_offer?: CustomOrderOffer | null;
+  product?: Product | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type CustomOrderOffer = {
+  id: number | string;
+  conversation_id: number | string;
+  message_id?: number | string | null;
+  order_id?: number | string | null;
+  product_id: number | string;
+  shop_id: number | string;
+  seller_id: number | string;
+  customer_id: number | string;
+  original_price: number;
+  negotiated_price: number;
+  minimum_allowed_price: number;
+  maximum_discount_percent: number;
+  status: string;
+  accepted_at?: string | null;
+  converted_at?: string | null;
+  product?: Product | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Conversation = {
+  id: number | string;
+  user_id: number | string;
+  user?: User;
+  to_user_id?: number | string;
+  to_user?: User;
+  shop_id: number | string;
+  shop?: Shop;
+  messages?: Message[];
+  latest_message?: Message | null;
+  unseen?: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type LoginInputType = {
   email: string;
   password: string;
@@ -395,6 +499,7 @@ export type RegisterUserInputType = {
   name: string;
   email: string;
   password: string;
+  permission?: string;
 };
 
 export type ChangePasswordInputType = {
@@ -431,6 +536,7 @@ export type OtpLoginInputType = {
   otp_id: string;
   name?: string;
   email?: string;
+  permission?: string;
 };
 export type UpdateContactInput = {
   phone_number: string;
@@ -462,6 +568,7 @@ export type VerifyCheckoutInputType = {
   products: any[];
   billing_address: any;
   shipping_address: any;
+  custom_order_offer_id?: number | string;
 };
 
 export type ContactFormValues = {
@@ -520,6 +627,7 @@ export enum PaymentGateway {
   PAYSTACK = 'PAYSTACK',
   IYZICO = 'IYZICO',
   TARAMONEY = 'TARAMONEY',
+  CAMPAY = 'CAMPAY',
 }
 
 export enum PaymentStatus {
@@ -574,3 +682,103 @@ export interface OrderPaginator extends PaginatorInfo<Order> {}
 export interface ProductPaginator extends PaginatorInfo<Product> {}
 export interface ShopPaginator extends PaginatorInfo<Shop> {}
 export interface TagPaginator extends PaginatorInfo<Tag> {}
+export interface ConversationPaginator extends PaginatorInfo<Conversation> {}
+export interface MessagePaginator extends PaginatorInfo<Message> {}
+export interface Faq {
+  id: number | string;
+  slug: string;
+  title: string;
+  description: string;
+  type: FaqType;
+  language: string;
+  order: number;
+}
+export type FaqType = 'customer' | 'seller';
+export interface FaqQueryOptionsType extends QueryOptions {
+  type?: FaqType;
+}
+export interface FaqPaginator extends PaginatorInfo<Faq> {}
+export interface SubscriptionPlan {
+  id: number | string;
+  name: string;
+  description: string;
+  level: number;
+  monthly_price: number;
+  annual_monthly_prorata_price: number;
+  permissions?: string[];
+  max_products?: number | null;
+  platform_commission_rate?: number | null;
+  discount_percent?: number | null;
+  discount_starts_at?: string | null;
+  discount_ends_at?: string | null;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+export interface SubscriptionPlanPaginator
+  extends PaginatorInfo<SubscriptionPlan> {}
+export type VendorSubscriptionBillingPeriod = 'monthly' | 'annual';
+export interface VendorSubscription {
+  id: number | string;
+  user_id: number | string;
+  subscription_plan_id: number | string;
+  status: string;
+  billing_period: VendorSubscriptionBillingPeriod;
+  amount: number;
+  currency: string;
+  payment_gateway: string;
+  payment_tracking_number: string;
+  paid_at?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  payment_intent_info?: PaymentIntentInfo | null;
+  plan?: SubscriptionPlan | null;
+}
+export interface VendorSubscriptionSummary {
+  trial_ends_at?: string | null;
+  active_subscription_plan?: SubscriptionPlan | null;
+  active_subscription_billing_period?: VendorSubscriptionBillingPeriod | null;
+  active_subscription_starts_at?: string | null;
+  active_subscription_ends_at?: string | null;
+}
+export interface VendorSubscriptionStartInput {
+  subscription_plan_id: number | string;
+  billing_period: VendorSubscriptionBillingPeriod;
+  payment_gateway: 'TARAMONEY' | 'CAMPAY';
+  taramoney?: {
+    phone_number?: string;
+    network?: string;
+    email?: string;
+    return_url?: string;
+    return_url_base?: string;
+    webhook_url?: string;
+  };
+  campay?: {
+    phone_number?: string;
+  };
+}
+export interface VendorSubscriptionStartResponse {
+  subscription: VendorSubscription;
+  payment_intent: PaymentIntent;
+}
+export interface TermsAndCondition {
+  id: number | string;
+  slug: string;
+  title: string;
+  description: string;
+  language: string;
+  order: number;
+}
+export interface TermsAndConditionsQueryOptionsType extends QueryOptions {}
+export interface TermsAndConditionPaginator
+  extends PaginatorInfo<TermsAndCondition> {}
+export interface PrivacyPolicy {
+  id: number | string;
+  slug: string;
+  title: string;
+  description: string;
+  language: string;
+  order: number;
+}
+export interface PrivacyPoliciesQueryOptionsType extends QueryOptions {}
+export interface PrivacyPolicyPaginator extends PaginatorInfo<PrivacyPolicy> {}

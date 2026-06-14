@@ -35,5 +35,7 @@ export const ROUTES = {
   TAGS: "/search?tags",
   ACCOUNT_CARDS: '/my-account/cards',
   verifyEmail: '/verify-email',
-  ABOUT_US:'/a-propos'
+  ABOUT_US: '/a-propos',
+  BECOME_SELLER: '/become-seller',
+  SUBSCRIPTION_CHECKOUT: '/subscriptions/checkout',
 };

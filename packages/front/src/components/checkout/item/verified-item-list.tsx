@@ -11,6 +11,7 @@ import {
 import { useAtom } from "jotai";
 import {
   couponAtom,
+  customOrderOfferAtom,
   discountAtom,
   verifiedResponseAtom,
 } from '@store/checkout';
@@ -27,6 +28,7 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
   const { items, isEmpty: isEmptyCart } = useCart();
   const [verifiedResponse] = useAtom(verifiedResponseAtom);
   const [coupon, setCoupon] = useAtom(couponAtom);
+  const [customOrderOfferId] = useAtom(customOrderOfferAtom);
   const [discount] = useAtom(discountAtom);
 
   const available_items = items?.filter(
@@ -102,7 +104,14 @@ const VerifiedItemList: React.FC<Props> = ({ className }) => {
         <ItemInfoRow title={t('text-sub-total')} value={sub_total} />
         <ItemInfoRow title={t('text-tax')} value={tax} />
         <ItemInfoRow title={t('text-shipping')} value={shipping} />
-        {discount && coupon ? (
+        {customOrderOfferId ? (
+          <div className="flex justify-between border-t border-gray-100 px-6 py-5">
+            <p className="text-sm text-body">Prix negocie</p>
+            <span className="text-sm font-semibold text-heading">
+              Verrouille par l'offre
+            </span>
+          </div>
+        ) : discount && coupon ? (
           <div className="flex justify-between px-6 py-5 border-t border-gray-100">
             <p className="text-sm text-body ltr:mr-4 rtl:ml-4">
               {t('text-discount')}

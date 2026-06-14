@@ -28,9 +28,9 @@ export const ProductAttributes: React.FC<Props> = ({
         {title}
       </h3>
       <ul className="colors flex flex-wrap ltr:-mr-3 rtl:-ml-3">
-        {attributes?.map(({ id, value, meta }) => (
+        {attributes?.map(({ id, value, meta }, index) => (
           <li
-            key={`${value}-${id}`}
+            key={`${title}-${value}-${id}-${index}`}
             className={cn(
               'cursor-pointer rounded border border-gray-100 min-w-[36px] md:min-w-[44px] min-h-[36px] md:min-h-[44px] p-1 mb-2 md:mb-3 ltr:mr-2 rtl:ml-2 ltr:md:mr-3 rtl:md:ml-3 flex justify-center items-center text-heading text-xs md:text-sm uppercase font-semibold transition duration-200 ease-in-out hover:border-black',
               {

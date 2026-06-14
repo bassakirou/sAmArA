@@ -8,11 +8,8 @@ import { generateCartItem } from '@utils/generate-cart-item';
 import { ProductAttributes } from './product-attributes';
 import isEmpty from 'lodash/isEmpty';
 import Link from '@components/ui/link';
-import Image from 'next/image';
 import { toast } from 'react-toastify';
 import { useWindowSize } from '@utils/use-window-size';
-import Carousel from '@components/ui/carousel/carousel';
-import { SwiperSlide } from 'swiper/react';
 import { Attachment, Product } from '@type/index';
 import { useSetAtom } from 'jotai';
 import { chatAtom } from '@store/chat-atom';
@@ -21,16 +18,11 @@ import VariationPrice from '@components/product/product-variant-price';
 import { useTranslation } from 'next-i18next';
 import isMatch from 'lodash/isMatch';
 import { ROUTES } from '@lib/routes';
-
-const productGalleryCarouselResponsive = {
-  '768': {
-    slidesPerView: 2,
-    spaceBetween: 12,
-  },
-  '0': {
-    slidesPerView: 1,
-  },
-};
+import { checkIsLoggedIn } from '@store/authorization-atom';
+import { useUI } from '@contexts/ui.context';
+import { useRouter } from 'next/router';
+import ProductMediaGallery from '@components/product/product-media-gallery';
+import { IoPlay } from 'react-icons/io5';
 
 type Props = {
   product: Product;
@@ -38,12 +30,27 @@ type Props = {
 
 const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { openModal, setModalView, setModalData } = useUI();
   const { width } = useWindowSize();
   const { addItemToCart } = useCart();
   const setChatState = useSetAtom(chatAtom);
   const [attributes, setAttributes] = useState<{ [key: string]: string }>({});
   const [quantity, setQuantity] = useState(1);
   const [addToCartLoader, setAddToCartLoader] = useState<boolean>(false);
+  const negotiationProduct = product
+    ? {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        image: product.image,
+        price: product.price,
+        sale_price: product.sale_price,
+        min_price: product.min_price,
+        max_price: product.max_price,
+        shop: product.shop,
+      }
+    : null;
 
   const { price, basePrice } = usePrice({
     amount: product?.sale_price ? product?.sale_price : product?.price!,
@@ -51,6 +58,9 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
   });
 
   const variations = getVariations(product?.variations!);
+  const canDiscussPrice =
+    Boolean(product?.can_discuss_price) ||
+    Boolean(product?.is_negotiable);
 
   const isSelected = !isEmpty(variations)
     ? !isEmpty(attributes) &&
@@ -107,93 +117,35 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
     setAttributes(() => ({}));
   }
 
-  // Combine image and gallery
-  const combineImages = [...product?.gallery, product?.image];
+  const selectedImage = !isEmpty(selectedVariation)
+    ? isEmpty(selectedVariation?.image)
+      ? product?.image
+      : selectedVariation?.image
+    : product?.image;
+  const hasVideo = Boolean(
+    Array.isArray(product?.video) && product.video.length && product.video[0]?.url
+  );
   return (
-    <div className="items-start block grid-cols-9 pb-10 lg:grid gap-x-10 xl:gap-x-14 pt-7 lg:pb-14 2xl:pb-20">
-      {width < 1025 ? (
-        <Carousel
-          pagination={{
-            clickable: true,
-          }}
-          breakpoints={productGalleryCarouselResponsive}
-          className="product-gallery"
-          buttonClassName="hidden"
-        >
-          {combineImages?.length > 1 ? (
-            combineImages?.map((item: Attachment, index: number) => (
-              <SwiperSlide key={`product-gallery-key-${index}`}>
-                <div className="relative flex col-span-1 transition duration-150 ease-in hover:opacity-90">
-                  <Image
-                    width={475}
-                    height={618}
-                    src={
-                      item?.original ??
-                      '/assets/placeholder/products/product-gallery.svg'
-                    }
-                    alt={`${product?.name}--${index}`}
-                    className="object-cover w-full"
-                  />
-                </div>
-              </SwiperSlide>
-            ))
-          ) : (
-            <SwiperSlide key={`product-gallery-key`}>
-              <div className="flex col-span-1 transition duration-150 ease-in hover:opacity-90">
-                <Image
-                  width={475}
-                  height={618}
-                  src={
-                    combineImages?.[0]?.original ??
-                    '/assets/placeholder/products/product-gallery.svg'
-                  }
-                  alt={product?.name}
-                  className="object-cover w-full"
-                />
-              </div>
-            </SwiperSlide>
-          )}
-        </Carousel>
-      ) : (
-        <div className="col-span-5 grid grid-cols-2 gap-2.5">
-          {combineImages?.length > 1 ? (
-            combineImages?.map((item: Attachment, index: number) => (
-              <div
-                key={index}
-                className="flex col-span-1 transition duration-150 ease-in hover:opacity-90"
-              >
-                <Image
-                  width={475}
-                  height={618}
-                  src={
-                    item?.original ??
-                    '/assets/placeholder/products/product-gallery.svg'
-                  }
-                  alt={`${product?.name}--${index}`}
-                  className="object-cover w-full"
-                />
-              </div>
-            ))
-          ) : (
-            <div className="flex justify-center bg-gray-300 rounded-md col-span-full">
-              <div className="flex w-1/2 transition duration-150 ease-in hover:opacity-90">
-                <Image
-                  width={475}
-                  height={618}
-                  src={
-                    combineImages?.[0]?.original ??
-                    '/assets/placeholder/products/product-gallery.svg'
-                  }
-                  alt={product?.name}
-                  className="object-cover"
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+    <div className="items-start block grid-cols-9 gap-x-10 pb-10 pt-7 lg:grid lg:min-w-0 lg:pb-14 xl:gap-x-14 2xl:pb-20">
+      <div className="col-span-5 min-w-0">
+        <ProductMediaGallery
+          productName={String(product?.name ?? '')}
+          coverImage={selectedImage}
+          gallery={product?.gallery as Attachment[]}
+          video={product?.video as any}
+          onOpenVideo={
+            hasVideo
+              ? () => {
+                  setModalView('VIDEO_VIEW');
+                  setModalData(product?.video);
+                  openModal();
+                }
+              : undefined
+          }
+        />
+      </div>
 
-      <div className="col-span-4 pt-8 lg:pt-0">
+      <div className="col-span-4 min-w-0 pt-8 lg:pt-0">
         <div className="border-b border-gray-300 pb-7">
           <h2 className="text-heading text-lg md:text-xl lg:text-2xl 2xl:text-3xl font-bold hover:text-black mb-3.5">
             {product?.name}
@@ -201,6 +153,24 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
           <p className="text-sm leading-6 text-body lg:text-base lg:leading-8">
             {product?.description}
           </p>
+
+          {hasVideo ? (
+            <div className="mt-5">
+              <Button
+                type="button"
+                variant="custom"
+                onClick={() => {
+                  setModalView('VIDEO_VIEW');
+                  setModalData(product?.video);
+                  openModal();
+                }}
+                className="h-11 w-full gap-2 bg-red-600 px-5 text-white hover:bg-red-700 sm:w-auto"
+              >
+                <IoPlay size={18} />
+                <span>Voir la vidéo</span>
+              </Button>
+            </div>
+          ) : null}
 
           <div className="flex items-center mt-5">
             {!isEmpty(variations) ? (
@@ -307,21 +277,48 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
           </Button>
         </div>
 
-        <div className="flex items-center pb-8 space-x-4 border-b border-gray-300 rtl:space-x-reverse ltr:md:pr-32 ltr:lg:pr-12 ltr:2xl:pr-32 ltr:3xl:pr-48 rtl:md:pl-32 rtl:lg:pl-12 rtl:2xl:pl-32 rtl:3xl:pl-48">
-          <Button
-            onClick={() => {
-              setChatState({
-                isOpen: true,
-                isExpanded: false,
-                activeProduct: product,
-              });
-            }}
-            variant="outline"
-            className="w-full"
-          >
-            {t('text-chat-with-seller')}
-          </Button>
-        </div>
+        {canDiscussPrice ? (
+          <div className="flex items-center pb-8 space-x-4 border-b border-gray-300 rtl:space-x-reverse ltr:md:pr-32 ltr:lg:pr-12 ltr:2xl:pr-32 ltr:3xl:pr-48 rtl:md:pl-32 rtl:lg:pl-12 rtl:2xl:pl-32 rtl:3xl:pl-48">
+            <Button
+              onClick={() => {
+                if (!checkIsLoggedIn()) {
+                  if (typeof window !== 'undefined') {
+                    window.sessionStorage.setItem(
+                      'samara:chat:intent',
+                      JSON.stringify({
+                        returnTo: router.asPath,
+                        isExpanded: false,
+                        activeShopId: (product as any)?.shop?.id ?? null,
+                        activeProduct: negotiationProduct,
+                      })
+                    );
+                  }
+                  setModalView('LOGIN_VIEW');
+                  openModal();
+                  toast.error(
+                    <div>
+                      <div className="font-semibold">Unauthenticated</div>
+                      <div>Vous devez être connecté pour discuter.</div>
+                    </div>,
+                    { toastId: 'chat-auth' }
+                  );
+                  return;
+                }
+                setChatState({
+                  isOpen: true,
+                  isExpanded: false,
+                  activeProduct: negotiationProduct,
+                  activeConversationId: null,
+                  activeShopId: (product as any)?.shop?.id ?? null,
+                });
+              }}
+              variant="outline"
+              className="w-full"
+            >
+              {t('text-chat-with-seller')}
+            </Button>
+          </div>
+        ) : null}
         <div className="py-6">
           <ul className="pb-1 space-y-5 text-sm">
             {product?.sku && (

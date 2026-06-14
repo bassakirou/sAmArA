@@ -3,6 +3,7 @@ import Modal from "./modal";
 import dynamic from "next/dynamic";
 import Newsletter from '@components/common/newsletter';
 import ProductPopup from "@components/product/product-popup";
+import ProductVideoModal from '@components/product/product-video-modal';
 
 const LoginForm = dynamic(() => import("@components/auth/login-form"));
 const OtpLogin = dynamic(() => import("@components/auth/otp/otp-login"));
@@ -22,6 +23,9 @@ const AddOrUpdateCheckoutContact = dynamic(
 );
 const TaramoneyPhoneModal = dynamic(
   () => import('@components/checkout/payment/taramoney-phone-modal')
+);
+const CampayPhoneModal = dynamic(
+  () => import('@components/checkout/payment/campay-phone-modal')
 );
 const CreateOrUpdateGuestAddressForm = dynamic(
   () => import('@components/checkout/create-or-update-guest')
@@ -71,6 +75,7 @@ const ManagedModal: React.FC = () => {
       {modalView === 'SIGN_UP_VIEW' && <SignUpForm />}
       {modalView === 'FORGET_PASSWORD' && <ForgetPasswordForm />}
       {modalView === 'PRODUCT_VIEW' && <ProductPopup productSlug={modalData} />}
+      {modalView === 'VIDEO_VIEW' && <ProductVideoModal video={modalData} />}
       {modalView === 'NEWSLETTER_VIEW' && <Newsletter />}
       {modalView === 'ADDRESS_FORM_VIEW' && <CreateOrUpdateAddressForm />}
       {modalView === 'ADDRESS_DELETE_VIEW' && (<AddressDeleteView data={modalData} />)}
@@ -78,6 +83,7 @@ const ManagedModal: React.FC = () => {
         <AddOrUpdateCheckoutContact data={modalData} />
       )}
       {modalView === 'TARAMONEY_PHONE_MODAL' && <TaramoneyPhoneModal />}
+      {modalView === 'CAMPAY_PHONE_MODAL' && <CampayPhoneModal />}
       {modalView === 'ADD_OR_UPDATE_PROFILE_CONTACT' && (
         <ProfileAddOrUpdateContact data={modalData} />
       )}

@@ -1,28 +1,12 @@
-const invariant = require('tiny-invariant');
 const path = require('path');
-
-invariant(
-  process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE,
-  'NEXT_PUBLIC_DEFAULT_LANGUAGE is required, but not set, check your .env file'
-);
-
-const isMultiLangEnable =
-  process.env.NEXT_PUBLIC_ENABLE_MULTI_LANG === 'true' &&
-  !!process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES;
-
-function generateLocales() {
-  if (isMultiLangEnable) {
-    return process.env.NEXT_PUBLIC_AVAILABLE_LANGUAGES.split(',');
-  }
-
-  return [process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE];
-}
+const ACTIVE_LOCALES = ['fr'];
+const DEFAULT_LOCALE = 'fr';
 
 module.exports = {
   i18n: {
-    defaultLocale: process.env.NEXT_PUBLIC_DEFAULT_LANGUAGE ?? 'fr',
-    locales: generateLocales(),
-    localeDetection: isMultiLangEnable,
+    defaultLocale: DEFAULT_LOCALE,
+    locales: ACTIVE_LOCALES,
+    localeDetection: false,
   },
   react: { useSuspense: false },
   localePath: path.resolve('./public/locales'),

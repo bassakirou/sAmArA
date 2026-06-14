@@ -44,9 +44,25 @@ export const getStaticProps: GetStaticProps = async ({ params, locale }) => {
       ({ queryKey, pageParam }) =>
         client.product.all(Object.assign({}, queryKey[1], pageParam))
     );
+
+    let termsAndConditions: any[] = [];
+    let faqs: any[] = [];
+    try {
+      const [termsResponse, faqsResponse] = await Promise.all([
+        client.termsAndConditions.all({ language: locale!, limit: 200 } as any),
+        client.faqs.all({
+          language: locale!,
+          type: 'customer',
+          limit: 100,
+        } as any),
+      ]);
+      termsAndConditions = termsResponse?.data ?? [];
+      faqs = faqsResponse?.data ?? [];
+    } catch {}
+
     return {
       props: {
-        data: { shop },
+        data: { shop, termsAndConditions, faqs },
         ...(await serverSideTranslations(locale!, [
           'common',
           'menu',

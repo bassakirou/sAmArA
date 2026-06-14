@@ -2,16 +2,130 @@ import { getLayout } from '@components/layout/layout';
 import Container from '@components/ui/container';
 import PageSellerBanner from '@components/ui/page-seller-banner';
 import BecomeOwnerBlock from '@containers/become-owner-block';
-import { useTranslation } from 'next-i18next';
 import PageSellerDescription from '@components/ui/page-seller-description';
 import PageSellerMoney from '@components/ui/page-seller-money';
-import Accordion from '@components/common/accordion';
-import { faqSeller } from '@settings/faq.settings';
-
-export { getStaticProps } from '@framework/homepage/modern';
+import VendorFaqSection from '@components/devenir-vendeur/vendor-faq-section';
+import SubscriptionPricingSection from '@components/devenir-vendeur/subscription-pricing-section';
+import { useAtom } from 'jotai';
+import { authorizationAtom } from '@store/authorization-atom';
+import { useUI } from '@contexts/ui.context';
+import { useSettings } from '@framework/settings';
+import { useEffect, useState } from 'react';
+import {
+  SubscriptionPlan,
+  VendorSubscriptionBillingPeriod,
+} from '@type/index';
+import {
+  clearPendingSubscriptionCheckout,
+  getAdminSubscriptionCheckoutUrl,
+  getAdminVerifyEmailUrl,
+  getPendingSubscriptionCheckout,
+  markSubscriptionCheckoutPending,
+  setSelectedSubscriptionPlan,
+} from '@lib/subscription-plan-checkout';
+import { useRouter } from 'next/router';
+import { ROUTES } from '@lib/routes';
+import client from '@framework/utils/index';
+import axios from 'axios';
+import { useToken } from '@lib/use-token';
+import { toast } from 'react-toastify';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 function DevenirVendeur() {
-  const { t } = useTranslation('common');
+  const router = useRouter();
+  const [isAuthorized] = useAtom(authorizationAtom);
+  const { setModalView, openModal, setModalData } = useUI();
+  const { data: settings, isLoading: settingsLoading } = useSettings();
+  const { setEmailVerified } = useToken();
+  const [
+    isRedirectingToSubscriptionCheckout,
+    setIsRedirectingToSubscriptionCheckout,
+  ] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthorized || settingsLoading) {
+      return;
+    }
+
+    const pending = getPendingSubscriptionCheckout();
+    if (!pending?.sellerFlow || !pending?.planId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function continueSubscriptionFlow() {
+      setIsRedirectingToSubscriptionCheckout(true);
+      try {
+        await client.vendorSubscriptions.me();
+        if (!cancelled) {
+          clearPendingSubscriptionCheckout();
+          window.location.assign(
+            getAdminSubscriptionCheckoutUrl(
+              pending.planId,
+              pending.billingPeriod ?? 'monthly'
+            )
+          );
+        }
+      } catch (error) {
+        if (cancelled) return;
+        if (axios.isAxiosError(error) && error.response?.status === 409) {
+          setEmailVerified(false);
+          clearPendingSubscriptionCheckout();
+          window.location.assign(getAdminVerifyEmailUrl());
+          return;
+        }
+        if (axios.isAxiosError(error) && error.response?.status === 403) {
+          toast.error(
+            "Ce compte n'est pas un compte vendeur. Creez un compte vendeur pour continuer."
+          );
+          clearPendingSubscriptionCheckout();
+          return;
+        }
+        toast.error('Impossible de lancer le checkout abonnement.');
+      } finally {
+        if (!cancelled) {
+          setIsRedirectingToSubscriptionCheckout(false);
+        }
+      }
+    }
+
+    continueSubscriptionFlow();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    isAuthorized,
+    setEmailVerified,
+    settingsLoading,
+  ]);
+
+  function handleSelectPlan(
+    plan: SubscriptionPlan,
+    billingPeriod: VendorSubscriptionBillingPeriod
+  ) {
+    setSelectedSubscriptionPlan(plan);
+    markSubscriptionCheckoutPending({
+      sellerFlow: true,
+      planId: plan.id,
+      billingPeriod,
+    });
+
+    if (!isAuthorized) {
+      setModalData({
+        sellerSubscriptionFlow: true,
+        planId: plan.id,
+        billingPeriod,
+      });
+      setModalView('LOGIN_VIEW');
+      openModal();
+      return;
+    }
+
+    setIsRedirectingToSubscriptionCheckout(true);
+  }
+
   return (
     <>
       <PageSellerBanner pageBackground={'/assets/images/devenir-vendeur.jpg'} />
@@ -19,16 +133,11 @@ function DevenirVendeur() {
       <Container>
         <PageSellerDescription />
         <PageSellerMoney />
-        <h2 className="px-24 mt-20 mb-12 text-xl font-semibold text-center sm:text-3xl title-font">
-          {t('text-page-faq')}
-        </h2>
-        <div className="max-w-5xl px-0 py-12 mx-auto space-y-4 lg:py-20">
-          <Accordion
-            items={faqSeller}
-            translatorNS="faq"
-            variant="transparent"
-          />
-        </div>
+        <SubscriptionPricingSection
+          onSelectPlan={handleSelectPlan}
+          isSubmitting={isRedirectingToSubscriptionCheckout}
+        />
+        <VendorFaqSection />
       </Container>
       <BecomeOwnerBlock />
     </>
@@ -38,3 +147,15 @@ function DevenirVendeur() {
 export default DevenirVendeur;
 
 DevenirVendeur.getLayout = getLayout;
+
+export const getStaticProps = async ({ locale }: any) => ({
+  props: {
+    ...(await serverSideTranslations(locale, [
+      'common',
+      'menu',
+      'forms',
+      'footer',
+      'faq',
+    ])),
+  },
+});

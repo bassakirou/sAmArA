@@ -3,8 +3,12 @@ import Footer from '@components/layout/footer/footer';
 import MobileNavigation from '@components/layout/mobile-navigation/mobile-navigation';
 import Search from '@components/common/search';
 import ChatWidget from '@components/chat/chat-widget';
+import { useRouter } from 'next/router';
 
 const SiteLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
+  const router = useRouter();
+  const showChatLauncher = router.pathname === '/products/[slug]';
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -20,7 +24,7 @@ const SiteLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
       <Footer />
       <MobileNavigation />
       <Search />
-      <ChatWidget />
+      <ChatWidget showLauncher={showChatLauncher} />
     </div>
   );
 };

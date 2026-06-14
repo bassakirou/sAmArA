@@ -1,10 +1,8 @@
 import { getLayout } from '@components/layout/layout';
 import Container from '@components/ui/container';
 import PageHeader from '@components/ui/page-header';
-import { privacyPolicy } from '@settings/privacy-settings';
 import { Link, Element } from 'react-scroll';
-import { useTranslation } from 'next-i18next';
-import { GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { QueryClient } from 'react-query';
 import { API_ENDPOINTS } from '@framework/utils/endpoints';
@@ -14,8 +12,13 @@ function makeTitleToDOMId(title: string) {
   return title.toLowerCase().split(' ').join('_');
 }
 
-export default function PrivacyPage() {
-  const { t } = useTranslation('privacy');
+type PrivacyItem = { id: string | number; title: string; description: string };
+
+export default function PrivacyPage({
+  privacyPolicies,
+}: {
+  privacyPolicies: PrivacyItem[];
+}) {
   return (
     <>
       <PageHeader pageHeader="text-page-privacy-policy" />
@@ -24,7 +27,7 @@ export default function PrivacyPage() {
           <div className="flex flex-col md:flex-row">
             <nav className="mb-8 md:w-72 xl:w-3/12 md:mb-0">
               <ol className="sticky z-10 md:top-16 lg:top-28">
-                {privacyPolicy?.map((item, index) => (
+                {privacyPolicies?.map((item, index) => (
                   <li key={item.id}>
                     <Link
                       spy={true}
@@ -35,10 +38,7 @@ export default function PrivacyPage() {
                       activeClass="text-heading font-semibold"
                       className="block cursor-pointer py-3 lg:py-3.5  text-sm lg:text-base  text-gray-700 uppercase"
                     >
-                      {(index <= 9 ? '0' : '') +
-                        index +
-                        ' ' +
-                        t(`${item.title}`)}
+                      {(index <= 9 ? '0' : '') + index + ' ' + item.title}
                     </Link>
                   </li>
                 ))}
@@ -47,7 +47,7 @@ export default function PrivacyPage() {
             {/* End of section scroll spy menu */}
 
             <div className="pt-0 md:w-9/12 ltr:md:pl-8 rtl:md:pr-8 lg:pt-2">
-              {privacyPolicy?.map((item) => (
+              {privacyPolicies?.map((item) => (
                 // @ts-ignore
                 <Element
                   key={item.title}
@@ -55,12 +55,12 @@ export default function PrivacyPage() {
                   className="mb-10"
                 >
                   <h2 className="mb-4 text-lg font-bold md:text-xl lg:text-2xl text-heading">
-                    {t(`${item.title}`)}
+                    {item.title}
                   </h2>
                   <div
                     className="text-sm leading-7 text-heading lg:text-base lg:leading-loose"
                     dangerouslySetInnerHTML={{
-                      __html: t(`${item.description}`),
+                      __html: item.description,
                     }}
                   />
                 </Element>
@@ -76,20 +76,28 @@ export default function PrivacyPage() {
 
 PrivacyPage.getLayout = getLayout;
 
-export const getStaticProps: GetStaticProps = async ({ locale }) => {
+export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   const queryClient = new QueryClient();
   await queryClient.prefetchQuery(API_ENDPOINTS.SETTINGS, () =>
     client.settings.findAll()
   );
+  const privacyResponse = await client.privacyPolicies.all({
+    language: locale!,
+    limit: 200,
+  } as any);
 
   return {
     props: {
+      privacyPolicies: (privacyResponse?.data ?? []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+      })) as PrivacyItem[],
       ...(await serverSideTranslations(locale!, [
         'common',
         'menu',
         'forms',
         'footer',
-        'privacy',
       ])),
     },
   };

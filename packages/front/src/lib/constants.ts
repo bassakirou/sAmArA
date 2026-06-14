@@ -10,6 +10,9 @@ export const CHECKOUT = 'sAmArA-checkout';
 export const DISPLAY_CURRENCY = 'sAmArA-display-currency';
 export const RTL_LANGUAGES: ReadonlyArray<string> = ['ar', 'he'];
 export const EMAIL_VERIFIED = 'EMAIL_VERIFIED';
+export const SUBSCRIPTION_CHECKOUT_PLAN = 'samara-subscription-checkout-plan';
+export const SUBSCRIPTION_CHECKOUT_PENDING =
+  'samara-subscription-checkout-pending';
 
 export const ORDER_STATUS = [
   { name: 'Order Pending', status: 'order-pending', serial: 1 },

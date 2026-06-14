@@ -338,6 +338,7 @@ export function useSendOtpCode({
         setServerError(data.message!);
         return;
       }
+      setServerError(null);
       setOtpState({
         ...otpState,
         otpId: data?.id!,
@@ -347,8 +348,17 @@ export function useSendOtpCode({
         ...(verifyOnly && { step: 'OtpForm' }),
       });
     },
-    onError: (error: Error) => {
-      console.log(error.message);
+    onError: (error: unknown) => {
+      if (axios.isAxiosError(error)) {
+        const data: any = error.response?.data;
+        setServerError(
+          data?.message ??
+            (data?.error ? String(data.error) : null) ??
+            error.message
+        );
+        return;
+      }
+      setServerError((error as any)?.message ?? 'SOMETHING_WENT_WRONG');
     },
   });
 

@@ -23,10 +23,10 @@ export function useShops(params: ShopsQueryOptionsType) {
   );
 }
 
-export const useShop = (slug: string) => {
+export const useShop = (slug?: string) => {
   const { locale } = useRouter();
   const formattedOptions = {
-    slug,
+    slug: slug as string,
     language: locale,
   };
   return useQuery<Shop, Error>(
@@ -34,6 +34,7 @@ export const useShop = (slug: string) => {
     ({ queryKey, pageParam }) => client.shop.findOne(Object.assign({}, queryKey[1], pageParam)),
     {
       keepPreviousData: true,
+      enabled: Boolean(slug),
     }
   );
 };

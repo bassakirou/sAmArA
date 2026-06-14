@@ -5,6 +5,8 @@ import { deliveryTimeAtom } from "@store/checkout";
 import { useEffect } from "react";
 import { useTranslation } from "next-i18next";
 import { useSettings } from "@contexts/settings.context";
+import { useCart } from "@store/quick-cart/cart.context";
+import { useShop } from "@framework/shops";
 
 interface ScheduleProps {
   label: string;
@@ -18,7 +20,15 @@ export const ScheduleGrid: React.FC<ScheduleProps> = ({
   count,
 }) => {
   const { t } = useTranslation("common");
-  const { deliveryTime: schedules } = useSettings();
+  const { deliveryTime: globalSchedules } = useSettings();
+  const { items } = useCart();
+  const shopSlug =
+    (items?.find((i: any) => Boolean(i?.shop_slug)) as any)?.shop_slug ?? null;
+  const { data: shop } = useShop(shopSlug ?? undefined);
+  const schedules =
+    shop?.settings?.deliveryTime && shop.settings.deliveryTime.length
+      ? shop.settings.deliveryTime
+      : globalSchedules;
 
   const [selectedSchedule, setSchedule] = useAtom(deliveryTimeAtom);
   useEffect(() => {
@@ -57,11 +67,7 @@ export const ScheduleGrid: React.FC<ScheduleProps> = ({
           </div>
         </RadioGroup>
       ) : (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-          <span className="relative px-5 py-6 text-base text-center bg-gray-100 rounded border border-border-200">
-            {t("text-no-delivery-time-found")}
-          </span>
-        </div>
+        <></>
       )}
     </div>
   );

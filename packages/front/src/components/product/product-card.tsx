@@ -5,15 +5,17 @@ import { useUI } from '@contexts/ui.context';
 import usePrice from '@lib/use-price';
 import { Product } from '@type/index';
 import { siteSettings } from '@settings/site.settings';
-import CartIconLine from "@components/icons/cart-icon-line";
-import HeartIcon from "@components/icons/heart-icon";
+import CartIconLine from '@components/icons/cart-icon-line';
+import HeartIcon from '@components/icons/heart-icon';
 import { toast } from 'react-toastify';
 import { generateBookmarkItem } from '@utils/generate-bookmark-item';
 import { useBookmark } from '@store/bookmarks/bookmark.context';
+import { useCart } from '@store/quick-cart/cart.context';
+import { generateCartItem } from '@utils/generate-cart-item';
 import Spinner from '@components/ui/loaders/spinner/spinner';
 import { useTranslation } from 'next-i18next';
-import { useAtom } from "jotai";
-import { authorizationAtom } from "@store/authorization-atom";
+import { useAtom } from 'jotai';
+import { authorizationAtom } from '@store/authorization-atom';
 
 interface ProductProps {
   product: Product;
@@ -21,12 +23,12 @@ interface ProductProps {
   contactClassName?: string;
   imageContentClassName?: string;
   variant?:
-  | 'grid'
-  | 'gridSmall'
-  | 'gridSlim'
-  | 'list'
-  | 'listSmall'
-  | 'gridSlimLarge';
+    | 'grid'
+    | 'gridSmall'
+    | 'gridSlim'
+    | 'list'
+    | 'listSmall'
+    | 'gridSlimLarge';
   imgWidth?: number;
   imgHeight?: number;
   imgLoading?: 'eager' | 'lazy';
@@ -62,20 +64,20 @@ const ProductCard: FC<ProductProps> = ({
   });
 
   function handlePopupView() {
-
     setModalData(product.slug);
     setModalView('PRODUCT_VIEW');
     return openModal();
   }
   const { t } = useTranslation('common');
 
-
-  const [addToBookmarkLoader, setAddToBookmarkLoader] = useState<boolean>(false);
+  const [addToBookmarkLoader, setAddToBookmarkLoader] =
+    useState<boolean>(false);
 
   const { addItemToBookmark } = useBookmark();
+  const { addItemToCart } = useCart();
 
-
-  function addToBookmark() {
+  function addToBookmark(e?: any) {
+    if (e?.stopPropagation) e.stopPropagation();
     // to show btn feedback while product carting
     setAddToBookmarkLoader(true);
     setTimeout(() => {
@@ -85,7 +87,27 @@ const ProductCard: FC<ProductProps> = ({
     addItemToBookmark(item, item['id'] as number);
 
     toast(t('add-to-bookmark'), {
-      type: 'dark',
+      theme: 'dark',
+      progressClassName: 'fancy-progress-bar',
+      position: 'top-right',
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    });
+  }
+
+  function addToCart(e?: any) {
+    if (e?.stopPropagation) e.stopPropagation();
+    if (!product) return;
+    if (product_type?.toLocaleLowerCase?.() === 'variable') {
+      return handlePopupView();
+    }
+    const item = generateCartItem(product as any, {} as any);
+    addItemToCart(item as any, 1);
+    toast(t('add-to-cart'), {
+      theme: 'dark',
       progressClassName: 'fancy-progress-bar',
       position: 'top-right',
       autoClose: 2000,
@@ -122,6 +144,7 @@ const ProductCard: FC<ProductProps> = ({
       )}
       role="button"
       title={name}
+      onClick={handlePopupView}
     >
       <div
         className={cn(
@@ -140,16 +163,24 @@ const ProductCard: FC<ProductProps> = ({
           imageContentClassName
         )}
       >
-        <div className="actions-btn opacity-0 group-hover:opacity-100 w-full h-full bg-black bg-opacity-70 top-0 right-0 left-0 bottom-0 absolute z-10">
-          <div className="add-cart absolute cursor-pointer z-20" onClick={handlePopupView}>
+        <div
+          className="actions-btn opacity-0 group-hover:opacity-100 w-full h-full bg-black bg-opacity-70 top-0 right-0 left-0 bottom-0 absolute z-10"
+          onClick={handlePopupView}
+        >
+          <div
+            className="add-cart absolute cursor-pointer z-20"
+            onClick={addToCart}
+          >
             <CartIconLine size={25} bg="#ffffff" />
           </div>
-          {isAuthorized &&
-            <div className="add-wish absolute cursor-pointer z-20 transform rotate-180" onClick={addToBookmark}>
+          {isAuthorized && (
+            <div
+              className="add-wish absolute cursor-pointer z-20 transform rotate-180"
+              onClick={addToBookmark}
+            >
               <HeartIcon bg="#ffffff" size={25} />
             </div>
-          }
-
+          )}
         </div>
         <Image
           src={image?.original ?? siteSettings?.product?.placeholderImage()}
@@ -172,11 +203,13 @@ const ProductCard: FC<ProductProps> = ({
       </div>
       <div
         className={cn(
-          "w-full overflow-hidden",
+          'w-full overflow-hidden px-2',
           {
-            "ltr:pl-0 rtl:pr-0 ltr:lg:pl-2.5 ltr:xl:pl-4 rtl:lg:pr-2.5 rtl:xl:pr-4 ltr:pr-2.5 ltr:xl:pr-4 rtl:pl-2.5 rtl:xl:pl-4": variant === "grid",
-            "ltr:pl-0 rtl:pr-0 ltr:lg:pl-2.5 ltr:xl:pl-4 rtl:lg:pr-2.5 rtl:xl:pr-4 ltr:pr-2.5 ltr:xl:pr-4 rtl:pl-2.5 rtl:xl:pl-5": variant === "gridSlim",
-            "px-4 lg:px-5 2xl:px-4": variant === "listSmall",
+            'ltr:pl-0 rtl:pr-0 ltr:lg:pl-2.5 ltr:xl:pl-4 rtl:lg:pr-2.5 rtl:xl:pr-4 ltr:pr-2.5 ltr:xl:pr-4 rtl:pl-2.5 rtl:xl:pl-4':
+              variant === 'grid',
+            'ltr:pl-0 rtl:pr-0 ltr:lg:pl-2.5 ltr:xl:pl-4 rtl:lg:pr-2.5 rtl:xl:pr-4 ltr:pr-2.5 ltr:xl:pr-4 rtl:pl-2.5 rtl:xl:pl-5':
+              variant === 'gridSlim',
+            'px-4 lg:px-5 2xl:px-4': variant === 'listSmall',
           },
           contactClassName
         )}
@@ -200,10 +233,11 @@ const ProductCard: FC<ProductProps> = ({
           </p>
         )}
         <div
-          className={`text-heading font-semibold text-sm sm:text-base mt-1.5 space-x-1 rtl:space-x-reverse ${variant === 'grid' || variant === 'gridSmall'
-            ? '3xl:text-lg lg:mt-2.5'
-            : 'sm:text-lg md:text-base 3xl:text-xl md:mt-2.5 2xl:mt-3'
-            }`}
+          className={`text-heading font-semibold text-sm sm:text-base mt-1.5 space-x-1 rtl:space-x-reverse ${
+            variant === 'grid' || variant === 'gridSmall'
+              ? '3xl:text-lg lg:mt-2.5'
+              : 'sm:text-lg md:text-base 3xl:text-xl md:mt-2.5 2xl:mt-3'
+          }`}
         >
           {product_type.toLocaleLowerCase() === 'variable' ? (
             <>

@@ -6,6 +6,8 @@ import * as yup from 'yup';
 import { useTranslation } from 'next-i18next';
 import { useUI } from '@contexts/ui.context';
 import Label from '@components/ui/label';
+import ButtonSamara from '@components/ui/button-samara';
+import cn from 'classnames';
 
 type OptCodeFormProps = {
   code: string;
@@ -25,10 +27,18 @@ export default function OtpCodeForm({
   isLoading,
 }: OtpLoginFormForAllUserProps) {
   const { t } = useTranslation('common');
-  const { closeModal } = useUI();
+  const { closeModal, modalData } = useUI();
+  const isSellerSubscriptionFlow = Boolean(modalData?.sellerSubscriptionFlow);
 
   return (
-    <div className="space-y-5 rounded border border-gray-200 p-5">
+    <div
+      className={cn(
+        'space-y-5 rounded-2xl border p-5',
+        isSellerSubscriptionFlow
+          ? 'border-[#eadfcb] bg-white/70 shadow-[0_14px_34px_rgba(15,23,42,0.05)]'
+          : 'border-gray-200 bg-white'
+      )}
+    >
       <Form<OptCodeFormProps>
         onSubmit={onSubmit}
         validationSchema={otpLoginFormSchemaForExistingUser}
@@ -36,6 +46,9 @@ export default function OtpCodeForm({
         {({ control }) => (
           <>
             <div className="mb-5">
+              <div className="mb-2 text-xs leading-6 text-body">
+                Saisissez le code OTP recu sur votre telephone pour continuer.
+              </div>
               <Label>{t('text-otp-code')}</Label>
               <Controller
                 control={control}
@@ -49,23 +62,40 @@ export default function OtpCodeForm({
                     }
                     renderInput={(props) => <input {...props} />}
                     containerStyle="flex items-center justify-between -mx-2"
-                    inputStyle="flex items-center justify-center !w-full mx-2 sm:!w-9 !px-0 appearance-none transition duration-300 ease-in-out text-heading text-sm focus:outline-0 focus:ring-0 border border-heading rounded focus:border-accent h-12"
+                    inputStyle={cn(
+                      'flex items-center justify-center !w-full mx-2 sm:!w-10 !px-0 appearance-none transition duration-300 ease-in-out text-heading text-sm font-semibold focus:outline-0 focus:ring-0 border rounded-xl h-12',
+                      isSellerSubscriptionFlow
+                        ? 'border-[#d8dbe6] bg-[#edf2fb] focus:border-accent'
+                        : 'border-heading focus:border-accent'
+                    )}
                   />
                 )}
                 name="code"
               />
             </div>
-            <div className="grid grid-cols-2 gap-5">
+            <div className="grid grid-cols-2 gap-4">
               <Button
+                type="button"
                 variant="outline"
                 onClick={closeModal}
-                className="hover:border-red-500 hover:bg-red-500 hover:text-white"
+                className={cn(
+                  'rounded-xl border px-4 py-3',
+                  isSellerSubscriptionFlow
+                    ? 'border-[#d5d9e6] bg-white text-heading hover:bg-gray-50'
+                    : 'hover:border-red-500 hover:bg-red-500 hover:text-white'
+                )}
               >
                 {t('text-cancel')}
               </Button>
-              <Button loading={isLoading} disabled={isLoading}>
-                {t('text-verify-code')}
-              </Button>
+              {isSellerSubscriptionFlow ? (
+                <ButtonSamara type="submit" loading={isLoading} disabled={isLoading}>
+                  {t('text-verify-code')}
+                </ButtonSamara>
+              ) : (
+                <Button loading={isLoading} disabled={isLoading}>
+                  {t('text-verify-code')}
+                </Button>
+              )}
             </div>
           </>
         )}

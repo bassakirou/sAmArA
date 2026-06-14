@@ -1,21 +1,68 @@
 import { getLayout } from "@components/layout/layout";
 import Container from "@components/ui/container";
 import PageHeader from "@components/ui/page-header";
-import { termsAndServices } from "@settings/terms-settings";
 import { Link, Element } from "react-scroll";
-import { useTranslation } from "next-i18next";
-import { GetStaticProps } from "next";
+import { GetServerSideProps } from "next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { QueryClient } from "react-query";
 import { API_ENDPOINTS } from "@framework/utils/endpoints";
 import client from '@framework/utils/index'
 
+const sanitizeRichTextHtml = (input: string) => {
+  let html = String(input ?? "");
+
+  html = html.replace(/\u0000/g, "");
+  html = html.replace(/<!--[\s\S]*?-->/g, "");
+  html = html.replace(
+    /<\s*(script|style|iframe|object|embed|link|meta)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi,
+    ""
+  );
+  html = html.replace(
+    /<\s*(script|style|iframe|object|embed|link|meta)[^>]*\/\s*>/gi,
+    ""
+  );
+
+  html = html.replace(/<\s*a\b([^>]*)>/gi, (_match, attrs) => {
+    const hrefMatch = String(attrs ?? "").match(
+      /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i
+    );
+    const hrefRaw = hrefMatch?.[1] ?? hrefMatch?.[2] ?? hrefMatch?.[3] ?? "";
+    const href = hrefRaw.trim();
+    const isSafe = !href || /^(https?:\/\/|mailto:|tel:|\/|#)/i.test(href);
+
+    if (!isSafe) {
+      return "<a>";
+    }
+
+    const safeHref = href
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+    return safeHref
+      ? `<a href="${safeHref}" target="_blank" rel="nofollow noopener noreferrer">`
+      : "<a>";
+  });
+
+  html = html.replace(
+    /<\s*(\/?)\s*([a-z0-9]+)(\s[^>]*)?>/gi,
+    (_m, slash, tag) => {
+      const normalizedTag = String(tag ?? "").toLowerCase();
+      return `<${slash}${normalizedTag}>`;
+    }
+  );
+
+  return html;
+};
+
 function makeTitleToDOMId(title: string) {
   return title.toLowerCase().split(" ").join("_");
 }
 
-export default function TermsPage() {
-  const { t } = useTranslation("terms");
+type TermsItem = { id: string | number; title: string; description: string };
+
+export default function TermsPage({ termsAndServices }: { termsAndServices: TermsItem[] }) {
   return (
     <>
       <PageHeader pageHeader="text-page-terms-of-service" />
@@ -38,7 +85,7 @@ export default function TermsPage() {
                       {(index <= 9 ? "0" : "") +
                         index +
                         " " +
-                        t(`${item.title}`)}
+                        item.title}
                     </Link>
                   </li>
                 ))}
@@ -55,12 +102,12 @@ export default function TermsPage() {
                   className="mb-10"
                 >
                   <h2 className="text-lg md:text-xl lg:text-2xl text-heading font-bold mb-4">
-                    {t(`${item.title}`)}
+                    {item.title}
                   </h2>
                   <div
-                    className="text-heading text-sm leading-7 lg:text-base lg:leading-loose"
+                    className="richText"
                     dangerouslySetInnerHTML={{
-                      __html: t(`${item.description}`),
+                      __html: sanitizeRichTextHtml(item.description),
                     }}
                   />
                 </Element>
@@ -76,18 +123,26 @@ export default function TermsPage() {
 
 TermsPage.getLayout = getLayout;
 
-export const getStaticProps: GetStaticProps = async ({ locale }) => {
+export const getServerSideProps: GetServerSideProps = async ({ locale }) => {
   const queryClient = new QueryClient();
   await queryClient.prefetchQuery(API_ENDPOINTS.SETTINGS, () => client.settings.findAll());
+  const termsResponse = await client.termsAndConditions.all({
+    language: locale!,
+    limit: 200,
+  } as any);
 
   return {
     props: {
+      termsAndServices: (termsResponse?.data ?? []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+      })) as TermsItem[],
       ...(await serverSideTranslations(locale!, [
         "common",
         "menu",
         "forms",
         "footer",
-        "terms",
       ])),
     },
   };

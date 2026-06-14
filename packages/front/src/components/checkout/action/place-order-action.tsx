@@ -10,7 +10,11 @@ import { formatOrderedProduct } from '@lib/format-ordered-product';
 import { useCart } from '@store/quick-cart/cart.context';
 import { useAtom } from 'jotai';
 import {
+  campayAutoSubmitAtom,
+  campayPhoneNumberAtom,
+  campayUseSavedContactAtom,
   checkoutAtom,
+  customOrderOfferAtom,
   discountAtom,
   taramoneyAutoSubmitAtom,
   taramoneyEmailAtom,
@@ -56,6 +60,7 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
     },
   ] = useAtom(checkoutAtom);
   const [discount] = useAtom(discountAtom);
+  const [customOrderOfferId] = useAtom(customOrderOfferAtom);
   const [use_wallet_points] = useAtom(walletAtom);
   const [taramoneyNetwork] = useAtom(taramoneyNetworkAtom);
   const [taramoneyPhoneNumber] = useAtom(taramoneyPhoneNumberAtom);
@@ -64,6 +69,10 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
     taramoneyAutoSubmitAtom
   );
   const taramoneyAutoSubmitGuardRef = useRef(false);
+  const [campayUseSavedContact] = useAtom(campayUseSavedContactAtom);
+  const [campayPhoneNumber] = useAtom(campayPhoneNumberAtom);
+  const [campayAutoSubmit, setCampayAutoSubmit] = useAtom(campayAutoSubmitAtom);
+  const campayAutoSubmitGuardRef = useRef(false);
 
   useEffect(() => {
     setErrorMessage(null);
@@ -102,6 +111,15 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
       return;
     }
     if (
+      payment_gateway === PaymentGateway.CAMPAY &&
+      !campayUseSavedContact &&
+      !campayPhoneNumber
+    ) {
+      setModalView('CAMPAY_PHONE_MODAL');
+      openModal();
+      return;
+    }
+    if (
       (taramoneyRequiresPhone && !taramoneyPhoneNumber) ||
       (taramoneyRequiresEmail && !taramoneyEmail)
     ) {
@@ -127,7 +145,7 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
       // status: orderStatusData?.orderStatuses?.data[0]?.id ?? "1",
       amount: subtotal,
       display_currency: targetCurrency,
-      coupon_id: Number(coupon?.id),
+      coupon_id: customOrderOfferId ? undefined : Number(coupon?.id),
       discount: discount ?? 0,
       paid_total: total,
       sales_tax: verified_response?.total_tax,
@@ -139,12 +157,26 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
       note,
       use_wallet_points,
       payment_gateway,
+      ...(customOrderOfferId
+        ? { custom_order_offer_id: customOrderOfferId }
+        : {}),
       ...(payment_gateway === PaymentGateway.TARAMONEY
         ? {
             taramoney: {
-              network: taramoneyNetwork,
               phone_number: taramoneyPhoneNumber,
-              email: taramoneyEmail,
+              ...(taramoneyNetwork === 'wave' || taramoneyNetwork === 'paypal'
+                ? { network: taramoneyNetwork }
+                : {}),
+              ...(taramoneyNetwork === 'paypal' ? { email: taramoneyEmail } : {}),
+            },
+          }
+        : {}),
+      ...(payment_gateway === PaymentGateway.CAMPAY
+        ? {
+            campay: {
+              phone_number: campayUseSavedContact
+                ? customer_contact
+                : campayPhoneNumber,
             },
           }
         : {}),
@@ -164,9 +196,12 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
     delete input.shipping_address.__typename;
     createOrder(input);
   }, [
+    campayPhoneNumber,
+    campayUseSavedContact,
     available_items,
     billing_address,
     coupon?.id,
+    customOrderOfferId,
     createOrder,
     customer_contact,
     customer_name,
@@ -210,6 +245,17 @@ export const PlaceOrderAction: React.FC<{ children: React.ReactNode }> = (
     taramoneyPhoneNumber,
     taramoneyRequiresPhone,
   ]);
+
+  useEffect(() => {
+    if (!campayAutoSubmit) {
+      campayAutoSubmitGuardRef.current = false;
+      return;
+    }
+    if (campayAutoSubmitGuardRef.current) return;
+    campayAutoSubmitGuardRef.current = true;
+    setCampayAutoSubmit(false);
+    handlePlaceOrder();
+  }, [campayAutoSubmit, handlePlaceOrder, setCampayAutoSubmit]);
 
   const isTaramoneySelectionSatisfied =
     payment_gateway === PaymentGateway.TARAMONEY

@@ -48,16 +48,16 @@ export default function Home() {
           sectionHeading="text-featured-products"
           variant="center"
         />
-        <BannerCard
+        {/* <BannerCard
           data={banner[1]}
           href={`${ROUTES.COLLECTIONS}/${banner[1].slug}`}
           className="mb-11 md:mb-12 lg:mb-14 2xl:mb-16"
           classNameInner="aspect-[2.65/1] md:aspect-[3.15/1]"
-        />
-        <ProductsFlashSaleBlock date={'2023-03-01T01:02:03'} />
+        /> */}
+        {/* <ProductsFlashSaleBlock date={'2023-03-01T01:02:03'} /> */}
         <BrandBlock sectionHeading="text-top-brands" />
-        <ExclusiveBlock />
-        <NewArrivalsProductFeed />
+        {/* <ExclusiveBlock />
+        <NewArrivalsProductFeed /> */}
         <BannerCard
           data={banner[2]}
           href={`${ROUTES.COLLECTIONS}/${banner[2].slug}`}
@@ -65,7 +65,7 @@ export default function Home() {
           classNameInner="md:aspect-[4.25/1] aspect-[3.75/1]"
         />
         <CategoryGridBlock sectionHeading="text-featured-categories" />
-        <DownloadApps />
+        {/* <DownloadApps /> */}
         {/* <Support /> 
         <Instagram />
         <Subscription className="px-5 py-12 bg-opacity-0 sm:px-16 xl:px-0 md:py-14 xl:py-16" />*/}

@@ -18,12 +18,17 @@ interface CheckoutState {
   payment_gateway: PaymentMethodName;
   delivery_time: DeliveryTime | null;
   customer_contact: string;
+  campay_use_saved_contact: boolean;
+  campay_operator: string | null;
+  campay_phone_number: string;
+  campay_auto_submit: boolean;
   taramoney_network: string | null;
   taramoney_phone_number: string;
   taramoney_email: string;
   taramoney_auto_submit: boolean;
   verified_response: VerifiedResponse | null;
   coupon: Coupon | null;
+  custom_order_offer_id?: string | number | null;
   [key: string]: unknown;
 }
 export const defaultCheckout: CheckoutState = {
@@ -32,12 +37,17 @@ export const defaultCheckout: CheckoutState = {
   delivery_time: null,
   payment_gateway: 'STRIPE',
   customer_contact: '',
+  campay_use_saved_contact: true,
+  campay_operator: null,
+  campay_phone_number: '',
+  campay_auto_submit: false,
   taramoney_network: null,
   taramoney_phone_number: '',
   taramoney_email: '',
   taramoney_auto_submit: false,
   verified_response: null,
   coupon: null,
+  custom_order_offer_id: null,
 };
 export type PaymentMethodName =
   | 'CASH_ON_DELIVERY'
@@ -47,7 +57,8 @@ export type PaymentMethodName =
   | 'MOLLIE'
   | 'PAYSTACK'
   | 'IYZICO'
-  | 'TARAMONEY';
+  | 'TARAMONEY'
+  | 'CAMPAY';
 
 // Original atom.
 export const checkoutAtom = atomWithStorage(CHECKOUT, defaultCheckout);
@@ -103,6 +114,38 @@ export const customerContactAtom = atom(
     return set(checkoutAtom, { ...prev, customer_contact: data });
   }
 );
+
+export const campayUseSavedContactAtom = atom(
+  (get) => get(checkoutAtom).campay_use_saved_contact,
+  (get, set, data: boolean) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, campay_use_saved_contact: data });
+  }
+);
+
+export const campayOperatorAtom = atom(
+  (get) => get(checkoutAtom).campay_operator,
+  (get, set, data: string | null) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, campay_operator: data });
+  }
+);
+
+export const campayPhoneNumberAtom = atom(
+  (get) => get(checkoutAtom).campay_phone_number,
+  (get, set, data: string) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, campay_phone_number: data });
+  }
+);
+
+export const campayAutoSubmitAtom = atom(
+  (get) => get(checkoutAtom).campay_auto_submit,
+  (get, set, data: boolean) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, campay_auto_submit: data });
+  }
+);
 export const orderNoteAtom = atom(
   (get) => get(checkoutAtom).note,
   (get, set, data: string) => {
@@ -154,6 +197,13 @@ export const couponAtom = atom(
   (get, set, data: Coupon | null) => {
     const prev = get(checkoutAtom);
     return set(checkoutAtom, { ...prev, coupon: data });
+  }
+);
+export const customOrderOfferAtom = atom(
+  (get) => get(checkoutAtom).custom_order_offer_id,
+  (get, set, data: string | number | null) => {
+    const prev = get(checkoutAtom);
+    return set(checkoutAtom, { ...prev, custom_order_offer_id: data });
   }
 );
 export const discountAtom = atom((get) => get(checkoutAtom).coupon?.amount);

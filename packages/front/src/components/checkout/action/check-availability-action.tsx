@@ -5,6 +5,7 @@ import { useVerifyCheckout } from "@framework/checkout";
 import { useAtom } from "jotai";
 import {
   billingAddressAtom,
+  customOrderOfferAtom,
   shippingAddressAtom,
   verifiedResponseAtom,
 } from "@store/checkout";
@@ -19,6 +20,7 @@ export const CheckAvailabilityAction: React.FC<{
   const { t } = useTranslation("common");
   const [billing_address] = useAtom(billingAddressAtom);
   const [shipping_address] = useAtom(shippingAddressAtom);
+  const [customOrderOfferId] = useAtom(customOrderOfferAtom);
   const [_, setVerifiedResponse] = useAtom(verifiedResponseAtom);
 
   const [errorMessage, setError] = useState("");
@@ -35,6 +37,9 @@ export const CheckAvailabilityAction: React.FC<{
         {
           amount: total,
           products: items?.map((item) => formatOrderedProduct(item)),
+          ...(customOrderOfferId
+            ? { custom_order_offer_id: customOrderOfferId }
+            : {}),
           billing_address: {
             ...(billing_address?.address && billing_address.address),
           },

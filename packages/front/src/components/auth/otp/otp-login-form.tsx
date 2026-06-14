@@ -10,10 +10,13 @@ import PhoneNumberForm from "./phone-number-form";
 import OtpCodeForm from "./otp-verify-form";
 // import Alert from "@components/ui/alert";
 import OtpRegisterForm from "./otp-register-form";
+import { useUI } from "@contexts/ui.context";
 
 export const OTPLoginForm = () => {
   // const { t } = useTranslation("common");
   const [otpState] = useAtom(optAtom);
+  const { modalData } = useUI();
+  const isSellerSubscriptionFlow = Boolean(modalData?.sellerSubscriptionFlow);
   const {
     mutate: sendOtpCode,
     isLoading: loading,
@@ -37,6 +40,9 @@ export const OTPLoginForm = () => {
       ...values,
       phone_number: otpState?.phoneNumber,
       otp_id: otpState?.otpId!,
+      ...(isSellerSubscriptionFlow && otpState.step === 'RegisterForm'
+        ? { permission: 'store_owner' }
+        : {}),
     });
   }
   return (

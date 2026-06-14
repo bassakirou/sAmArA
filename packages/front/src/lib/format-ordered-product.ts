@@ -7,5 +7,8 @@ export function formatOrderedProduct(product: any) {
     order_quantity: product.quantity,
     unit_price: product.price,
     subtotal: product.itemTotal,
+    ...(product?.customOrderOfferId
+      ? { custom_order_offer_id: product.customOrderOfferId }
+      : {}),
   };
 }

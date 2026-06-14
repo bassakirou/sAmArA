@@ -25,6 +25,9 @@ interface Item {
 
 export function generateCartItem(item: Item, variation: any) {
   const { id, name, slug, image, price, sale_price, quantity, unit } = item;
+  const shopId = (item as any)?.shop?.id ?? (item as any)?.shop_id ?? null;
+  const shopSlug =
+    (item as any)?.shop?.slug ?? (item as any)?.shop_slug ?? null;
   if (!isEmpty(variation)) {
     return {
       id: `${id}.${variation.id}`,
@@ -36,6 +39,8 @@ export function generateCartItem(item: Item, variation: any) {
       price: variation.sale_price ? variation.sale_price : variation.price,
       image: image?.thumbnail,
       variationId: variation.id,
+      shop_id: shopId,
+      shop_slug: shopSlug,
     };
   }
   return {
@@ -46,5 +51,7 @@ export function generateCartItem(item: Item, variation: any) {
     image: image?.thumbnail,
     stock: quantity,
     price: sale_price ? sale_price : price,
+    shop_id: shopId,
+    shop_slug: shopSlug,
   };
 }

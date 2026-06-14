@@ -1,6 +1,7 @@
 import Input from "@components/ui/input";
 import PasswordInput from "@components/ui/password-input";
 import Button from "@components/ui/button";
+import ButtonSamara from "@components/ui/button-samara";
 import { useForm } from "react-hook-form";
 import Logo from "@components/ui/logo";
 import { useUI } from "@contexts/ui.context";
@@ -13,10 +14,8 @@ import { useTranslation } from "next-i18next";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import Alert from "@components/ui/alert";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useRegister } from "@framework/auth";
-import { useAtom } from "jotai";
-import { authorizationAtom } from "@store/authorization-atom";
 import {useRouter} from "next/router";
 import { useEffect } from "react";
 
@@ -49,9 +48,13 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
   const router = useRouter();
   const { t } = useTranslation();
   const [errorMessage, setErrorMessage] = useState("");
-  const [_, authorize] = useAtom(authorizationAtom);
   const { mutate: signUp, isLoading, formError, setFormError }: any = useRegister();
-  const { setModalView, openModal, closeModal } = useUI();
+  const { setModalView, openModal, closeModal, modalData } = useUI();
+  const isSellerSubscriptionFlow = Boolean(modalData?.sellerSubscriptionFlow);
+  const dividerBgClass = useMemo(
+    () => (isSellerSubscriptionFlow ? "bg-sable" : "bg-white"),
+    [isSellerSubscriptionFlow]
+  );
 
   const {
     register,
@@ -88,11 +91,21 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
   function onSubmit({ name, email, password }: SignUpInputType) {
     setErrorMessage("");
     setFormError?.(null);
-    signUp({ name, email, password });
+    signUp({
+      name,
+      email,
+      password,
+      ...(isSellerSubscriptionFlow ? { permission: "store_owner" } : {}),
+    });
   }
 
   return (
-    <div className="py-5 px-5 sm:px-8 bg-white mx-auto rounded-lg w-full sm:w-96 md:w-450px border border-gray-300">
+    <div
+      className={`mx-auto w-full overflow-hidden rounded-lg border border-gray-300 px-5 py-5 sm:w-96 sm:px-8 md:w-450px ${
+        isSellerSubscriptionFlow ? "bg-sable" : "bg-white"
+      }`}
+    >
+      {isSellerSubscriptionFlow ? <div className="motif"></div> : null}
       <div className="text-center mb-6 pt-2.5">
         <div onClick={closeModal}>
           <Logo />
@@ -143,20 +156,19 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
             {...register("password")}
           />
           <div className="relative">
-            <Button
+            <ButtonSamara
               type="submit"
               loading={isLoading}
               disabled={isLoading}
-              className="h-11 md:h-12 w-full mt-2"
             >
               {t("common:text-register")}
-            </Button>
+            </ButtonSamara>
           </div>
         </div>
       </form>
       <div className="flex flex-col items-center justify-center relative text-sm text-heading mt-6 mb-3.5">
         <hr className="w-full border-gray-300" />
-        <span className="absolute -top-2.5 px-2 bg-white">
+        <span className={`absolute -top-2.5 px-2 ${dividerBgClass}`}>
           {t("common:text-or")}
         </span>
       </div>

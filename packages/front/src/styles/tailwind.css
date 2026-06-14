@@ -299,6 +299,46 @@
   .carouselWrapper.pagination-none .swiper-pagination {
     @apply hidden;
   }
+
+  .richText {
+    @apply text-sm leading-7 text-gray-600;
+  }
+
+  .richText p {
+    @apply mb-4;
+  }
+
+  .richText p:last-child {
+    @apply mb-0;
+  }
+
+  .richText ul {
+    @apply mb-4 list-disc ps-6;
+  }
+
+  .richText ol {
+    @apply mb-4 list-decimal ps-6;
+  }
+
+  .richText li {
+    @apply mb-2;
+  }
+
+  .richText li:last-child {
+    @apply mb-0;
+  }
+
+  .richText a {
+    @apply underline decoration-current underline-offset-2;
+  }
+
+  .richText strong {
+    @apply font-semibold text-heading;
+  }
+
+  .richText em {
+    @apply italic;
+  }
 }
 
 /* Breadcrumb truncate last child */

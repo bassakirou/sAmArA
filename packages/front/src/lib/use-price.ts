@@ -2,10 +2,22 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useSettings } from '@contexts/settings.context';
 import { useCurrency } from '@utils/use-currency';
+import { CURRENCY } from '@components/settings/currency';
 
 function normalizeCurrencyDisplay(value: string, currencyCode: string) {
   if (currencyCode !== 'XAF') return value;
   return value.replace(/\b(XAF|FCFA)\b/g, 'F CFA');
+}
+
+function getCurrencyFractionDigits(currencyCode: string, fallback: number) {
+  const matchedCurrency = CURRENCY.find((item) => item.code === currencyCode);
+
+  if (!matchedCurrency) return fallback;
+
+  const digits = Number(matchedCurrency.decimal_digits);
+  if (!Number.isFinite(digits)) return fallback;
+
+  return digits;
 }
 
 export function formatPrice({
@@ -80,7 +92,18 @@ export default function usePrice(
         : undefined;
 
     const currentLocale = formation ? formation : 'en';
-    const effectiveFractions = targetCurrency === 'XAF' ? 0 : fractions;
+    const configuredFractions =
+      typeof fractions === 'number' && Number.isFinite(fractions)
+        ? fractions
+        : 2;
+    const currencyFractionDigits = getCurrencyFractionDigits(
+      targetCurrency,
+      configuredFractions
+    );
+    const effectiveFractions =
+      targetCurrency === 'XAF'
+        ? 0
+        : Math.max(currencyFractionDigits, configuredFractions);
 
     return convertedBaseAmount
       ? formatVariantPrice({

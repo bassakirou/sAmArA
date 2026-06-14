@@ -44,7 +44,13 @@ const OrderItemList = (_: any, record: any) => {
     </div>
   );
 };
-export const OrderItems = ({ products }: { products: any }) => {
+export const OrderItems = ({
+  products,
+  negotiatedOfferId,
+}: {
+  products: any;
+  negotiatedOfferId?: string | number | null;
+}) => {
   const { t } = useTranslation('common');
   const { alignLeft, alignRight } = useIsRTL();
 
@@ -94,8 +100,26 @@ export const OrderItems = ({ products }: { products: any }) => {
           );
         },
       },
+      ...(negotiatedOfferId
+        ? [
+            {
+              title: 'Trace',
+              dataIndex: 'pivot',
+              key: 'trace',
+              align: 'center' as const,
+              width: 140,
+              render: function RenderTrace() {
+                return (
+                  <p className="text-[13px] font-semibold text-olive">
+                    Offre negociee
+                  </p>
+                );
+              },
+            },
+          ]
+        : []),
     ],
-    [alignLeft, alignRight, t]
+    [alignLeft, alignRight, negotiatedOfferId, t]
   );
 
   return (

@@ -48,6 +48,11 @@ module.exports = withPWA({
         port: '8000',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'rockfish-outflank-skewed.ngrok-free.dev',
+        pathname: '/**',
+      },
     ],
   },
 

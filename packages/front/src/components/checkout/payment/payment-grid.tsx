@@ -1,4 +1,5 @@
 import CashOnDelivery from '@components/checkout/payment/cash-on-delivery';
+import CampayPayment from '@components/checkout/payment/campay-payment';
 import PaymentOnline from '@components/checkout/payment/payment-online';
 import TaramoneyPayment from '@components/checkout/payment/taramoney-payment';
 import { IyzicoIcon } from '@components/icons/payment-gateways/iyzico';
@@ -26,10 +27,12 @@ interface PaymentGroupOptionProps {
 }
 
 const PaymentGroupOption: React.FC<PaymentGroupOptionProps> = ({
-  payment: { name, value, icon },
+  payment,
   theme,
 }) => {
   const { t } = useTranslation('common');
+  if (!payment) return null;
+  const { name, value, icon } = payment;
   return (
     <RadioGroup.Option value={value} key={value}>
       {({ checked }) => (
@@ -134,6 +137,12 @@ const PaymentGrid: React.FC<{ className?: string; theme?: 'bw' }> = ({
       icon: <TaramoneyIcon />,
       component: TaramoneyPayment,
     },
+    CAMPAY: {
+      name: 'Campay',
+      value: PaymentGateway.CAMPAY,
+      icon: '',
+      component: CampayPayment,
+    },
     CASH_ON_DELIVERY: {
       name: t('text-cash-on-delivery'),
       value: PaymentGateway.COD,
@@ -219,16 +228,13 @@ const PaymentGrid: React.FC<{ className?: string; theme?: 'bw' }> = ({
           {settings?.useEnableGateway &&
             availableGateway &&
             availableGateway?.map((gateway: any, index: any) => {
+              const gatewayKey = String(gateway?.name ?? '').toUpperCase();
+              const gatewayInfo =
+                AVAILABLE_PAYMENT_METHODS_MAP[gatewayKey as PaymentGateway];
+              if (!gatewayInfo) return null;
               return (
                 <Fragment key={index}>
-                  <PaymentGroupOption
-                    theme={theme}
-                    payment={
-                      AVAILABLE_PAYMENT_METHODS_MAP[
-                        gateway?.name.toUpperCase() as PaymentGateway
-                      ]
-                    }
-                  />
+                  <PaymentGroupOption theme={theme} payment={gatewayInfo} />
                 </Fragment>
               );
             })}

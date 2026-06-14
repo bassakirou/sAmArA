@@ -8,7 +8,13 @@ export { getStaticPaths, getStaticProps } from '@framework/shop.ssr';
 export default function ShopDetailsPage({ data }: any) {
   return (
     <div className="border-t border-gray-300">
-      {data?.shop && <ShopsSingleDetails data={data.shop} />}
+      {data?.shop && (
+        <ShopsSingleDetails
+          data={data.shop}
+          termsAndConditions={data.termsAndConditions}
+          faqs={data.faqs}
+        />
+      )}
       <Container>
         <Subscription />
       </Container>

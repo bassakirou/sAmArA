@@ -42,6 +42,26 @@ import {
   CreateOrderPaymentInput,
   PaymentIntentCollection,
   VerificationEmailUserInput,
+  ConversationPaginator,
+  Conversation,
+  MessagePaginator,
+  Message,
+  CustomOrderOffer,
+  Faq,
+  FaqPaginator,
+  FaqQueryOptionsType,
+  FaqType,
+  SubscriptionPlanPaginator,
+  TermsAndCondition,
+  TermsAndConditionPaginator,
+  TermsAndConditionsQueryOptionsType,
+  VendorSubscription,
+  VendorSubscriptionStartInput,
+  VendorSubscriptionStartResponse,
+  VendorSubscriptionSummary,
+  PrivacyPolicy,
+  PrivacyPolicyPaginator,
+  PrivacyPoliciesQueryOptionsType,
 } from '@type/index';
 
 class Client {
@@ -121,6 +141,9 @@ class Client {
 
     updateContact: (input: UpdateContactInput) =>
       HttpClient.post(API_ENDPOINTS.UPDATE_CONTACT, input),
+
+    updateProfileContact: (input: { contact: string }) =>
+      HttpClient.post(API_ENDPOINTS.UPDATE_PROFILE_CONTACT, input),
 
     register: (input: RegisterUserInputType) =>
       HttpClient.post(API_ENDPOINTS.REGISTER, input),
@@ -320,7 +343,7 @@ class Client {
       HttpClient.get<Product>(`${API_ENDPOINTS.PRODUCTS}/${slug}`, {
         language,
         searchJoin: 'and',
-        with: 'categories;shop;type;variations;variations.attribute.values;manufacturer;variation_options;tags;author',
+        with: 'categories;shop;shop.owner;type;variations;variations.attribute.values;manufacturer;variation_options;tags;author',
       }),
 
     all: (params: ParamsType) =>
@@ -334,9 +357,68 @@ class Client {
       HttpClient.get<SettingsResponse>(API_ENDPOINTS.SETTINGS, { ...params }),
   };
 
+  faqs = {
+    all: (params?: Partial<FaqQueryOptionsType>) =>
+      HttpClient.get<FaqPaginator>(API_ENDPOINTS.FAQS, { ...params }),
+  };
+
+  termsAndConditions = {
+    all: (params?: Partial<TermsAndConditionsQueryOptionsType>) =>
+      HttpClient.get<TermsAndConditionPaginator>(
+        API_ENDPOINTS.TERMS_AND_CONDITIONS,
+        { ...params }
+      ),
+  };
+
+  becomeSeller = {
+    findAll: (params?: { language?: string }) =>
+      HttpClient.get<any>(API_ENDPOINTS.BECAME_SELLER, { ...params }),
+  };
+
+  subscriptionPlans = {
+    active: (params?: { limit?: number }) =>
+      HttpClient.get<SubscriptionPlanPaginator>(
+        API_ENDPOINTS.SUBSCRIPTION_PLANS_ACTIVE,
+        { ...params }
+      ),
+  };
+
+  vendorSubscriptions = {
+    me: () =>
+      HttpClient.get<VendorSubscriptionSummary>(
+        `${API_ENDPOINTS.VENDOR_SUBSCRIPTIONS}/me`
+      ),
+    start: (input: VendorSubscriptionStartInput) =>
+      HttpClient.post<VendorSubscriptionStartResponse>(
+        `${API_ENDPOINTS.VENDOR_SUBSCRIPTIONS}/start`,
+        input
+      ),
+    confirmTaramoney: (trackingNumber: string) =>
+      HttpClient.post<VendorSubscription>(
+        `${
+          API_ENDPOINTS.VENDOR_SUBSCRIPTIONS
+        }/confirm-taramoney/${encodeURIComponent(trackingNumber)}`,
+        {}
+      ),
+    confirmCampay: (trackingNumber: string) =>
+      HttpClient.post<VendorSubscription>(
+        `${
+          API_ENDPOINTS.VENDOR_SUBSCRIPTIONS
+        }/confirm-campay/${encodeURIComponent(trackingNumber)}`,
+        {}
+      ),
+  };
+
+  privacyPolicies = {
+    all: (params?: Partial<PrivacyPoliciesQueryOptionsType>) =>
+      HttpClient.get<PrivacyPolicyPaginator>(API_ENDPOINTS.PRIVACY_POLICIES, {
+        ...params,
+      }),
+  };
+
   shop = {
     findOne: ({ slug, language }: GetParams) =>
-      HttpClient.get<Shop>(`${API_ENDPOINTS.SHOPS}/${slug}`, language),
+      HttpClient.get<Shop>(`${API_ENDPOINTS.SHOPS}/${slug}`, { language }),
 
     find: (params: ParamsType) => {
       const {
@@ -390,6 +472,54 @@ class Client {
       HttpClient.get<TagPaginator>(API_ENDPOINTS.TAGS, {
         ...params,
       }),
+  };
+
+  conversation = {
+    all: (params?: { limit?: number }) =>
+      HttpClient.get<ConversationPaginator>(API_ENDPOINTS.CONVERSATIONS, {
+        ...params,
+      }),
+    findOne: (id: NumberOrString) =>
+      HttpClient.get<Conversation>(`${API_ENDPOINTS.CONVERSATIONS}/${id}`),
+    create: (input: { shop_id: number | string }) =>
+      HttpClient.post<Conversation>(API_ENDPOINTS.CONVERSATIONS, input),
+  };
+
+  message = {
+    allByConversation: (
+      conversation_id: NumberOrString,
+      params?: { limit?: number }
+    ) =>
+      HttpClient.get<MessagePaginator>(
+        `${API_ENDPOINTS.MESSAGES_CONVERSATIONS}/${conversation_id}`,
+        { ...params }
+      ),
+    create: (
+      conversation_id: NumberOrString,
+      input: {
+        body: string;
+        product_id?: NumberOrString | null;
+        negotiated_price?: number | string | null;
+      }
+    ) =>
+      HttpClient.post<Message>(
+        `${API_ENDPOINTS.MESSAGES_CONVERSATIONS}/${conversation_id}`,
+        {
+          message: input.body,
+          product_id: input.product_id ?? null,
+          negotiated_price: input.negotiated_price ?? null,
+        }
+      ),
+    seen: (conversation_id: NumberOrString) =>
+      HttpClient.post<number>(
+        `${API_ENDPOINTS.MESSAGES_SEEN}/${conversation_id}`,
+        {}
+      ),
+  };
+
+  customOrderOffers = {
+    findOne: (id: NumberOrString) =>
+      HttpClient.get<CustomOrderOffer>(`${API_ENDPOINTS.CUSTOM_ORDER_OFFERS}/${id}`),
   };
 
   cards = {
