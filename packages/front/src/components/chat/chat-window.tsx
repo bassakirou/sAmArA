@@ -66,10 +66,10 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
 
   const { data: me } = useMe();
   const { data: conversationsData, isLoading: isLoadingConversations } =
-    useConversations({ limit: 20 });
+    useConversations({ limit: 20, with: 'shop,user,latest_message' });
   const conversations = conversationsData?.data ?? [];
   const orderedConversations = useMemo(() => {
-    return [...conversations].sort((left: any, right: any) => {
+    let list = [...conversations].sort((left: any, right: any) => {
       const unseenDelta =
         Number(right?.unseen ?? 0) - Number(left?.unseen ?? 0);
 
@@ -86,7 +86,23 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
 
       return rightTimestamp - leftTimestamp;
     });
-  }, [conversations]);
+
+    if (
+      activeConversationId &&
+      !list.some((c: any) => String(c.id) === String(activeConversationId))
+    ) {
+      list.unshift({
+        id: activeConversationId,
+        shop: activeProduct?.shop ?? shopFromPage ?? (productFromPage as any)?.shop,
+        latest_message: {
+          body: '',
+          created_at: new Date().toISOString(),
+        },
+      });
+    }
+
+    return list;
+  }, [conversations, activeConversationId, activeProduct?.shop, shopFromPage, productFromPage]);
 
   const { data: shopFromPage } = useQuery(
     ['chat_shop', shopSlug, locale],
@@ -526,11 +542,6 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
           syncConversationCaches(message);
           setPendingMessages((prev) =>
             prev.filter((item) => item.id !== pendingId)
-          );
-          setChatState((prev) =>
-            prev.activeProduct?.id === activeProduct.id
-              ? { ...prev, activeProduct: null }
-              : prev
           );
         },
         onError: () => {
