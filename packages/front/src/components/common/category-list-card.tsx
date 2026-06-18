@@ -22,7 +22,7 @@ const CategoryListCard: React.FC<Props> = ({ category }) => {
       className="flex justify-between items-center bg-gray-200 rounded-md px-5 2xl:px-3.5 py-3 xl:py-3.5 2xl:py-2.5 3xl:py-3.5 transition hover:bg-gray-100"
     >
       <div className="flex items-center">
-        <div className="inline-flex flex-shrink-0 2xl:w-12 2xl:h-12 3xl:w-auto 3xl:h-auto">
+        <div className="inline-flex flex-shrink-0 w-[60px] h-[60px] 2xl:w-12 2xl:h-12 3xl:w-[60px] 3xl:h-[60px] rounded-full overflow-hidden bg-gray-300">
           <Image
             src={
               parsedImage?.original ?? '/assets/placeholder/category-small.svg'
@@ -30,7 +30,7 @@ const CategoryListCard: React.FC<Props> = ({ category }) => {
             alt={name || t('text-category-thumbnail')}
             width={60}
             height={60}
-            className="object-cover bg-gray-300 rounded-full"
+            className="object-cover w-full h-full"
           />
         </div>
         <h3 className="text-sm md:text-base 2xl:text-sm 3xl:text-base text-heading capitalize ltr:pl-2.5 ltr:md:pl-4 ltr:2xl:pl-3 ltr:3xl:pl-4 rtl:pr-2.5 rtl:md:pr-4 rtl:2xl:pr-3 rtl:3xl:pr-4">
