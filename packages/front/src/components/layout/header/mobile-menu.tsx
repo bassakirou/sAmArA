@@ -11,6 +11,8 @@ import { getIcon } from "@lib/get-icon";
 import socialIcons from "@components/icons/social-icon";
 import { Social } from "@type/index";
 import { mobileMenu } from "@data/static/menus";
+import { useCategories } from "@framework/categories";
+import { useTags } from "@framework/tags";
 
 export default function MobileMenu() {
 	const [activeMenus, setActiveMenus] = useState<any>([]);
@@ -50,8 +52,13 @@ export default function MobileMenu() {
 						href={data.path}
 						className="w-full text-[15px] menu-item relative py-3 ltr:pl-5 ltr:md:pl-7 rtl:pr-5 rtl:md:pr-7 ltr:pr-4 rtl:pl-4 transition duration-300 ease-in-out"
 					>
-						<span className="block w-full" onClick={closeSidebar}>
+						<span className="flex items-center gap-3 w-full" onClick={closeSidebar}>
 							{t(`${data.label}`)}
+							{typeof data.count === 'number' && (
+								<span className="inline-flex min-w-[1.85rem] items-center justify-center rounded-full bg-green-700 px-2 py-0.5 text-xs font-bold text-white">
+									{data.count}
+								</span>
+							)}
 						</span>
 					</Link>
 					{hasSubMenu && (
@@ -106,6 +113,42 @@ export default function MobileMenu() {
 		);
 	};
 
+	const { data: categoriesData } = useCategories({ limit: 10, parent: null });
+	const { data: tagsData } = useTags({ limit: 8 });
+
+	const collections = tagsData?.pages?.flatMap((page) => page?.data ?? []) ?? [];
+	const categories = Array.isArray((categoriesData as any)?.data)
+		? (categoriesData as any).data
+		: Array.isArray(categoriesData)
+		? categoriesData
+		: [];
+
+	const dynamicMobileMenu = mobileMenu.map((menu: any) => {
+		if (menu.label === "menu-collections" && collections.length > 0) {
+			return {
+				...menu,
+				subMenu: collections.map((c: any) => ({
+					id: c.id,
+					path: `/collections/${c.slug}`,
+					label: c.name,
+					count: c.products_count
+				}))
+			};
+		}
+		if (menu.label === "Catégories" && categories.length > 0) {
+			return {
+				...menu,
+				subMenu: categories.map((c: any) => ({
+					id: c.id,
+					path: `/category/${c.slug}`,
+					label: c.name,
+					count: c.products_count
+				}))
+			};
+		}
+		return menu;
+	});
+
 	return (
 		<>
 			<div className="flex flex-col justify-between w-full h-full">
@@ -124,7 +167,7 @@ export default function MobileMenu() {
 				<Scrollbar className="menu-scrollbar flex-grow mb-auto">
 					<div className="flex flex-col py-7 px-0 lg:px-2 text-heading">
               <ul className="mobileMenu">
-                {mobileMenu?.map((menu: any, index: number) => {
+                {dynamicMobileMenu?.map((menu: any, index: number) => {
                   const dept: number = 1;
                   const menuName: string = `sidebar-menu-${dept}-${index}`;
 

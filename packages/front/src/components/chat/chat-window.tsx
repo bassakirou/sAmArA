@@ -654,7 +654,7 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
               <div className="p-4">
                 <p className="text-sm text-gray-400">Chargement…</p>
               </div>
-            ) : conversations.length === 0 ? (
+            ) : orderedConversations.length === 0 ? (
               <div className="p-4">
                 <p className="text-sm text-gray-400">
                   Aucune conversation pour le moment.
@@ -684,6 +684,10 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
                 fill
                 sizes="44px"
                 className="object-cover"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.srcset = PRODUCT_PLACEHOLDER;
+                }}
               />
             </div>
           ) : null}

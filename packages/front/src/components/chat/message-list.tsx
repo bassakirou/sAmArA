@@ -101,6 +101,10 @@ const MessageList = ({
                       fill
                       sizes="36px"
                       className="object-cover"
+                      onError={(event) => {
+                        event.currentTarget.onerror = null;
+                        event.currentTarget.srcset = PRODUCT_PLACEHOLDER;
+                      }}
                     />
                   </div>
                 ) : null}
