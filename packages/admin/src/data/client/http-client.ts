@@ -15,7 +15,7 @@ const Axios = axios.create({
   },
 });
 // Change request data/error
-const AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? 'authToken';
+const AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? 'AUTH_CRED';
 let isAuthRedirecting = false;
 Axios.interceptors.request.use((config) => {
   const cookies = Cookies.get(AUTH_TOKEN_KEY);
