@@ -302,9 +302,11 @@ export function useStoreNoticeReadAll() {
     },
     onSuccess: () => {},
     onError: (_error, _variables, context: any) => {
-      context?.previousQueries?.forEach?.(([queryKey, data]: [unknown, unknown]) => {
-        queryClient.setQueryData(queryKey, data);
-      });
+      context?.previousQueries?.forEach?.(
+        ([queryKey, data]: [unknown, unknown]) => {
+          queryClient.setQueryData(queryKey as any, data);
+        }
+      );
     },
     onSettled: () => {
       queryClient.invalidateQueries(API_ENDPOINTS.STORE_NOTICES);

@@ -803,7 +803,7 @@ export default function CreateOrUpdateProductForm({
                 setValue={setValue}
               />
               <ProductCategoryInput control={control} setValue={setValue} />
-              {/* it's not needed in chawkbazar */}
+              {/* it's not needed in sAmArA */}
               {/* <ProductAuthorInput control={control} /> */}
               {/* <ProductManufacturerInput control={control} setValue={setValue} /> */}
               <ProductTagInput control={control} setValue={setValue} />

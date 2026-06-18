@@ -1073,6 +1073,7 @@ export interface SettingsOptions {
   guestCheckout: boolean;
   smsEvent?: SmsEvent;
   emailEvent?: EmailEvent;
+  inAppEvent?: EmailEvent;
   whatsapp?: WhatsAppSettings;
   server_info?: ServerInfo;
 }
@@ -1293,6 +1294,7 @@ export interface SettingsOptions {
   guestCheckout: boolean;
   smsEvent?: SmsEvent;
   emailEvent?: EmailEvent;
+  inAppEvent?: EmailEvent;
   whatsapp?: WhatsAppSettings;
   server_info?: ServerInfo;
   mailchimpSubscribeText?: string;
@@ -1337,6 +1339,7 @@ export interface SettingsOptionsInput {
   guestCheckout: boolean;
   smsEvent?: SmsEvent;
   emailEvent?: EmailEvent;
+  inAppEvent?: EmailEvent;
   whatsapp?: WhatsAppSettings;
   server_info?: ServerInfo;
 }

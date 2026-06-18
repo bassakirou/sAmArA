@@ -1,13 +1,19 @@
-import { Category } from "@type/index";
+import { Attachment, Category } from "@type/index";
 
 export const getCategoryTypeImage = (category: Category, variant = "image") => {
   const { image } = category;
 
-  if (!image?.length) return null;
+  const normalizedImages: Attachment[] = Array.isArray(image)
+    ? image
+    : image
+      ? [image as Attachment]
+      : [];
 
-  if (variant === "vector" && image?.length > 1) {
-    return image[1];
+  if (!normalizedImages.length) return null;
+
+  if (variant === "vector" && normalizedImages.length > 1) {
+    return normalizedImages[1];
   }
 
-  return image[0];
+  return normalizedImages[0];
 };

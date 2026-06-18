@@ -1,23 +1,23 @@
-import Input from "@components/ui/input";
-import PasswordInput from "@components/ui/password-input";
-import Button from "@components/ui/button";
-import ButtonSamara from "@components/ui/button-samara";
-import { useForm } from "react-hook-form";
-import Logo from "@components/ui/logo";
-import { useUI } from "@contexts/ui.context";
+import Input from '@components/ui/input';
+import PasswordInput from '@components/ui/password-input';
+import Button from '@components/ui/button';
+import ButtonSamara from '@components/ui/button-samara';
+import { useForm } from 'react-hook-form';
+import Logo from '@components/ui/logo';
+import { useUI } from '@contexts/ui.context';
 /* @ts-ignore */
-import { ImGoogle2 } from "react-icons/im";
+import { ImGoogle2 } from 'react-icons/im';
 // import { ImFacebook2 } from "react-icons/im/ImFacebook2";
-import Link from "@components/ui/link";
-import { ROUTES } from "@lib/routes";
-import { useTranslation } from "next-i18next";
-import * as yup from "yup";
-import { yupResolver } from "@hookform/resolvers/yup";
-import Alert from "@components/ui/alert";
-import React, { useMemo, useState } from "react";
-import { useRegister } from "@framework/auth";
-import {useRouter} from "next/router";
-import { useEffect } from "react";
+import Link from '@components/ui/link';
+import { ROUTES } from '@lib/routes';
+import { useTranslation } from 'next-i18next';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import Alert from '@components/ui/alert';
+import React, { useMemo, useState } from 'react';
+import { useRegister } from '@framework/auth';
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
 
 interface SignUpInputType {
   email: string;
@@ -26,33 +26,38 @@ interface SignUpInputType {
 }
 
 const registerFormSchema = yup.object().shape({
-  name: yup.string().required("forms:name-required"),
+  name: yup.string().required('forms:name-required'),
   email: yup
     .string()
-    .email("forms:email-error")
-    .required("forms:email-required"),
-  password: yup.string().required("forms:password-required"),
+    .email('forms:email-error')
+    .required('forms:email-required'),
+  password: yup.string().required('forms:password-required'),
 });
 
 const defaultValues = {
-  name: "",
-  email: "",
-  password: "",
+  name: '',
+  email: '',
+  password: '',
 };
 
 type Props = {
-  layout?: "modal" | "page";
-}
+  layout?: 'modal' | 'page';
+};
 
-const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
+const SignUpForm: React.FC<Props> = ({ layout = 'modal' }) => {
   const router = useRouter();
   const { t } = useTranslation();
-  const [errorMessage, setErrorMessage] = useState("");
-  const { mutate: signUp, isLoading, formError, setFormError }: any = useRegister();
+  const [errorMessage, setErrorMessage] = useState('');
+  const {
+    mutate: signUp,
+    isLoading,
+    formError,
+    setFormError,
+  }: any = useRegister();
   const { setModalView, openModal, closeModal, modalData } = useUI();
   const isSellerSubscriptionFlow = Boolean(modalData?.sellerSubscriptionFlow);
   const dividerBgClass = useMemo(
-    () => (isSellerSubscriptionFlow ? "bg-sable" : "bg-white"),
+    () => (isSellerSubscriptionFlow ? 'bg-sable' : 'bg-white'),
     [isSellerSubscriptionFlow]
   );
 
@@ -73,57 +78,57 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
         ? formError[field][0]
         : formError[field];
       setError(field, {
-        type: "manual",
+        type: 'manual',
         message,
       });
     });
   }, [formError, setError]);
 
   function handleSignIn() {
-    if (layout === "modal"){
-      setModalView("LOGIN_VIEW");
+    if (layout === 'modal') {
+      setModalView('LOGIN_VIEW');
       return openModal();
-    }else {
+    } else {
       router.push(`${ROUTES.LOGIN}`);
     }
   }
 
   function onSubmit({ name, email, password }: SignUpInputType) {
-    setErrorMessage("");
+    setErrorMessage('');
     setFormError?.(null);
     signUp({
       name,
       email,
       password,
-      ...(isSellerSubscriptionFlow ? { permission: "store_owner" } : {}),
+      ...(isSellerSubscriptionFlow ? { permission: 'store_owner' } : {}),
     });
   }
 
   return (
     <div
       className={`mx-auto w-full overflow-hidden rounded-lg border border-gray-300 px-5 py-5 sm:w-96 sm:px-8 md:w-450px ${
-        isSellerSubscriptionFlow ? "bg-sable" : "bg-white"
+        isSellerSubscriptionFlow ? 'bg-sable' : 'bg-sable'
       }`}
     >
-      {isSellerSubscriptionFlow ? <div className="motif"></div> : null}
+      <div className="motif"></div>
       <div className="text-center mb-6 pt-2.5">
         <div onClick={closeModal}>
           <Logo />
         </div>
         <p className="text-sm md:text-base text-body mt-2 mb-8 sm:mb-10">
-          {t("common:registration-helper")}{" "}
+          {t('common:registration-helper')}{' '}
           <Link
             href={ROUTES.TERMS}
             className="text-heading underline hover:no-underline focus:outline-none"
           >
-            {t("common:text-terms")}
-          </Link>{" "}
-          &amp;{" "}
+            {t('common:text-terms')}
+          </Link>{' '}
+          &amp;{' '}
           <Link
             href={ROUTES.POLICY}
             className="text-heading underline hover:no-underline focus:outline-none"
           >
-            {t("common:text-policy")}
+            {t('common:text-policy')}
           </Link>
         </p>
       </div>
@@ -140,28 +145,28 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
             labelKey="forms:label-name-star"
             type="text"
             variant="solid"
-            {...register("name")}
+            {...register('name')}
             errorKey={errors.name?.message}
           />
           <Input
             labelKey="forms:label-email-star"
             type="email"
             variant="solid"
-            {...register("email")}
+            {...register('email')}
             errorKey={errors.email?.message}
           />
           <PasswordInput
             labelKey="forms:label-password-star"
             errorKey={errors.password?.message}
-            {...register("password")}
+            {...register('password')}
           />
-          <div className="relative">
+          <div className="mt-2 relative w-full flex justify-center">
             <ButtonSamara
               type="submit"
               loading={isLoading}
               disabled={isLoading}
             >
-              {t("common:text-register")}
+              {t('common:text-register')}
             </ButtonSamara>
           </div>
         </div>
@@ -169,7 +174,7 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
       <div className="flex flex-col items-center justify-center relative text-sm text-heading mt-6 mb-3.5">
         <hr className="w-full border-gray-300" />
         <span className={`absolute -top-2.5 px-2 ${dividerBgClass}`}>
-          {t("common:text-or")}
+          {t('common:text-or')}
         </span>
       </div>
 
@@ -190,16 +195,16 @@ const SignUpForm: React.FC<Props> = ({ layout = "modal" }) => {
         className="h-11 md:h-12 w-full mt-2.5 bg-google hover:bg-googleHover"
       >
         <ImGoogle2 className="text-sm sm:text-base ltr:mr-1.5 rtl:ml-1.5" />
-        {t("common:text-login-with-google")}
+        {t('common:text-login-with-google')}
       </Button>
       <div className="text-sm sm:text-base text-body text-center mt-5 mb-1">
-        {t("common:text-have-account")}{" "}
+        {t('common:text-have-account')}{' '}
         <button
           type="button"
           className="text-sm sm:text-base text-heading underline font-bold hover:no-underline focus:no-underline focus:outline-none"
           onClick={handleSignIn}
         >
-          {t("common:text-login")}
+          {t('common:text-login')}
         </button>
       </div>
     </div>

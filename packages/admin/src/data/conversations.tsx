@@ -22,29 +22,7 @@ import { mapPaginatorData } from '@/utils/data-mappers';
 import { conversationsClient } from './client/conversations';
 import { useModalAction } from '@/components/ui/modal/modal.context';
 import { getAuthCredentials, isSuperAdmin } from '@/utils/auth-utils';
-
-const reportVendorChatDebug = (
-  hypothesisId: string,
-  location: string,
-  msg: string,
-  data: Record<string, unknown> = {}
-) => {
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'vendor-chat-scroll-lag',
-      runId: 'post-fix',
-      hypothesisId,
-      location,
-      msg,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-};
+import { reportInternalDebug } from '@/utils/report-internal-debug';
 
 export const useConversationsQuery = (
   options: Partial<ConversationQueryOptions>
@@ -277,11 +255,13 @@ export const useSendMessage = () => {
     },
     onSuccess: () => {
       // #region debug-point E:mutation-success
-      reportVendorChatDebug(
-        'E',
-        'data/conversations.tsx:useSendMessage:onSuccess',
-        '[DEBUG] send message mutation resolved successfully'
-      );
+      reportInternalDebug({
+        sessionId: 'vendor-chat-scroll-lag',
+        runId: 'post-fix',
+        hypothesisId: 'E',
+        location: 'data/conversations.tsx:useSendMessage:onSuccess',
+        msg: '[DEBUG] send message mutation resolved successfully',
+      });
       // #endregion
       toast.success(t('common:text-message-sent'));
     },
@@ -295,11 +275,13 @@ export const useSendMessage = () => {
     // Always refetch after error or success:
     onSettled: () => {
       // #region debug-point E:mutation-settled
-      reportVendorChatDebug(
-        'E',
-        'data/conversations.tsx:useSendMessage:onSettled',
-        '[DEBUG] invalidating queries after send message'
-      );
+      reportInternalDebug({
+        sessionId: 'vendor-chat-scroll-lag',
+        runId: 'post-fix',
+        hypothesisId: 'E',
+        location: 'data/conversations.tsx:useSendMessage:onSettled',
+        msg: '[DEBUG] invalidating queries after send message',
+      });
       // #endregion
       queryClient.invalidateQueries(API_ENDPOINTS.MESSAGE);
       queryClient.invalidateQueries(API_ENDPOINTS.CONVERSIONS);

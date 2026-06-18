@@ -19,6 +19,7 @@ interface ProductsProps {
   className?: string;
   variant?: 'default' | 'reverse' | 'modern';
   limit?: number;
+  hideWhenEmpty?: boolean;
 }
 
 const BannerWithProducts: React.FC<ProductsProps> = ({
@@ -28,6 +29,7 @@ const BannerWithProducts: React.FC<ProductsProps> = ({
   className = 'mb-12 md:mb-14 xl:mb-16',
   limit = 9,
   data,
+  hideWhenEmpty = false,
 }) => {
   const { t } = useTranslation();
 
@@ -42,6 +44,10 @@ const BannerWithProducts: React.FC<ProductsProps> = ({
   });
 
   if (!loading && isEmpty(products)) {
+    if (hideWhenEmpty) {
+      return null;
+    }
+
     return <NotFoundItem text={t('text-no-on-selling-products-found')} />;
   }
 

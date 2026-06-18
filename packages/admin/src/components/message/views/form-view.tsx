@@ -13,29 +13,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { isEmpty } from 'lodash';
 import { useModalAction } from '@/components/ui/modal/modal.context';
 import { Conversations } from '@/types';
-
-const reportVendorChatDebug = (
-  hypothesisId: string,
-  location: string,
-  msg: string,
-  data: Record<string, unknown> = {}
-) => {
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'vendor-chat-scroll-lag',
-      runId: 'post-fix',
-      hypothesisId,
-      location,
-      msg,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-};
+import { reportInternalDebug } from '@/utils/report-internal-debug';
 
 type FormValues = {
   message: string;
@@ -133,15 +111,17 @@ const CreateMessageForm = ({
     }
     onTypingChange?.(false);
     // #region debug-point E:send-message-start
-    reportVendorChatDebug(
-      'E',
-      'form-view.tsx:onSubmit:start',
-      '[DEBUG] send message requested',
-      {
+    reportInternalDebug({
+      sessionId: 'vendor-chat-scroll-lag',
+      runId: 'post-fix',
+      hypothesisId: 'E',
+      location: 'form-view.tsx:onSubmit:start',
+      msg: '[DEBUG] send message requested',
+      data: {
         conversationId: query?.id,
         messageLength: values?.message?.length ?? 0,
-      }
-    );
+      },
+    });
     // #endregion
     createMessage(
       {
@@ -151,37 +131,41 @@ const CreateMessageForm = ({
       {
         onError: (error: any) => {
           // #region debug-point E:send-message-error
-          reportVendorChatDebug(
-            'E',
-            'form-view.tsx:onSubmit:error',
-            '[DEBUG] send message failed',
-            {
+          reportInternalDebug({
+            sessionId: 'vendor-chat-scroll-lag',
+            runId: 'post-fix',
+            hypothesisId: 'E',
+            location: 'form-view.tsx:onSubmit:error',
+            msg: '[DEBUG] send message failed',
+            data: {
               conversationId: query?.id,
               durationMs: sendStartedAtRef.current
                 ? Date.now() - sendStartedAtRef.current
                 : null,
               error: error?.message ?? 'unknown',
-            }
-          );
+            },
+          });
           // #endregion
           toast?.error(error?.message);
         },
         onSuccess: () => {
           const chatBody = document.getElementById('chatBody');
           // #region debug-point E:send-message-success
-          reportVendorChatDebug(
-            'E',
-            'form-view.tsx:onSubmit:success',
-            '[DEBUG] send message succeeded',
-            {
+          reportInternalDebug({
+            sessionId: 'vendor-chat-scroll-lag',
+            runId: 'post-fix',
+            hypothesisId: 'E',
+            location: 'form-view.tsx:onSubmit:success',
+            msg: '[DEBUG] send message succeeded',
+            data: {
               conversationId: query?.id,
               durationMs: sendStartedAtRef.current
                 ? Date.now() - sendStartedAtRef.current
                 : null,
               scrollTop: chatBody?.scrollTop ?? null,
               scrollHeight: chatBody?.scrollHeight ?? null,
-            }
-          );
+            },
+          });
           // #endregion
           chatBody?.scrollTo({
             top: chatBody?.scrollHeight,

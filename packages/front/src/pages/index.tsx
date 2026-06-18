@@ -16,37 +16,54 @@ import HeroWithCategoryFlash from '@containers/hero-with-category-flash';
 import { ROUTES } from '@lib/routes';
 import {
   promotionBanner,
+  masonryBanner,
   vintageDemoGridBanner as gridBanner,
   vintageDemoProductBanner as productBanner,
   vintageDemoBanner as banner,
+  fashionHomeHeroGridSlider as heroBanner,
 } from '@data/static/banners';
+import BannerBlock from '@containers/banner-block';
+import BecomeOwnerBlock from '@containers/become-owner-block';
+import FeatureSamaraBlock from '@containers/feature-samara-block';
+import HeroSlider from '@containers/hero-slider';
 
 export { getStaticProps } from '@framework/homepage/vintage';
 
 export default function Home() {
   return (
     <>
+      {/* <BannerBlock data={masonryBanner} />
+      <HeroSlider
+        data={heroBanner}
+        paginationPosition="none"
+        variant="fashion"
+        className="hero-grid-carousel"
+      /> */}
       <Container>
         <HeroWithCategoryFlash data={gridBanner} />
       </Container>
-      <BannerSliderBlock data={promotionBanner} />
+
+      {/* <BannerSliderBlock data={promotionBanner} /> */}
       <Container>
+        <NewArrivalsProductFeed />
         <CategoryBlock sectionHeading="text-shop-by-category" />
         <BannerWithProducts
           sectionHeading="text-on-selling-products"
           categorySlug="/search"
           variant="reverse"
           data={productBanner}
+          hideWhenEmpty
         />
-        <BannerCard
+        {/* <BannerCard
           data={banner[0]}
           href={`${ROUTES.COLLECTIONS}/${banner[0].slug}`}
           className="mb-11 md:mb-12 lg:mb-14 2xl:mb-16"
           classNameInner="md:aspect-[3.15/1] aspect-[2.65/1]"
-        />
+        /> */}
         <ProductsFeatured
           sectionHeading="text-featured-products"
           variant="center"
+          hideWhenEmpty
         />
         {/* <BannerCard
           data={banner[1]}
@@ -56,14 +73,14 @@ export default function Home() {
         /> */}
         {/* <ProductsFlashSaleBlock date={'2023-03-01T01:02:03'} /> */}
         <BrandBlock sectionHeading="text-top-brands" />
-        {/* <ExclusiveBlock />
-        <NewArrivalsProductFeed /> */}
-        <BannerCard
+        {/* <ExclusiveBlock /> */}
+
+        {/* <BannerCard
           data={banner[2]}
           href={`${ROUTES.COLLECTIONS}/${banner[2].slug}`}
           className="mb-12 lg:mb-14 xl:mb-16 pb-0.5 lg:pb-1 xl:pb-0"
           classNameInner="md:aspect-[4.25/1] aspect-[3.75/1]"
-        />
+        /> */}
         <CategoryGridBlock sectionHeading="text-featured-categories" />
         {/* <DownloadApps /> */}
         {/* <Support /> 

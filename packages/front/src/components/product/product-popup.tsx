@@ -23,6 +23,7 @@ import { useAtom } from 'jotai';
 import { authorizationAtom } from '@store/authorization-atom';
 import { chatAtom } from '@store/chat-atom';
 import ButtonSamara from '@components/ui/button-samara';
+import { reportInternalDebug } from '@utils/report-internal-debug';
 
 export default function ProductPopup({ productSlug }: { productSlug: string }) {
   const { t } = useTranslation('common');
@@ -73,27 +74,22 @@ export default function ProductPopup({ productSlug }: { productSlug: string }) {
   // #region debug-point A:popup-product-payload
   useEffect(() => {
     if (loading) return;
-    fetch('http://127.0.0.1:7777/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'chat-popup-negotiation',
-        runId: 'pre-fix',
-        hypothesisId: 'A',
-        location: 'product-popup.tsx',
-        msg: '[DEBUG] Popup product payload resolved',
-        data: {
-          productSlug,
-          productId: product?.id ?? null,
-          can_discuss_price: product?.can_discuss_price ?? null,
-          is_negotiable: product?.is_negotiable ?? null,
-          shopId: product?.shop?.id ?? null,
-          shopSlug: product?.shop?.slug ?? null,
-          canDiscussPrice,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {});
+    reportInternalDebug({
+      sessionId: 'chat-popup-negotiation',
+      runId: 'pre-fix',
+      hypothesisId: 'A',
+      location: 'product-popup.tsx',
+      msg: '[DEBUG] Popup product payload resolved',
+      data: {
+        productSlug,
+        productId: product?.id ?? null,
+        can_discuss_price: product?.can_discuss_price ?? null,
+        is_negotiable: product?.is_negotiable ?? null,
+        shopId: product?.shop?.id ?? null,
+        shopSlug: product?.shop?.slug ?? null,
+        canDiscussPrice,
+      },
+    });
   }, [
     canDiscussPrice,
     loading,
@@ -180,47 +176,37 @@ export default function ProductPopup({ productSlug }: { productSlug: string }) {
   const handleDiscussPrice = () => {
     const activeShopId = product?.shop?.id ?? null;
     // #region debug-point B:popup-discuss-click
-    fetch('http://127.0.0.1:7777/event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sessionId: 'chat-popup-negotiation',
-        runId: 'pre-fix',
-        hypothesisId: 'B',
-        location: 'product-popup.tsx',
-        msg: '[DEBUG] Popup discuss click',
-        data: {
-          isAuthorized,
-          productId: negotiationProduct?.id ?? null,
-          productSlug: negotiationProduct?.slug ?? null,
-          activeShopId,
-          canDiscussPrice,
-        },
-        ts: Date.now(),
-      }),
-    }).catch(() => {});
+    reportInternalDebug({
+      sessionId: 'chat-popup-negotiation',
+      runId: 'pre-fix',
+      hypothesisId: 'B',
+      location: 'product-popup.tsx',
+      msg: '[DEBUG] Popup discuss click',
+      data: {
+        isAuthorized,
+        productId: negotiationProduct?.id ?? null,
+        productSlug: negotiationProduct?.slug ?? null,
+        activeShopId,
+        canDiscussPrice,
+      },
+    });
     // #endregion
 
     if (isAuthorized) {
       closeModal();
       window.setTimeout(() => {
         // #region debug-point B:popup-set-chat-state
-        fetch('http://127.0.0.1:7777/event', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: 'chat-popup-negotiation',
-            runId: 'pre-fix',
-            hypothesisId: 'B',
-            location: 'product-popup.tsx',
-            msg: '[DEBUG] Popup opening chat for authorized user',
-            data: {
-              productId: negotiationProduct?.id ?? null,
-              activeShopId,
-            },
-            ts: Date.now(),
-          }),
-        }).catch(() => {});
+        reportInternalDebug({
+          sessionId: 'chat-popup-negotiation',
+          runId: 'pre-fix',
+          hypothesisId: 'B',
+          location: 'product-popup.tsx',
+          msg: '[DEBUG] Popup opening chat for authorized user',
+          data: {
+            productId: negotiationProduct?.id ?? null,
+            activeShopId,
+          },
+        });
         // #endregion
         setChatState((prev) => ({
           ...prev,
@@ -236,23 +222,18 @@ export default function ProductPopup({ productSlug }: { productSlug: string }) {
 
     if (typeof window !== 'undefined') {
       // #region debug-point B:popup-store-intent
-      fetch('http://127.0.0.1:7777/event', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: 'chat-popup-negotiation',
-          runId: 'pre-fix',
-          hypothesisId: 'B',
-          location: 'product-popup.tsx',
-          msg: '[DEBUG] Popup storing chat intent for guest user',
-          data: {
-            returnTo: router.asPath,
-            productId: negotiationProduct?.id ?? null,
-            activeShopId,
-          },
-          ts: Date.now(),
-        }),
-      }).catch(() => {});
+      reportInternalDebug({
+        sessionId: 'chat-popup-negotiation',
+        runId: 'pre-fix',
+        hypothesisId: 'B',
+        location: 'product-popup.tsx',
+        msg: '[DEBUG] Popup storing chat intent for guest user',
+        data: {
+          returnTo: router.asPath,
+          productId: negotiationProduct?.id ?? null,
+          activeShopId,
+        },
+      });
       // #endregion
       window.sessionStorage.setItem(
         chatIntentKey,

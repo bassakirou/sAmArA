@@ -698,7 +698,7 @@ export const vintageDemoGridBanner = [
   {
     id: 1,
     title: 'On Selected Items',
-    slug: 'on-sale',
+    slug: 'traditionnel',
     image: {
       mobile: {
         url: '/assets/images/banner/grid/small/banner-mobile-1.jpg',
@@ -716,7 +716,7 @@ export const vintageDemoGridBanner = [
   {
     id: 2,
     title: 'Casual Top',
-    slug: 'womens-collection',
+    slug: 'discount',
     image: {
       mobile: {
         url: '/assets/images/banner/grid/small/banner-mobile-2.jpg',

@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 // @ts-ignore
-import { ImFacebook2, ImGoogle2 } from "react-icons/im";
+import { ImFacebook2, ImGoogle2 } from 'react-icons/im';
 // import { ImFacebook2 } from 'react-icons/im';
 import { useTranslation } from 'next-i18next';
 import * as yup from 'yup';
@@ -19,8 +19,7 @@ import { ROUTES } from '@lib/routes';
 import { MobileIcon } from '@components/icons/mobile-icon';
 import { useSettings } from '@framework/settings';
 import { AnonymousIcon } from '@components/icons/anonymous-icon';
-import ButtonSamara from "@components/ui/button-samara";
-
+import ButtonSamara from '@components/ui/button-samara';
 
 interface LoginInputType {
   email: string;
@@ -97,7 +96,7 @@ const LoginForm: React.FC<Props> = ({ layout = 'modal' }) => {
   }
 
   return (
-    <div className="overflow-hidden bg-sable w-full px-5 py-5 mx-auto overflow-hidden bg-white border border-gray-300 rounded-lg sm:w-96 md:w-450px sm:px-8">
+    <div className="overflow-hidden bg-sable w-full px-5 py-5 mx-auto overflow-hidden border border-gray-300 rounded-lg sm:w-96 md:w-450px sm:px-8">
       <div className="motif"></div>
       <div className="text-center mb-6 pt-2.5">
         <div onClick={closeModal}>
@@ -159,8 +158,13 @@ const LoginForm: React.FC<Props> = ({ layout = 'modal' }) => {
             </div>
           </div>
           <div className="relative w-full flex justify-center">
-            <ButtonSamara type="submit" loading={loading} disabled={loading} variant="normal">
-              {t("common:text-login")}
+            <ButtonSamara
+              type="submit"
+              loading={loading}
+              disabled={loading}
+              variant="normal"
+            >
+              {t('common:text-login')}
             </ButtonSamara>
           </div>
         </div>
@@ -172,8 +176,9 @@ const LoginForm: React.FC<Props> = ({ layout = 'modal' }) => {
         </span>
       </div>
 
+      {/* SOCIAL LOGIN */}
       <div className="grid grid-cols-1 gap-4 mt-2">
-        <Button
+        {/* <Button
           loading={false}
           disabled={false}
           className="h-11 md:h-12 w-full mt-2.5 bg-google hover:bg-googleHover"
@@ -190,16 +195,16 @@ const LoginForm: React.FC<Props> = ({ layout = 'modal' }) => {
         >
           <ImFacebook2 className="text-sm sm:text-base ltr:mr-1.5 rtl:ml-1.5" />
           {t("common:text-login-with-facebook")}
-        </Button>
+        </Button> */}
 
-        <Button
+        {/* <Button
           className="h-11 md:h-12 w-full mt-1.5"
           disabled={loading}
           onClick={handleOtpLogin}
         >
           <MobileIcon className="h-5 ltr:mr-2 rtl:ml-2 text-light" />
           {t('text-login-mobile')}
-        </Button>
+        </Button> */}
         {isCheckout && guestCheckout && (
           <Button
             className="h-11 w-full !bg-pink-700 !text-light hover:!bg-pink-800 sm:h-12"

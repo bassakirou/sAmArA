@@ -2,7 +2,7 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import Cookies from 'js-cookie';
 
-const AUTH_TOKEN_KEY = process.env.NEXT_PUBLIC_AUTH_TOKEN_KEY ?? 'AUTH_CRED';
+const AUTH_TOKEN_KEY = 'AUTH_CRED';
 
 let echoInstance: Echo<'pusher'> | null = null;
 let echoToken: string | null = null;

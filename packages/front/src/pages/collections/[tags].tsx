@@ -47,7 +47,7 @@ export default function Collections() {
             <CollectionProductsBlock tagSlug={query?.tags as string} />
           </div>
         </div>
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </div>
   );

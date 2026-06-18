@@ -3,8 +3,12 @@
 
 # But not these files...
 !/packages/
+!/packages/api/
+!/packages/api/**
 !/packages/admin/
+!/packages/admin/**
 !/packages/front/
+!/packages/front/**
 
 # And not these files in the root
 !/.gitignore

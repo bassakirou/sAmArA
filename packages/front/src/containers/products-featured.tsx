@@ -1,28 +1,30 @@
-import SectionHeader from "@components/common/section-header";
-import ProductOverlayCard from "@components/product/product-overlay-card";
-import { useProducts } from "@framework/products";
-import Alert from "@components/ui/alert";
-import { Product } from "@type/index";
-import Spinner from "@components/ui/loaders/spinner/spinner";
-import { siteSettings } from "@settings/site.settings";
-import { useTranslation } from "next-i18next";
-import isEmpty from "lodash/isEmpty";
-import NotFoundItem from "@components/404/not-found-item";
+import SectionHeader from '@components/common/section-header';
+import ProductOverlayCard from '@components/product/product-overlay-card';
+import { useProducts } from '@framework/products';
+import Alert from '@components/ui/alert';
+import { Product } from '@type/index';
+import Spinner from '@components/ui/loaders/spinner/spinner';
+import { siteSettings } from '@settings/site.settings';
+import { useTranslation } from 'next-i18next';
+import isEmpty from 'lodash/isEmpty';
+import NotFoundItem from '@components/404/not-found-item';
 
 interface ProductsProps {
   sectionHeading: string;
   categorySlug?: string;
   className?: string;
-  variant?: "flat" | "left" | "center" | "combined" | "fashion";
+  variant?: 'flat' | 'left' | 'center' | 'combined' | 'fashion';
   limit?: number;
+  hideWhenEmpty?: boolean;
 }
 
 const ProductsFeatured: React.FC<ProductsProps> = ({
   sectionHeading,
   categorySlug,
-  className = "mb-12 md:mb-14 xl:mb-16",
-  variant = "left",
+  className = 'mb-12 md:mb-14 xl:mb-16',
+  variant = 'left',
   limit = 5,
+  hideWhenEmpty = false,
 }) => {
   const { t } = useTranslation();
 
@@ -38,7 +40,11 @@ const ProductsFeatured: React.FC<ProductsProps> = ({
   });
 
   if (!loading && isEmpty(products)) {
-    return <NotFoundItem text={t("text-no-featured-products-found")} />;
+    if (hideWhenEmpty) {
+      return null;
+    }
+
+    return <NotFoundItem text={t('text-no-featured-products-found')} />;
   }
 
   return (

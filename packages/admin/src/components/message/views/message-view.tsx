@@ -24,31 +24,9 @@ import {
 } from '@floating-ui/react-dom-interactions';
 import { ArrowDown } from '@/components/icons/arrow-down';
 import { useMeQuery } from '@/data/user';
+import { reportInternalDebug } from '@/utils/report-internal-debug';
 
 const AUTO_SCROLL_THRESHOLD = 24;
-
-const reportVendorChatDebug = (
-  hypothesisId: string,
-  location: string,
-  msg: string,
-  data: Record<string, unknown> = {}
-) => {
-  fetch('http://127.0.0.1:7777/event', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      sessionId: 'vendor-chat-scroll-lag',
-      runId: 'post-fix',
-      hypothesisId,
-      location,
-      msg,
-      data,
-      ts: Date.now(),
-    }),
-  }).catch(() => {});
-};
 
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
@@ -133,11 +111,13 @@ const UserMessageView = ({
       latestMessageChanged && (!visibleRef.current || isNearBottom(chatBody));
 
     // #region debug-point A:messages-effect
-    reportVendorChatDebug(
-      'A',
-      'message-view.tsx:defaultScrollToBottom',
-      '[DEBUG] messages effect requests scroll to bottom',
-      {
+    reportInternalDebug({
+      sessionId: 'vendor-chat-scroll-lag',
+      runId: 'post-fix',
+      hypothesisId: 'A',
+      location: 'message-view.tsx:defaultScrollToBottom',
+      msg: '[DEBUG] messages effect requests scroll to bottom',
+      data: {
         conversationId: query?.id,
         messageCount: messages?.length ?? 0,
         scrollTop: chatBody?.scrollTop ?? null,
@@ -148,8 +128,8 @@ const UserMessageView = ({
         latestMessageKey,
         latestMessageChanged,
         shouldAutoScroll,
-      }
-    );
+      },
+    });
     // #endregion
     if (!chatBody || !shouldAutoScroll) {
       return;
@@ -164,18 +144,20 @@ const UserMessageView = ({
   useEffect(() => {
     const chatBody = getChatBody();
     // #region debug-point B:conversation-open-scroll
-    reportVendorChatDebug(
-      'B',
-      'message-view.tsx:conversation-open-effect',
-      '[DEBUG] conversation effect requests scroll to latest message',
-      {
+    reportInternalDebug({
+      sessionId: 'vendor-chat-scroll-lag',
+      runId: 'post-fix',
+      hypothesisId: 'B',
+      location: 'message-view.tsx:conversation-open-effect',
+      msg: '[DEBUG] conversation effect requests scroll to latest message',
+      data: {
         conversationId: query?.id,
         isSuccess,
         scrollTop: chatBody?.scrollTop ?? null,
         scrollHeight: chatBody?.scrollHeight ?? null,
         clientHeight: chatBody?.clientHeight ?? null,
-      }
-    );
+      },
+    });
     // #endregion
     // @ts-ignore
     chatBody?.scrollTo({
@@ -206,19 +188,21 @@ const UserMessageView = ({
         Number(chatBody?.clientHeight) <= Number(chatBody?.scrollHeight);
       if (lastVisibleRef.current !== nextVisible) {
         // #region debug-point C:scroll-visibility-change
-        reportVendorChatDebug(
-          'C',
-          'message-view.tsx:toggleVisible',
-          '[DEBUG] scroll-to-bottom visibility changed',
-          {
+        reportInternalDebug({
+          sessionId: 'vendor-chat-scroll-lag',
+          runId: 'post-fix',
+          hypothesisId: 'C',
+          location: 'message-view.tsx:toggleVisible',
+          msg: '[DEBUG] scroll-to-bottom visibility changed',
+          data: {
             conversationId: query?.id,
             nextVisible,
             scrollTop: chatBody?.scrollTop ?? null,
             scrollHeight: chatBody?.scrollHeight ?? null,
             clientHeight: chatBody?.clientHeight ?? null,
             distanceFromBottom,
-          }
-        );
+          },
+        });
         // #endregion
         lastVisibleRef.current = nextVisible;
       }
@@ -256,17 +240,19 @@ const UserMessageView = ({
           onClick={() => {
             const chatBody = getChatBody();
             // #region debug-point D:manual-scroll-bottom
-            reportVendorChatDebug(
-              'D',
-              'message-view.tsx:scrollButtonClick',
-              '[DEBUG] user clicked scroll-to-bottom button',
-              {
+            reportInternalDebug({
+              sessionId: 'vendor-chat-scroll-lag',
+              runId: 'post-fix',
+              hypothesisId: 'D',
+              location: 'message-view.tsx:scrollButtonClick',
+              msg: '[DEBUG] user clicked scroll-to-bottom button',
+              data: {
                 conversationId: query?.id,
                 scrollTop: chatBody?.scrollTop ?? null,
                 scrollHeight: chatBody?.scrollHeight ?? null,
                 clientHeight: chatBody?.clientHeight ?? null,
-              }
-            );
+              },
+            });
             // #endregion
             scrollToBottom();
           }}
@@ -370,7 +356,7 @@ const UserMessageView = ({
                     <div className="w-full text-left sm:w-[75%]">
                       <div className="inline-flex max-w-full flex-col items-start gap-2 rounded-[18px] border border-[#E2E8F0] bg-white px-4 py-3">
                         <span className="text-xs font-medium text-[#64748B]">
-                          {typingName} est en train d'ecrire...
+                          {typingName} est en train d&apos;ecrire...
                         </span>
                         <div className="flex items-center gap-1.5">
                           <span className="h-2 w-2 animate-bounce rounded-full bg-[#94A3B8] [animation-delay:-0.2s]" />
