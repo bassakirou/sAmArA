@@ -1,4 +1,5 @@
 import Link from '@components/ui/link';
+import Image from 'next/image';
 import usePrice from '@lib/use-price';
 import { ROUTES } from '@lib/routes';
 import { Product } from '@type/index';
@@ -40,14 +41,15 @@ export default function ProductMessageCard({
     >
       <div className="flex gap-3 p-3">
         <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-linen">
-          <img
+          <Image
             src={getProductImageSrc(product)}
             alt={product?.name ?? 'Produit'}
-            className="h-full w-full object-cover"
-            loading="lazy"
+            fill
+            sizes="64px"
+            className="object-cover"
             onError={(event) => {
               event.currentTarget.onerror = null;
-              event.currentTarget.src = PRODUCT_PLACEHOLDER;
+              event.currentTarget.srcset = PRODUCT_PLACEHOLDER;
             }}
           />
         </div>
