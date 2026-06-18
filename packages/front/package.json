@@ -2,6 +2,9 @@
   "name": "front",
   "version": "5.4.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build",
@@ -29,6 +32,7 @@
     "i18next": "22.4.14",
     "jotai": "2.0.4",
     "js-cookie": "3.0.1",
+    "laravel-echo": "1.16.1",
     "lodash": "4.17.21",
     "next": "13.3.0",
     "next-auth": "4.22.0",
@@ -37,6 +41,7 @@
     "next-seo": "6.0.0",
     "overlayscrollbars": "2.1.1",
     "overlayscrollbars-react": "0.5.0",
+    "pusher-js": "8.4.0",
     "rc-collapse": "3.5.2",
     "rc-drawer": "6.1.5",
     "rc-pagination": "3.3.1",

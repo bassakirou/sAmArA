@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_REST_API_ENDPOINT: https://example.com
+      NEXT_PUBLIC_SITE_URL: https://example.com
+      NEXT_ADMIN_SITE_URL: https://admin.example.com
+      NEXT_PUBLIC_SHOP_URL: https://example.com
+      NEXT_PUBLIC_AUTH_TOKEN_KEY: AUTH_CRED
+      NEXT_PUBLIC_DEFAULT_LANGUAGE: fr
+      NEXT_PUBLIC_ENABLE_MULTI_LANG: 'false'
+      NEXT_PUBLIC_AVAILABLE_LANGUAGES: fr
+      NEXT_PUBLIC_MAILCHIMP_URL: https://example.com/subscribe
+      NEXT_PUBLIC_GOOGLE_MAP_API_KEY: dummy-key
+      NEXT_PUBLIC_INSTAGRAM_URL: https://instagram.com/example
+      NEXT_PUBLIC_INSTAGRAM_BASIC_DISPLAY_USER_TOKEN: dummy-token
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_dummy
+      NEXT_PUBLIC_PAYPAL_CLIENT_TOKEN: dummy-token
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: dummy-key
+      NEXT_PUBLIC_PUSHER_APP_KEY: samara-key
+      NEXT_PUBLIC_PUSHER_HOST: 127.0.0.1
+      NEXT_PUBLIC_PUSHER_PORT: '6001'
+      NEXTAUTH_URL: https://example.com
+      SECRET: ci-secret-value-32-characters-minimum
+      GOOGLE_CLIENT_ID: dummy-client-id
+      GOOGLE_CLIENT_SECRET: dummy-client-secret
+      FACEBOOK_CLIENT_ID: dummy-client-id
+      FACEBOOK_CLIENT_SECRET: dummy-client-secret
+      REVALIDATE_DURATION: '120'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx next lint
+      - run: npx tsc --noEmit
+      - run: npm run build
