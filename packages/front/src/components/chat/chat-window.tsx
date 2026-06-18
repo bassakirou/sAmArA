@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useAtom } from 'jotai';
 import { IoChevronBack } from 'react-icons/io5';
 import cn from 'classnames';
@@ -183,19 +184,29 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
     );
   }, [activeConversationId, orderedConversations]);
 
+  const currentShop = useMemo(
+    () =>
+      activeConversation?.shop ??
+      shopFromPage ??
+      (productFromPage as any)?.shop ??
+      activeProduct?.shop,
+    [activeConversation, shopFromPage, productFromPage, activeProduct]
+  );
+
   const conversationTitle = useMemo(
     () =>
-      activeConversation?.shop?.name ??
+      currentShop?.name ??
       activeConversation?.user?.name ??
       'Discussion',
-    [activeConversation]
+    [currentShop, activeConversation]
   );
+
   const conversationSubtitle = useMemo(
     () =>
       activeConversation?.latest_message?.body ||
-      activeConversation?.shop?.name ||
+      currentShop?.name ||
       '',
-    [activeConversation]
+    [activeConversation, currentShop]
   );
 
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
@@ -665,27 +676,14 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
         )}
       >
         <div className="p-4 border-b flex items-center gap-3">
-          {!showListInMain && activeConversation?.shop ? (
-            <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-linen">
-              <img
-                src={getShopLogoSrc(activeConversation.shop)}
+          {!showListInMain && currentShop ? (
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-linen">
+              <Image
+                src={getShopLogoSrc(currentShop) || PRODUCT_PLACEHOLDER}
                 alt={conversationTitle}
-                className="h-full w-full object-cover"
-                loading="lazy"
-                onLoad={() =>
-                  console.log(
-                    'Shop logo loaded successfully:',
-                    activeConversation.shop?.logo
-                  )
-                }
-                onError={(event) => {
-                  console.error(
-                    'Failed to load shop logo:',
-                    activeConversation.shop?.logo
-                  );
-                  event.currentTarget.onerror = null;
-                  event.currentTarget.src = PRODUCT_PLACEHOLDER;
-                }}
+                fill
+                sizes="44px"
+                className="object-cover"
               />
             </div>
           ) : null}
