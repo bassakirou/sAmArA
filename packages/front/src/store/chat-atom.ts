@@ -6,6 +6,7 @@ interface ChatState {
   activeProduct: any | null;
   activeConversationId: number | string | null;
   activeShopId: number | string | null;
+  activeShop: any | null;
 }
 
 export const chatAtom = atom<ChatState>({
@@ -14,4 +15,5 @@ export const chatAtom = atom<ChatState>({
   activeProduct: null,
   activeConversationId: null,
   activeShopId: null,
+  activeShop: null,
 });

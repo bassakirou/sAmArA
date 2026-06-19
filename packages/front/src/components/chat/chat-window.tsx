@@ -18,7 +18,7 @@ import {
 import { useRouter } from 'next/router';
 import { useQuery, useQueryClient } from 'react-query';
 import client from '@framework/utils/index';
-import { getShopLogoSrc, PRODUCT_PLACEHOLDER } from './chat-media';
+import { getShopLogoSrc, PRODUCT_PLACEHOLDER, SHOP_PLACEHOLDER } from './chat-media';
 
 interface ChatWindowProps {
   isExpanded: boolean;
@@ -41,7 +41,7 @@ const formatConversationTime = (value?: string | null) => {
 
 const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
   const [chatState, setChatState] = useAtom(chatAtom);
-  const { activeConversationId, activeProduct, activeShopId } = chatState;
+  const { activeConversationId, activeProduct, activeShopId, activeShop: storedShop } = chatState;
   const queryClient = useQueryClient();
   const router = useRouter();
   const { locale } = router;
@@ -203,27 +203,45 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
   const currentShop = useMemo(
     () =>
       activeConversation?.shop ??
+      storedShop ??
       shopFromPage ??
       (productFromPage as any)?.shop ??
       activeProduct?.shop,
-    [activeConversation, shopFromPage, productFromPage, activeProduct]
+    [activeConversation, storedShop, shopFromPage, productFromPage, activeProduct]
   );
+
+  const isShopOwnerOfConversation = useMemo(() => {
+    if (!me || !activeConversation) return false;
+    const shopId = String(activeConversation.shop_id);
+    return (
+      String(me.shop_id) === shopId ||
+      me.shops?.some((s: any) => String(s.id) === shopId)
+    );
+  }, [me, activeConversation]);
 
   const conversationTitle = useMemo(
     () =>
-      currentShop?.name ??
-      activeConversation?.user?.name ??
-      'Discussion',
-    [currentShop, activeConversation]
+      isShopOwnerOfConversation
+        ? activeConversation?.user?.name
+        : currentShop?.name ?? activeConversation?.user?.name ?? '',
+    [currentShop, activeConversation, isShopOwnerOfConversation]
   );
 
   const conversationSubtitle = useMemo(
     () =>
-      activeConversation?.latest_message?.body ||
-      currentShop?.name ||
-      '',
-    [activeConversation, currentShop]
+      currentShop?.is_active === 0 ? 'Hors ligne' : 'Connecté',
+    [currentShop]
   );
+
+  // Persist shop info in atom so it survives API refetches
+  useEffect(() => {
+    if (currentShop && currentShop.id) {
+      setChatState((prev) => {
+        if (prev.activeShop?.id === currentShop.id) return prev;
+        return { ...prev, activeShop: currentShop };
+      });
+    }
+  }, [currentShop, setChatState]);
 
   const { data: messagesData, isLoading: isLoadingMessages } = useMessages(
     activeConversationId ?? undefined,
@@ -454,9 +472,23 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
 
   const handleCreateConversation = async () => {
     if (!inferredShopId) return;
+    const resolvedShop = currentShop ?? shopFromPage ?? (productFromPage as any)?.shop ?? activeProduct?.shop;
     try {
       const conversation = await createConversation.mutateAsync({
         shop_id: inferredShopId,
+      });
+      // Persist the shop in the atom so it survives API refetches
+      if (resolvedShop) {
+        setChatState((prev) => ({ ...prev, activeShop: resolvedShop }));
+      }
+      queryClient.setQueriesData([`${'conversations'}`], (current: any) => {
+        if (!current || !Array.isArray(current.data)) return current;
+        const exists = current.data.some((c: any) => String(c.id) === String(conversation.id));
+        if (exists) return current;
+        return {
+          ...current,
+          data: [{ ...conversation, shop: resolvedShop }, ...current.data],
+        };
       });
       setActiveConversationId(conversation.id);
     } catch (error: any) {
@@ -620,7 +652,7 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
               loading="lazy"
               onError={(event) => {
                 event.currentTarget.onerror = null;
-                event.currentTarget.src = PRODUCT_PLACEHOLDER;
+                event.currentTarget.src = SHOP_PLACEHOLDER;
               }}
             />
           </div>
@@ -687,18 +719,22 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
         )}
       >
         <div className="p-4 border-b flex items-center gap-3">
-          {!showListInMain && currentShop ? (
-            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full bg-linen">
+          {!showListInMain && (currentShop || activeConversation) ? (
+            <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-linen">
               <Image
-                src={getShopLogoSrc(currentShop) || PRODUCT_PLACEHOLDER}
-                alt={conversationTitle}
+                src={
+                  isShopOwnerOfConversation
+                    ? activeConversation?.user?.profile?.avatar?.thumbnail ?? SHOP_PLACEHOLDER
+                    : getShopLogoSrc(currentShop) || SHOP_PLACEHOLDER
+                }
+                alt={conversationTitle || 'Avatar'}
                 fill
                 sizes="44px"
                 className="object-cover"
                 onError={(event) => {
                   event.currentTarget.onerror = null;
                   event.currentTarget.srcset = '';
-                  event.currentTarget.src = PRODUCT_PLACEHOLDER;
+                  event.currentTarget.src = SHOP_PLACEHOLDER;
                 }}
               />
             </div>

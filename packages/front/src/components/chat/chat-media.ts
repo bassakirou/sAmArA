@@ -1,4 +1,7 @@
-const PRODUCT_PLACEHOLDER = '/assets/placeholder/products/samara-boutique.svg';
+import { productPlaceholder, shopPlaceholder } from '@lib/placeholders';
+
+const PRODUCT_PLACEHOLDER = (productPlaceholder as any)?.src ?? productPlaceholder;
+const SHOP_PLACEHOLDER = (shopPlaceholder as any)?.src ?? shopPlaceholder;
 
 function normalizeMedia(value: any) {
   if (!value) return null;
@@ -14,18 +17,24 @@ function normalizeMedia(value: any) {
   return value;
 }
 
-export function getAbsoluteMediaSrc(url?: string | null) {
-  if (!url) return PRODUCT_PLACEHOLDER;
+export function getAbsoluteMediaSrc(url?: string | null, fallback: string = PRODUCT_PLACEHOLDER) {
+  if (!url) return fallback;
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_REST_API_ENDPOINT;
+  let apiOrigin = apiBaseUrl || '';
+  try {
+    if (apiBaseUrl) {
+      apiOrigin = new URL(apiBaseUrl).origin;
+    }
+  } catch {}
 
   // Replace localhost or 127.0.0.1 with the correct NEXT_PUBLIC_REST_API_ENDPOINT if the latter is a production URL
-  if (apiBaseUrl && !apiBaseUrl.includes('localhost') && !apiBaseUrl.includes('127.0.0.1')) {
+  if (apiOrigin && !apiOrigin.includes('localhost') && !apiOrigin.includes('127.0.0.1')) {
     if (url.includes('localhost') || url.includes('127.0.0.1')) {
       try {
         const parsed = new URL(url);
         const relativePath = parsed.pathname + parsed.search;
-        return `${apiBaseUrl.replace(/\/+$/, '')}${relativePath}`;
+        return `${apiOrigin}${relativePath}`;
       } catch {
         // Fallback if URL parsing fails
       }
@@ -38,9 +47,9 @@ export function getAbsoluteMediaSrc(url?: string | null) {
       return url;
     }
   } catch {
-    if (apiBaseUrl) {
+    if (apiOrigin) {
       const normalizedPath = url.startsWith('/') ? url : `/${url}`;
-      return `${apiBaseUrl.replace(/\/+$/, '')}${normalizedPath}`;
+      return `${apiOrigin}${normalizedPath}`;
     }
   }
 
@@ -52,7 +61,8 @@ export function getShopLogoSrc(shop?: any) {
   return getAbsoluteMediaSrc(
     logo?.original ??
       logo?.thumbnail ??
-      (typeof logo === 'string' ? logo : null)
+      (typeof logo === 'string' ? logo : null),
+    SHOP_PLACEHOLDER
   );
 }
 
@@ -74,8 +84,9 @@ export function getProductImageSrc(product?: any | null) {
       galleryImage?.original ??
       galleryImage?.thumbnail ??
       (typeof galleryImage === 'string' ? galleryImage : null) ??
-      null
+      null,
+    PRODUCT_PLACEHOLDER
   );
 }
 
-export { PRODUCT_PLACEHOLDER };
+export { PRODUCT_PLACEHOLDER, SHOP_PLACEHOLDER };

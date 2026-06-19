@@ -94,49 +94,56 @@ const CategoryList = ({
       key: 'image',
       align: 'center',
       width: 100,
-      render: (image: Attachment[]) => {
-        if (!image?.length) return null;
+      render: (image: Attachment | Attachment[]) => {
+        const images: Attachment[] = image
+          ? Array.isArray(image)
+            ? image
+            : [image]
+          : [];
+        if (!images.length) return null;
 
         return (
           <div className="flex flex-row items-center justify-center gap-x-2">
-            {image?.map((image: Attachment, index: number) => (
-              <Image
-                src={image?.original ?? '/'}
-                alt={`brand-image-${image.id}`}
-                layout="fixed"
-                width={40}
-                height={40}
-                className="overflow-hidden rounded-lg bg-gray-300 object-contain"
-                key={`brand-image-${index}`}
-              />
+            {images.map((img: Attachment, index: number) => (
+              <div key={`cat-image-${index}`} className="relative h-10 w-10">
+                <Image
+                  src={(img?.thumbnail ?? img?.original) || '/'}
+                  alt={`category-image-${img.id ?? index}`}
+                  fill
+                  sizes="40px"
+                  className="overflow-hidden rounded-lg bg-gray-300 object-contain"
+                />
+              </div>
             ))}
           </div>
         );
       },
-    },
-    {
+    },    {
       title: t('table:table-item-banner-image'),
       dataIndex: 'banner_image',
       key: 'banner_image',
       align: 'center',
       width: 140,
-      render: (banner_image: Attachment[]) => {
-        if (!banner_image?.length) return null;
+      render: (banner_image: Attachment | Attachment[]) => {
+        const images: Attachment[] = banner_image
+          ? Array.isArray(banner_image)
+            ? banner_image
+            : [banner_image]
+          : [];
+        if (!images.length) return null;
         return (
           <div className="flex flex-row items-center justify-center gap-x-2">
-            {banner_image && banner_image.map(
-              (image: Attachment, index: number) => (
+            {images.map((img: Attachment, index: number) => (
+              <div key={`cat-banner-${index}`} className="relative h-10 w-10">
                 <Image
-                  src={image?.original ?? '/'}
-                  alt={`brand-image-${image.id}`}
-                  layout="fixed"
-                  width={40}
-                  height={40}
+                  src={(img?.thumbnail ?? img?.original) || '/'}
+                  alt={`category-banner-${img.id ?? index}`}
+                  fill
+                  sizes="40px"
                   className="overflow-hidden rounded-lg bg-gray-300 object-contain"
-                  key={`brand-image-${index}`}
                 />
-              )
-            )}
+              </div>
+            ))}
           </div>
         );
       },
