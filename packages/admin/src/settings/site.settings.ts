@@ -71,10 +71,6 @@ const adminSidebarLinks = {
           href: Routes.product.list,
           label: 'sidebar-nav-item-all-products',
         }),
-        link({
-          href: Routes.product.create,
-          label: 'sidebar-nav-item-add-product',
-        }),
       ],
       { icon: 'ProductsIcon' }
     ),
