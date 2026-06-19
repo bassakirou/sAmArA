@@ -265,6 +265,7 @@ export function getProductInputValues(
       })
       .filter((entry: any) => Boolean(entry?.url)),
     is_digital,
+    is_negotiable,
     // language: router.locale,
     author_id: author?.id,
     manufacturer_id: manufacturer?.id,

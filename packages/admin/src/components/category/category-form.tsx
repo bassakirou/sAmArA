@@ -21,6 +21,7 @@ import { categoryIcons } from './category-icons';
 import { useTranslation } from 'next-i18next';
 import FileInput from '@/components/ui/file-input';
 import SelectInput from '@/components/ui/select-input';
+import Checkbox from '@/components/ui/checkbox/checkbox';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { categoryValidationSchema } from './category-validation-schema';
 import {
@@ -102,6 +103,7 @@ type FormValues = {
   image: AttachmentInput[];
   banner_image: AttachmentInput[];
   icon: any;
+  is_featured: boolean;
   // type: any;
 };
 
@@ -112,6 +114,7 @@ const defaultValues = {
   details: '',
   parent: '',
   icon: '',
+  is_featured: false,
 };
 
 type IProps = {
@@ -208,6 +211,7 @@ export default function CreateOrUpdateCategoriesForm({
         : undefined,
       icon: values.icon?.value || '',
       parent: values.parent?.id ?? null,
+      is_featured: values.is_featured,
       // type_id: values.type?.id,
     };
 
@@ -303,6 +307,14 @@ export default function CreateOrUpdateCategoriesForm({
               control={control}
               options={updatedIcons}
               isClearable={true}
+            />
+          </div>
+
+          <div className="mb-5">
+            <Checkbox
+              {...register('is_featured')}
+              label={t('form:input-label-is-featured') ?? 'Catégorie Vedette'}
+              id="is_featured"
             />
           </div>
         </Card>
