@@ -50,8 +50,8 @@ const CategoryGridBlock: React.FC<CategoriesProps> = ({
     limit: 3,
   });
 
-  if (!loading && isEmpty(categories)) {
-    return <NotFoundItem text={t('text-no-categories-found')} />;
+  if (!loading && (!categories || !categories?.data || categories?.data?.length === 0)) {
+    return null;
   }
   return (
     <div className={className}>
