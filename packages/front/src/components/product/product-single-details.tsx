@@ -150,9 +150,10 @@ const ProductSingleDetails: React.FC<Props> = ({ product }: any) => {
           <h2 className="text-heading text-lg md:text-xl lg:text-2xl 2xl:text-3xl font-bold hover:text-black mb-3.5">
             {product?.name}
           </h2>
-          <p className="text-sm leading-6 text-body lg:text-base lg:leading-8">
-            {product?.description}
-          </p>
+          <p
+            className="text-sm leading-6 text-body lg:text-base lg:leading-8"
+            dangerouslySetInnerHTML={{ __html: product?.description }}
+          />
 
           {hasVideo ? (
             <div className="mt-5">

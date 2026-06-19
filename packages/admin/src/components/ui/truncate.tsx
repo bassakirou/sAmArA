@@ -26,9 +26,14 @@ const ReadMore: React.FC<ReadMoreProps> = ({
 
   return (
     <>
-      {(children && children.length < character) || expanded
-        ? children
-        : children.substring(0, character) + '...'}
+      <span
+        dangerouslySetInnerHTML={{
+          __html:
+            (children && children.length < character) || expanded
+              ? children
+              : children.substring(0, character) + '...',
+        }}
+      />
       {children && children.length > character && !expanded && (
         <>
           <br />

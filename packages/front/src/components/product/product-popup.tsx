@@ -307,9 +307,10 @@ export default function ProductPopup({ productSlug }: { productSlug: string }) {
               </div>
             )}
 
-            <p className="line-clamp-8 overflow-hidden text-sm leading-6 md:text-body md:leading-7 max-h-[200px]">
-              {product.description}
-            </p>
+            <p
+              className="line-clamp-8 overflow-hidden text-sm leading-6 md:text-body md:leading-7 max-h-[200px]"
+              dangerouslySetInnerHTML={{ __html: product.description }}
+            />
 
             <div className="flex items-center mt-3">
               {!isEmpty(variations) ? (
