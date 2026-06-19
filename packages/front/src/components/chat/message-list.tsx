@@ -103,7 +103,8 @@ const MessageList = ({
                       className="object-cover"
                       onError={(event) => {
                         event.currentTarget.onerror = null;
-                        event.currentTarget.srcset = PRODUCT_PLACEHOLDER;
+                        event.currentTarget.srcset = '';
+                        event.currentTarget.src = PRODUCT_PLACEHOLDER;
                       }}
                     />
                   </div>

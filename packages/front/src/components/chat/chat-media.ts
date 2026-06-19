@@ -17,13 +17,27 @@ function normalizeMedia(value: any) {
 export function getAbsoluteMediaSrc(url?: string | null) {
   if (!url) return PRODUCT_PLACEHOLDER;
 
+  const apiBaseUrl = process.env.NEXT_PUBLIC_REST_API_ENDPOINT;
+
+  // Replace localhost or 127.0.0.1 with the correct NEXT_PUBLIC_REST_API_ENDPOINT if the latter is a production URL
+  if (apiBaseUrl && !apiBaseUrl.includes('localhost') && !apiBaseUrl.includes('127.0.0.1')) {
+    if (url.includes('localhost') || url.includes('127.0.0.1')) {
+      try {
+        const parsed = new URL(url);
+        const relativePath = parsed.pathname + parsed.search;
+        return `${apiBaseUrl.replace(/\/+$/, '')}${relativePath}`;
+      } catch {
+        // Fallback if URL parsing fails
+      }
+    }
+  }
+
   try {
     const parsed = new URL(url);
     if (['http:', 'https:'].includes(parsed.protocol)) {
       return url;
     }
   } catch {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_REST_API_ENDPOINT;
     if (apiBaseUrl) {
       const normalizedPath = url.startsWith('/') ? url : `/${url}`;
       return `${apiBaseUrl.replace(/\/+$/, '')}${normalizedPath}`;
@@ -36,8 +50,8 @@ export function getAbsoluteMediaSrc(url?: string | null) {
 export function getShopLogoSrc(shop?: any) {
   const logo = normalizeMedia(shop?.logo);
   return getAbsoluteMediaSrc(
-    logo?.thumbnail ??
-      logo?.original ??
+    logo?.original ??
+      logo?.thumbnail ??
       (typeof logo === 'string' ? logo : null)
   );
 }
@@ -54,11 +68,11 @@ export function getProductImageSrc(product?: any | null) {
     : null;
 
   return getAbsoluteMediaSrc(
-    productImage?.thumbnail ??
-      productImage?.original ??
+    productImage?.original ??
+      productImage?.thumbnail ??
       (typeof productImage === 'string' ? productImage : null) ??
-      galleryImage?.thumbnail ??
       galleryImage?.original ??
+      galleryImage?.thumbnail ??
       (typeof galleryImage === 'string' ? galleryImage : null) ??
       null
   );
