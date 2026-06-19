@@ -197,6 +197,7 @@
   "form-title-create-withdraw": "Créer un Retrait",
   "withdraw-description-helper-text": "retirer la demande d'ici",
   "input-label-payment-method": "Méthode de paiement",
+  "input-label-is-featured": "Catégorie Vedette",
   "input-label-vendor-id": "ID du Vendeur",
   "input-label-note": "Note",
   "form-title-create-tag": "Créer une étiquette",
