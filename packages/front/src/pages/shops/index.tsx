@@ -1,17 +1,17 @@
-import { getLayout } from "@components/layout/layout";
-import Container from "@components/ui/container";
-import Subscription from "@components/common/subscription";
-import ShopsPageContent from "@components/shops/shops-page-content";
+import { getLayout } from '@components/layout/layout';
+import Container from '@components/ui/container';
+import Subscription from '@components/common/subscription';
+import ShopsPageContent from '@components/shops/shops-page-content';
 
-export { getStaticProps } from "@framework/shops.ssr";
+export { getStaticProps } from '@framework/shops.ssr';
 
 export default function ShopsPage() {
   return (
     <>
       <ShopsPageContent />
-      <Container>
+      {/* <Container>
         <Subscription />
-      </Container>
+      </Container> */}
     </>
   );
 }

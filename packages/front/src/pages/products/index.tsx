@@ -47,7 +47,7 @@ export default function Products() {
             <ProductSearchBlock />
           </div>
         </div>
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </>
   );

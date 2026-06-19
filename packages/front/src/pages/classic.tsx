@@ -60,7 +60,7 @@ export default function Home() {
         <NewArrivalsProductFeed />
         <DownloadApps />
         {/* <Support />*/}
-        <Instagram />
+        {/* <Instagram /> */}
         {/* <Subscription className="px-8 bg-opacity-0 sm:px-16 xl:px-0" />  */}
       </Container>
       <Divider className="mb-0" />

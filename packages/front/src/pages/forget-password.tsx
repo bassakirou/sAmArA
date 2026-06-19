@@ -1,16 +1,16 @@
-import Container from "@components/ui/container";
-import { getLayout } from "@components/layout/layout";
-import PageHeader from "@components/ui/page-header";
-import Subscription from "@components/common/subscription";
-import ForgetPasswordForm from "@components/auth/forget-password/forget-password";
-import { useRouter } from "next/router";
-import { useAtom } from "jotai";
-import { authorizationAtom } from "@store/authorization-atom";
-import { useEffect } from "react";
-import { ROUTES } from "@lib/routes";
-import PageLoader from "@components/ui/page-loader/page-loader";
+import Container from '@components/ui/container';
+import { getLayout } from '@components/layout/layout';
+import PageHeader from '@components/ui/page-header';
+import Subscription from '@components/common/subscription';
+import ForgetPasswordForm from '@components/auth/forget-password/forget-password';
+import { useRouter } from 'next/router';
+import { useAtom } from 'jotai';
+import { authorizationAtom } from '@store/authorization-atom';
+import { useEffect } from 'react';
+import { ROUTES } from '@lib/routes';
+import PageLoader from '@components/ui/page-loader/page-loader';
 
-export { getStaticProps } from "@framework/common.ssr";
+export { getStaticProps } from '@framework/common.ssr';
 
 export default function ForgetPasswordPage() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function ForgetPasswordPage() {
         <div className="py-16 lg:py-20">
           <ForgetPasswordForm layout="page" />
         </div>
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </>
   );

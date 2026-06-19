@@ -1,10 +1,10 @@
-import { useRouter } from "next/router";
-import { useOrder } from "@framework/orders";
-import Spinner from "@components/ui/loaders/spinner/spinner";
-import OrderView from "@components/orders/order-view";
-import Divider from "@components/ui/divider";
-import Subscription from "@components/common/subscription";
-import Container from "@components/ui/container";
+import { useRouter } from 'next/router';
+import { useOrder } from '@framework/orders';
+import Spinner from '@components/ui/loaders/spinner/spinner';
+import OrderView from '@components/orders/order-view';
+import Divider from '@components/ui/divider';
+import Subscription from '@components/common/subscription';
+import Container from '@components/ui/container';
 
 export default function OldOrder() {
   const { query } = useRouter();
@@ -25,7 +25,7 @@ export default function OldOrder() {
       <Divider />
       <Container>
         <OrderView order={data} loadingStatus={isLoading} />
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </>
   );

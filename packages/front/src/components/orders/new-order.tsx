@@ -1,14 +1,14 @@
-import { useRouter } from "next/router";
-import { useOrder } from "@framework/orders";
-import Spinner from "@components/ui/loaders/spinner/spinner";
-import OrderView from "@components/orders/order-view";
-import Divider from "@components/ui/divider";
-import Subscription from "@components/common/subscription";
-import Container from "@components/ui/container";
-import { useEffect } from "react";
-import { useCart } from "@store/quick-cart/cart.context";
-import { useAtom } from "jotai";
-import { clearCheckoutAtom } from "@store/checkout";
+import { useRouter } from 'next/router';
+import { useOrder } from '@framework/orders';
+import Spinner from '@components/ui/loaders/spinner/spinner';
+import OrderView from '@components/orders/order-view';
+import Divider from '@components/ui/divider';
+import Subscription from '@components/common/subscription';
+import Container from '@components/ui/container';
+import { useEffect } from 'react';
+import { useCart } from '@store/quick-cart/cart.context';
+import { useAtom } from 'jotai';
+import { clearCheckoutAtom } from '@store/checkout';
 
 export default function NewOrder() {
   const { resetCart } = useCart();
@@ -35,7 +35,7 @@ export default function NewOrder() {
       <Divider />
       <Container>
         <OrderView order={data} loadingStatus={isLoading} />
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </>
   );

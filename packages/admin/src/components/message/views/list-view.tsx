@@ -99,7 +99,6 @@ const UserListView = ({ conversation, className, ...rest }: Props) => {
                     Aucune reponse pour le moment.
                   </p>
                 )}
-                )}
               </div>
               {unreadCount > 0 ? (
                 <span className="inline-flex min-h-[1.5rem] min-w-[1.5rem] items-center justify-center rounded-full bg-accent px-2 text-xs font-semibold text-white">

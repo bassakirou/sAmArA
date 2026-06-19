@@ -10,7 +10,7 @@ import { IoCartOutline } from 'react-icons/io5';
 import { IoPersonOutline } from 'react-icons/io5';
 import { IoCallOutline } from 'react-icons/io5';
 import { IoSettingsOutline } from 'react-icons/io5';
-import { IoHeartSharp } from "react-icons/io5"
+import { IoHeartSharp } from 'react-icons/io5';
 import { Cards } from '@components/icons/cards';
 
 const accountMenu = [
@@ -70,7 +70,7 @@ const AccountLayout: React.FunctionComponent<{
           </div>
         </div>
 
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </>
   );

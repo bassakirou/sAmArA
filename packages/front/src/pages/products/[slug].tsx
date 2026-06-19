@@ -36,7 +36,7 @@ export default function ProductPage({ product }: any) {
           currentProductId={product?.id}
           sectionHeading="text-related-products"
         />
-        <Subscription />
+        {/* <Subscription /> */}
       </Container>
     </>
   );

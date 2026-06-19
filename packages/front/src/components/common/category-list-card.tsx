@@ -38,7 +38,7 @@ const CategoryListCard: React.FC<Props> = ({ category }) => {
         </h3>
       </div>
       <div className="flex items-center">
-        <div className="flex items-center justify-center flex-shrink-0 w-5 h-5 text-xs font-medium rounded bg-gray-350 ltr:2xl:mr-2 rtl:2xl:ml-2">
+        <div className="flex items-center justify-center flex-shrink-0 w-5 h-5 text-xs font-medium rounded bg-green-700 text-white text-center ltr:2xl:mr-2 rtl:2xl:ml-2">
           {category?.products_count ?? 0}
         </div>
         <IoIosArrowForward className="hidden text-sm 2xl:block text-heading" />
