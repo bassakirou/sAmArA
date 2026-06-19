@@ -68,6 +68,31 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
   const { data: conversationsData, isLoading: isLoadingConversations } =
     useConversations({ limit: 20, with: 'shop,user,latest_message' });
   const conversations = conversationsData?.data ?? [];
+  const { data: shopFromPage } = useQuery(
+    ['chat_shop', shopSlug, locale],
+    () => client.shop.findOne({ slug: shopSlug as string, language: locale }),
+    {
+      enabled: !!shopSlug,
+      retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: 15 * 1000,
+    }
+  );
+
+  const { data: productFromPage } = useQuery(
+    ['chat_product', productSlug, locale],
+    () =>
+      client.product.findOne({ slug: productSlug as string, language: locale }),
+    {
+      enabled: !!productSlug,
+      retry: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      staleTime: 15 * 1000,
+    }
+  );
+
   const orderedConversations = useMemo(() => {
     let list = [...conversations].sort((left: any, right: any) => {
       const unseenDelta =
@@ -103,31 +128,6 @@ const ChatWindow = ({ isExpanded }: ChatWindowProps) => {
 
     return list;
   }, [conversations, activeConversationId, activeProduct?.shop, shopFromPage, productFromPage]);
-
-  const { data: shopFromPage } = useQuery(
-    ['chat_shop', shopSlug, locale],
-    () => client.shop.findOne({ slug: shopSlug as string, language: locale }),
-    {
-      enabled: !!shopSlug,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      staleTime: 15 * 1000,
-    }
-  );
-
-  const { data: productFromPage } = useQuery(
-    ['chat_product', productSlug, locale],
-    () =>
-      client.product.findOne({ slug: productSlug as string, language: locale }),
-    {
-      enabled: !!productSlug,
-      retry: false,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
-      staleTime: 15 * 1000,
-    }
-  );
 
   useEffect(() => {
     if (!chatState.isOpen) return;
